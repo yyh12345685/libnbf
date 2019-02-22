@@ -100,7 +100,7 @@ void MatrixStat::DumpSimple(const std::string& parent, std::ostream& os) const {
 
   os.setf(std::ios::fixed);
   os << std::setprecision(2); 
-  os << "[matrixstat_"<< tm_now->tm_hour <<tm_now->tm_min<<tm_now->tm_sec 
+  os << "[matrixstat_"<< tm_now->tm_hour <<':'<<tm_now->tm_min<<':'<<tm_now->tm_sec 
     <<"] {\"name\": \"" << parent << "\""
     << ", \"qps\": " << GetQps()
     << ", \"count\": " << GetCount()

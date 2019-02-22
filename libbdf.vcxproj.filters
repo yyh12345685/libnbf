@@ -21,6 +21,8 @@
     <None Include="third\lib\libunwind-1.1.tar.gz" />
     <None Include="third\lib\log4cplus-1.1.2.zip" />
     <None Include="src\monitor\test\conf\test.conf" />
+    <None Include="LICENSE" />
+    <None Include=".gitignore" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />
@@ -53,6 +55,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="src\monitor\test\t_matrix_stat.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\monitor\test\t_mem_profile.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -94,6 +99,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="src\monitor\mem_profile.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\monitor\test\t_struct.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

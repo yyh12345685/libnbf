@@ -10,16 +10,16 @@
 #define MATRIX_TRACE() _MATRIX_TRACE(__FILE__, __LINE__)
 
 #ifdef MEM_PROFILE 
-  #define ADE_NEW(T, ...) \
-    ade::matrix::AllocPerf<T>(MATRIX_TRACE(), ## __VA_ARGS__)
-  #define ADE_DELETE(P) \
-    ade::matrix::DestroyPerf(P)
+  #define BDF_NEW(T, ...) \
+    bdf::monitor::AllocPerf< T >(MATRIX_TRACE(), ##__VA_ARGS__)
+  #define BDF_DELETE(P) \
+    bdf::monitor::DestroyPerf(P)
 #else
-  #define ADE_NEW(T, ...) \
-    new T(__VA_ARGS__)
-  #define ADE_DELETE(P) \
+  #define BDF_NEW(T, ...) \
+    new T(##__VA_ARGS__)
+  #define BDF_DELETE(P) \
     delete P
-#endif //MATRIX_MEM_PERF
+#endif 
 
 namespace bdf {
 

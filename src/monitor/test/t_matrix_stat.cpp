@@ -5,8 +5,8 @@
 using namespace bdf;
 using namespace bdf::monitor;
 
-LOGGER_SYS_INIT_DYNAMIC(watcher, "matrix_stat.log", 10 * 1000);
-LOGGER_STATIC_DECL_IMPL(logger, "root");
+LOGGER_EXTERN_DECL(logger)
+LOGGER_IMPL(logger, "root");
 
 int main(int argc, char** argv){
   LOGGER_SYS_INIT("conf/test.conf")

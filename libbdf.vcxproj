@@ -84,6 +84,8 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>E:\work\open_source\libbdf\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <UndefinePreprocessorDefinitions>-DMEM_PROFILE=1;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -115,7 +117,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <None Include=".gitignore" />
     <None Include="basic.cmake" />
+    <None Include="LICENSE" />
     <None Include="src\monitor\test\conf\test.conf" />
     <None Include="third\lib\googletest-release-1.8.1.zip" />
     <None Include="third\lib\gperftools-2.1.tar.gz" />
@@ -137,6 +141,7 @@
     <ClCompile Include="src\monitor\matrix_stat_map.cpp" />
     <ClCompile Include="src\monitor\test\t_matrix.cpp" />
     <ClCompile Include="src\monitor\test\t_matrix_stat.cpp" />
+    <ClCompile Include="src\monitor\test\t_mem_profile.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\common\logger.h" />
@@ -152,6 +157,7 @@
     <ClInclude Include="src\monitor\matrix_scope.h" />
     <ClInclude Include="src\monitor\matrix_stat.h" />
     <ClInclude Include="src\monitor\matrix_stat_map.h" />
+    <ClInclude Include="src\monitor\test\t_struct.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

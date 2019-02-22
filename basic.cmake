@@ -3,7 +3,6 @@ add_definitions(
   -ggdb -Wall
   #-O2  
   -std=c++0x 
-  #-DMEM_PROFILE=1
 )
   
 link_libraries(-static-libstdc++ -static-libgcc)
