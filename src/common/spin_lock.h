@@ -13,10 +13,10 @@ class SpinLock {
     flag.clear(std::memory_order::memory_order_release);
   }
 
-  void lock() {
+  void Lock() {
     while(flag.test_and_set(std::memory_order_acquire)){};
   }
-  void unlock() {
+  void UnLock() {
     flag.clear(std::memory_order_release);
   }
  private:
@@ -26,10 +26,10 @@ class SpinLock {
 class SpinLockScope {
  public:
    SpinLockScope(SpinLock& lock) : lock_(lock) {
-    lock_.lock();
+    lock_.Lock();
   }
   ~SpinLockScope() {
-    lock_.unlock();
+    lock_.UnLock();
   }
 
  private:

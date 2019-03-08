@@ -28,6 +28,7 @@
     <Text Include="CMakeLists.txt" />
     <Text Include="src\CMakeLists.txt" />
     <Text Include="src\monitor\test\CMakeLists.txt" />
+    <Text Include="src\tester\CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\monitor\matrix.cpp">
@@ -58,6 +59,69 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="src\monitor\test\t_mem_profile.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tester\t_timer.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\common\ini_files.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\agents\agent_master.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\agents\agent_slave.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\agents\agents.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\common\buffer.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\message_base.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\protocol\protocol_base.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\protocol\http\third\http_parser.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\protocol\http\http_helper.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\protocol\http\http_protocol.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\protocol\http\http_util.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\protocol\rapid\rapid_protocol.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\protocol\redis\redis_parser.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\protocol\redis\redis_protocol.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\event\timer\timer.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\event\event_loop_thread.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\net\socket.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\event\event_data.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\event\event_notifier.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\event\event_driver.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -102,6 +166,84 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="src\monitor\test\t_struct.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\heap.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\common.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\ini_files.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\agents\agent_master.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\agents\agent_slave.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\agents\agents.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\buffer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\protocol\protocol_helper.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\message_base.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\protocol\protocol_base.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\protocol\http\third\http_parser.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\protocol\http\http_helper.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\protocol\http\http_protocol.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\protocol\http\http_info.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\protocol\http\http_util.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\message.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\protocol\rapid\rapid_protocol.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\protocol\redis\redis_parser.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\protocol\redis\redis_protocol.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\event\timer\timer_base.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\event\timer\timer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\event\event_loop_thread.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\net\socket.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\event\event_data.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\event\event_notifier.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\event\event_driver.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -130,9 +130,21 @@
     <Text Include="CMakeLists.txt" />
     <Text Include="src\CMakeLists.txt" />
     <Text Include="src\monitor\test\CMakeLists.txt" />
+    <Text Include="src\tester\CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\agents\agents.cpp" />
+    <ClCompile Include="src\agents\agent_master.cpp" />
+    <ClCompile Include="src\agents\agent_slave.cpp" />
+    <ClCompile Include="src\common\ini_files.cpp" />
+    <ClCompile Include="src\common\buffer.cpp" />
     <ClCompile Include="src\common\string_util.cpp" />
+    <ClCompile Include="src\event\event_data.cpp" />
+    <ClCompile Include="src\event\event_driver.cpp" />
+    <ClCompile Include="src\event\event_loop_thread.cpp" />
+    <ClCompile Include="src\event\event_notifier.cpp" />
+    <ClCompile Include="src\event\timer\timer.cpp" />
+    <ClCompile Include="src\message_base.cpp" />
     <ClCompile Include="src\monitor\matrix.cpp" />
     <ClCompile Include="src\monitor\matrix_collector.cpp" />
     <ClCompile Include="src\monitor\matrix_item.cpp" />
@@ -142,13 +154,38 @@
     <ClCompile Include="src\monitor\test\t_matrix.cpp" />
     <ClCompile Include="src\monitor\test\t_matrix_stat.cpp" />
     <ClCompile Include="src\monitor\test\t_mem_profile.cpp" />
+    <ClCompile Include="src\net\socket.cpp" />
+    <ClCompile Include="src\protocol\http\http_helper.cpp" />
+    <ClCompile Include="src\protocol\http\http_protocol.cpp" />
+    <ClCompile Include="src\protocol\http\http_util.cpp" />
+    <ClCompile Include="src\protocol\http\third\http_parser.c" />
+    <ClCompile Include="src\protocol\protocol_base.cpp" />
+    <ClCompile Include="src\protocol\rapid\rapid_protocol.cpp" />
+    <ClCompile Include="src\protocol\redis\redis_parser.cpp" />
+    <ClCompile Include="src\protocol\redis\redis_protocol.cpp" />
+    <ClCompile Include="src\tester\t_timer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\agents\agents.h" />
+    <ClInclude Include="src\agents\agent_master.h" />
+    <ClInclude Include="src\agents\agent_slave.h" />
+    <ClInclude Include="src\common\common.h" />
+    <ClInclude Include="src\common\heap.h" />
+    <ClInclude Include="src\common\ini_files.h" />
     <ClInclude Include="src\common\logger.h" />
+    <ClInclude Include="src\common\buffer.h" />
     <ClInclude Include="src\common\spin_lock.h" />
     <ClInclude Include="src\common\string_util.h" />
     <ClInclude Include="src\common\thread_id.h" />
     <ClInclude Include="src\common\time.h" />
+    <ClInclude Include="src\event\event_data.h" />
+    <ClInclude Include="src\event\event_driver.h" />
+    <ClInclude Include="src\event\event_loop_thread.h" />
+    <ClInclude Include="src\event\event_notifier.h" />
+    <ClInclude Include="src\event\timer\timer.h" />
+    <ClInclude Include="src\event\timer\timer_base.h" />
+    <ClInclude Include="src\message.h" />
+    <ClInclude Include="src\message_base.h" />
     <ClInclude Include="src\monitor\matrix.h" />
     <ClInclude Include="src\monitor\matrix_collector.h" />
     <ClInclude Include="src\monitor\matrix_item.h" />
@@ -158,6 +195,17 @@
     <ClInclude Include="src\monitor\matrix_stat.h" />
     <ClInclude Include="src\monitor\matrix_stat_map.h" />
     <ClInclude Include="src\monitor\test\t_struct.h" />
+    <ClInclude Include="src\net\socket.h" />
+    <ClInclude Include="src\protocol\http\http_helper.h" />
+    <ClInclude Include="src\protocol\http\http_info.h" />
+    <ClInclude Include="src\protocol\http\http_protocol.h" />
+    <ClInclude Include="src\protocol\http\http_util.h" />
+    <ClInclude Include="src\protocol\http\third\http_parser.h" />
+    <ClInclude Include="src\protocol\protocol_base.h" />
+    <ClInclude Include="src\protocol\protocol_helper.h" />
+    <ClInclude Include="src\protocol\rapid\rapid_protocol.h" />
+    <ClInclude Include="src\protocol\redis\redis_parser.h" />
+    <ClInclude Include="src\protocol\redis\redis_protocol.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

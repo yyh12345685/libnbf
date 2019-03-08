@@ -16,7 +16,7 @@
     bdf::monitor::DestroyPerf(P)
 #else
   #define BDF_NEW(T, ...) \
-    new T(##__VA_ARGS__)
+    new T (##__VA_ARGS__)
   #define BDF_DELETE(P) \
     delete P
 #endif 
