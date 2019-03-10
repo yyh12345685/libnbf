@@ -13,8 +13,6 @@
 
 namespace bdf {
 
-namespace protocol {
-
 int RedisParser::ParseReply(
   const std::string& reply, bool* is_pong, size_t* size_reply, std::string* out) {
   if (0 == reply.length() || NULL == is_pong || NULL == size_reply || NULL == out) 
@@ -177,8 +175,6 @@ int RedisParser::ParseSingleStr(const char* line_data, const size_t& line_len, s
   }else{
     return -1;
   }
-}
-
 }
 
 }

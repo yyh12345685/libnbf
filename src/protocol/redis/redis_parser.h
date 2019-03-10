@@ -5,8 +5,6 @@
 
 namespace bdf {
 
-namespace protocol {
- 
 class RedisParser {
 public:
   static const char kSep = '\1';
@@ -44,8 +42,6 @@ private:
     return -1;
   }
 };
-
-}
 
 }
 

@@ -2,14 +2,15 @@
 #pragma once
 
 #include "event/event_data.h"
+#include "common/logger.h"
 
 namespace bdf {
-
-namespace event {
 
 class WakeUpFd : public EventFunctionBase {
 public:
   virtual void OnEvent(EventDriver *poll, int fd, short event);
+private:
+  LOGGER_CLASS_DECL(logger);
 };
 
 class EventNotifier {
@@ -31,9 +32,8 @@ private:
   WakeUpFd *wake_;
 
   EventDriver* event_driver_;
+
+  LOGGER_CLASS_DECL(logger);
 };
-
-
-}
 
 }

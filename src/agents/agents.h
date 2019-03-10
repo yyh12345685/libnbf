@@ -4,14 +4,15 @@
 #include <vector>
 #include <memory>
 
-namespace bdf {
-namespace agents {
+#include "common/logger.h"
 
-//struct AppCofing;
-//class AgentMaster;
-//class AgentSlave;
-//class HandlerMessageFactoryBase;
-//class HandlerMessageBase;
+namespace bdf {
+
+struct AppCofing;
+class AgentMaster;
+class AgentSlave;
+class HandlerMessageFactoryBase;
+class HandlerMessageBase;
 
 class Agents {
 public:
@@ -31,14 +32,14 @@ private:
   Agents();
   Agents& operator=(const Agents&);
 
+  LOGGER_CLASS_DECL(logger);
+
   const AppCofing* conf_;
   AgentMaster* agent_master_;
   AgentSlave* agent_slaves_; 
 
   //std::vector<std::tr1::shared_ptr<HandlerMessageBase> >handle_list_;
 };
-
-}
 
 }
 

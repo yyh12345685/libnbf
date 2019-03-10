@@ -6,7 +6,6 @@
 #include <string.h>
 
 namespace bdf {
-namespace common {
 
 void Buffer::DestroyAll(){
   if (pos_begin_) {
@@ -103,8 +102,6 @@ bool Buffer::EnsureSize(size_t need){
     pos_writing_ = pos_begin_ + dlen;
   }
   return true;
-}
-
 }
 
 }

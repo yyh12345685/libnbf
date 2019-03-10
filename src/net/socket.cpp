@@ -9,8 +9,6 @@
 
 namespace bdf {
 
-namespace net {
-
 LOGGER_CLASS_IMPL(logger_, Socket);
 
 int Socket::CreateSocket(bool is_non_block) {
@@ -294,5 +292,4 @@ bool Socket::SetSoLinger(int fd, int seconds){
   return true;
 }
 
-}
 }

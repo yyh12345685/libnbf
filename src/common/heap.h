@@ -4,7 +4,6 @@
 #include "common/common.h"
 
 namespace bdf {
-namespace common {
 
 struct HeapCategory {
   enum {
@@ -320,6 +319,5 @@ void SimpleKVHeap<Key, Val, Order>::Insert(IN const Key& key, IN const Val& val,
 }
 #endif
 
-}
 }
 

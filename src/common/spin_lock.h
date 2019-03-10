@@ -5,8 +5,6 @@
 
 namespace bdf {
 
-namespace common {
-
 class SpinLock {
  public:
    SpinLock() {

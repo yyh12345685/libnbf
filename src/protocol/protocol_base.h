@@ -6,11 +6,7 @@
 namespace bdf {
 
 class MessageBase;
-namespace common {
-  class Buffer;
-}
-
-namespace protocol {
+class Buffer;
 
 class ProtocolBase {
 public:
@@ -26,8 +22,8 @@ public:
 public:
   virtual bool IsSynchronous() = 0;
   virtual void Release() = 0;
-  virtual MessageBase *Decode(common::Buffer &input, bool &failed) = 0;
-  virtual bool Encode(MessageBase *msg, common::Buffer *output) = 0;
+  virtual MessageBase *Decode(Buffer &input, bool &failed) = 0;
+  virtual bool Encode(MessageBase *msg, Buffer *output) = 0;
   virtual ProtocolBase* Clone() = 0;
 protected:
   virtual ~ProtocolBase() {}
@@ -49,5 +45,4 @@ private:
   std::vector<ProtocolBase*> protocol_;
 };
 
-}
 }

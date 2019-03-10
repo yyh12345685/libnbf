@@ -1,14 +1,6 @@
 ﻿
 #pragma once
 
-#ifdef WIN32
-
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
-
-#endif
-
 #include <string>
 #include <vector>
 #include <functional>
@@ -18,7 +10,6 @@
 #include <stdlib.h>
 
 namespace bdf {
-namespace common {
 
 //////////////////////////////////////////////////////////////////////////
 class CIniFileS{
@@ -170,6 +161,5 @@ inline bool CIniFileS::UnCommentRecord(const char* strSecName, const char* strKe
   return CommentRecord(CC_Record,strSecName,strKeyName,bSaveToFile);           // In the event the file does not load
 }
 
-}
 }
 

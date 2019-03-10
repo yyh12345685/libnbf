@@ -4,12 +4,14 @@
 #include <string.h>
 
 namespace bdf {
-namespace common {
 
 class Buffer{
 public:
-  Buffer() : pos_begin_(0),
-      pos_end_(0), pos_reading_(0), pos_writing_(0) {
+  Buffer() : 
+    pos_begin_(0),
+    pos_end_(0), 
+    pos_reading_(0), 
+    pos_writing_(0) {
   }
 
   ~Buffer(){
@@ -92,8 +94,6 @@ public:
   char *pos_reading_;
   char *pos_writing_;
 };
-
-}
 
 }
 

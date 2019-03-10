@@ -10,11 +10,7 @@
 namespace bdf {
 
 class MessageBase;
-namespace common{
-  class Buffer;
-}
-
-namespace protocol {
+class Buffer;
 
 struct HttpAgent;
 class HttpMessage;
@@ -37,14 +33,13 @@ public:
     return new HttpProtocol(); 
   }
 
-  virtual MessageBase *Decode(common::Buffer &input, bool& failed);
-  virtual bool Encode(MessageBase *msg, common::Buffer *output);
+  virtual MessageBase *Decode(Buffer &input, bool& failed);
+  virtual bool Encode(MessageBase *msg, Buffer *output);
 private:
-  bool WirteToBuf(HttpMessage *msg, common::Buffer *output);
+  bool WirteToBuf(HttpMessage *msg, Buffer *output);
   LOGGER_CLASS_DECL(logger_);
   HttpAgent* agent_;
 };
 
-}
 }
 

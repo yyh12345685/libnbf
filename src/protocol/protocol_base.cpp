@@ -7,8 +7,6 @@
 
 namespace bdf{
 
-namespace protocol {
-
 ProtocolFactory::ProtocolFactory() {
   RegisterProtocol(MessageType::kRapidMessage, BDF_NEW(RapidProtocol));
   RegisterProtocol(MessageType::kHttpMessage, BDF_NEW(HttpProtocol));
@@ -40,8 +38,6 @@ void ProtocolFactory::RegisterProtocol(int type, ProtocolBase* protocol) {
   }
 
   protocol_[type] = protocol;
-}
-
 }
 
 }

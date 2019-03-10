@@ -11,8 +11,6 @@
 
 namespace bdf {
 
-namespace event {
-
 LOGGER_CLASS_IMPL(logger_, EventDriver);
 
 EventDriver::EventDriver() :
@@ -213,6 +211,3 @@ int EventDriver::Mod(int fd){
 }
 
 }
-
-}
-

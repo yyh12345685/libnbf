@@ -12,8 +12,6 @@
 
 namespace bdf {
 
-namespace net {
-
 class Socket{
  public:
   inline static bool IpToInt(const char* ipstr, uint32_t& ipint);
@@ -94,8 +92,6 @@ bool Socket::isIpAddr(const char* ip){
     }
   }
   return true;
-}
-
 }
 
 }

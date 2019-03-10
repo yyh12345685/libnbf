@@ -5,7 +5,6 @@
 #include <sstream>
 
 namespace bdf {
-namespace protocol {
 
 static void GetUserId(HttpParsedInfo& info);
 
@@ -244,5 +243,4 @@ bool HttpUtil::CheckRootDomainMatch(const std::string& base_str, const std::stri
   }
 }
 
-}
 }

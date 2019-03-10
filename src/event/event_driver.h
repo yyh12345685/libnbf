@@ -8,8 +8,6 @@
 
 namespace bdf{
 
-namespace event {
-
 //template <typename LockPolicy=NoLock>
 class EventDriver{
 public:
@@ -55,7 +53,5 @@ private:
 
   EventNotifier event_notifier_;
 };
-
-}
 
 }

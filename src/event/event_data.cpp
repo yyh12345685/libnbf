@@ -4,8 +4,6 @@
 
 namespace bdf {
 
-namespace event {
-
 static int incr_fd2data = 4096;
 static int init_fd2data = 40960;
 
@@ -109,5 +107,4 @@ EventData::~EventData(){
   lock_.UnLock();
 }
 
-}
 }

@@ -6,8 +6,6 @@
 
 namespace bdf {
 
-namespace protocol {
-
 LOGGER_CLASS_IMPL(logger_, CustomProtocol);
 
 struct RapidHead{
@@ -31,7 +29,7 @@ void Int32To64(uint32_t high, uint32_t low, uint64_t& value){
   value = ((uint64_t)(high) << 32) | low;
 }
 
-MessageBase* RapidProtocol::Decode(common::Buffer &input, bool& failed){
+MessageBase* RapidProtocol::Decode(Buffer &input, bool& failed){
   size_t total = input.GetReadingSize();
   if (total < sizeof(RapidHead)){
     return NULL;
@@ -80,7 +78,7 @@ MessageBase* RapidProtocol::Decode(common::Buffer &input, bool& failed){
   return msg;
 }
 
-bool RapidProtocol::Encode(MessageBase *pv, common::Buffer *output){
+bool RapidProtocol::Encode(MessageBase *pv, Buffer *output){
   RapidMessage *msg = NULL;
 
   switch (pv->type_id) {
@@ -126,8 +124,6 @@ bool RapidProtocol::Encode(MessageBase *pv, common::Buffer *output){
   if (length)
     memcpy(data, msg->body.c_str(), length);
   return output->PourWriting(size);
-
-}
 
 }
 

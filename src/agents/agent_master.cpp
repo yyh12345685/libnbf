@@ -8,7 +8,6 @@
 //#include "connecting.h"
 
 namespace bdf {
-namespace agents {
 
 LOGGER_CLASS_IMPL(logger_, AgentMaster);
 
@@ -21,7 +20,7 @@ bool AgentMaster::Init(const AppCofing* confs, const Agents* agents){
   conf_ = confs;
   agents_ = agents;
 
-  event::EventDriver* events_driver = master_event_thread_.GetPoll();
+  EventDriver* events_driver = master_event_thread_.GetPoll();
   for (const auto& addr:conf_->listener_){
     char ip[1024];
     int port;
@@ -62,7 +61,7 @@ bool AgentMaster::Init(const AppCofing* confs, const Agents* agents){
   return true;
 }
 
-void AgentMaster::OnEvent(event::EventDriver *poll, int fd, short event){
+void AgentMaster::OnEvent(EventDriver *poll, int fd, short event){
   const auto& listen_it = listened_list_.find(fd);
 
   if (listen_it == listened_list_.end()){

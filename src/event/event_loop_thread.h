@@ -6,8 +6,6 @@
 
 namespace bdf {
 
-namespace event {
-
 class EventLoopThread{
 public:
   EventLoopThread();
@@ -23,7 +21,8 @@ private:
   bool is_run_;
 
   std::thread* thread_;
+
+  LOGGER_CLASS_DECL(logger);
 };
 
-}
 }

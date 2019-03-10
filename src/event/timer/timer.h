@@ -8,8 +8,6 @@
 
 namespace bdf {
 
-namespace event {
-
 template <typename T>
 struct GetTimeOut {
   int64_t operator()(const T& t) const { return t.time_out_ms; }
@@ -30,10 +28,8 @@ public:
 private:
 	LOGGER_CLASS_DECL(logger_);
 
-  common::SimpleHeap<TimerData, GetTimeOut<TimerData> > heap_timer_;
+  SimpleHeap<TimerData, GetTimeOut<TimerData> > heap_timer_;
 
 };
-
-}
 
 }

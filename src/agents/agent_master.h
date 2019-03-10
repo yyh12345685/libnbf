@@ -6,7 +6,6 @@
 #include "event/event_data.h"
 
 namespace bdf {
-namespace agents {
 
 class Agents;
 class AppCofing;
@@ -17,7 +16,7 @@ struct ListenInfo{
   std::string addr;
 };
 
-class AgentMaster:public event::EventFunctionBase {
+class AgentMaster:public EventFunctionBase {
 public:
   AgentMaster();
   bool Init(const AppCofing* confs, const Agents* agents);
@@ -26,7 +25,7 @@ public:
   void Stop();
   virtual ~AgentMaster();
 
-  virtual void OnEvent(event::EventDriver *poll, int fd, short event);
+  virtual void OnEvent(EventDriver *poll, int fd, short event);
 private:
   AgentMaster(const AgentMaster&);
   AgentMaster& operator=(const AgentMaster&);
@@ -34,14 +33,12 @@ private:
   const AppCofing* conf_;
   const Agents* agents_;
 
-  event::EventLoopThread master_event_thread_;
+  EventLoopThread master_event_thread_;
 
   std::unordered_map<int, ListenInfo> listened_list_;
 
   LOGGER_CLASS_DECL(logger_);
 };
-
-}
 
 }
 

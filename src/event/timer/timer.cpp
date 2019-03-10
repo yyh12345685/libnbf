@@ -4,8 +4,6 @@
 
 namespace bdf {
 
-namespace event {
-
 LOGGER_CLASS_IMPL(logger_, Timer)
 
 Timer::Timer(){
@@ -41,8 +39,6 @@ int Timer::ProcessTimer(){
     event_timeo = heap_timer_.Top();
   }
   return 0;
-}
-
 }
 
 }

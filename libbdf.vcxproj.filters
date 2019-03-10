@@ -124,6 +124,39 @@
     <ClCompile Include="src\event\event_driver.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\app\appbase.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\app\config_info.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\net\connect.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\net\client_connect.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\net\sync_client_connect.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\net\async_client_connect.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\net\async_sequence.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\net\sync_sequence.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\net\server_connect.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\net\io_handle.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\service\service_handle.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\monitor\matrix.h">
@@ -244,6 +277,42 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="src\event\event_driver.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\app\app.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\app\appbase.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\app\config_info.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\net\connect.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\net\client_connect.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\net\sync_client_connect.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\net\async_client_connect.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\net\async_sequence.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\net\sync_sequence.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\net\server_connect.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\net\io_handle.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\service\service_handle.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

@@ -8,7 +8,8 @@
 //#include "handler.h"
 
 namespace bdf {
-namespace agents {
+
+LOGGER_CLASS_IMPL(logger_, Agents)
 
 Agents::Agents(const AppCofing* conf) :
   conf_(conf),
@@ -67,8 +68,6 @@ Agents::~Agents() {
     BDF_DELETE(agent_master_);
 	if(NULL != agent_slaves_)
     BDF_DELETE(agent_slaves_);
-}
-
 }
 
 }

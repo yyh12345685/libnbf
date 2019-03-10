@@ -10,22 +10,17 @@
 namespace bdf {
 
 class MessageBase;
-namespace common {
-  class Buffer;
-}
-
-namespace protocol {
+class Buffer;
 
 class RedisProtocol : public ProtocolBase {
 public:
   RedisProtocol(){}
   virtual ~RedisProtocol(){}
   virtual bool IsSynchronous() { return true; }
-  virtual MessageBase *Decode(common::Buffer &input, bool& failed);
-  virtual bool Encode(MessageBase *msg, common::Buffer *output);
+  virtual MessageBase *Decode(Buffer &input, bool& failed);
+  virtual bool Encode(MessageBase *msg, Buffer *output);
 private:
   LOGGER_CLASS_DECL(logger_);
 };
 
-}
 }

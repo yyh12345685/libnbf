@@ -6,7 +6,6 @@
 #include <map>
 
 namespace bdf {
-namespace protocol {
 
 typedef std::unordered_map<std::string, std::string> Dict;
 typedef Dict::const_iterator DictIter;

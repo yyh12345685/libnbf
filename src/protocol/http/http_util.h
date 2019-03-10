@@ -6,7 +6,6 @@
 #include "common/logger.h"
 
 namespace bdf {
-namespace protocol {
 
 struct HttpMessage;
 
@@ -33,7 +32,5 @@ static std::string GetRootDomain(const std::string& domain);
 static bool CheckRootDomainMatch(const std::string& base_str, const std::string& check_str);
 
 };
-
-}
 
 }

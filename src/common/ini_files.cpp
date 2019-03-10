@@ -31,7 +31,6 @@
 #endif
 
 namespace bdf {
-namespace common {
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
@@ -930,8 +929,6 @@ bool CIniFileS::AddSection(const char* strSecName,bool bSaveToFile)
   }
 
   return rel ;   // The section is exist 
-}
-
 }
 
 }

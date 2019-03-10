@@ -8,9 +8,6 @@
 #include "message.h"
 
 namespace bdf {
-namespace protocol {
-
-static const std::string body_sequence_id_tag = "seqid:";
 
 LOGGER_CLASS_IMPL(logger_, HttpParser);
 

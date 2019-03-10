@@ -4,9 +4,7 @@
 
 namespace bdf {
 
-namespace event {
-
-enum Event{
+enum{
   EVENT_NONE = 0x00,
   EVENT_READ = 0x01,
   EVENT_WRITE = 0x02,
@@ -45,8 +43,7 @@ public:
   int closed_count_;
   FdEvent **closed_;
 
-  common::SpinLock lock_;
+  SpinLock lock_;
 };
 
-}
 }

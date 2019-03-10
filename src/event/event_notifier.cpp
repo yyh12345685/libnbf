@@ -5,7 +5,7 @@
 
 namespace bdf {
 
-namespace event {
+LOGGER_CLASS_IMPL(logger, WakeUpFd);
 
 void WakeUpFd::OnEvent(EventDriver *poll, int fd, short event){
   //TRACE(logger_, "EventDriver::WakeUpFd::OnEvent.");
@@ -14,6 +14,8 @@ void WakeUpFd::OnEvent(EventDriver *poll, int fd, short event){
     WARN(logger_, "read is failed, errno:" << errno << ",fd:" << fd);
   }
 }
+
+LOGGER_CLASS_IMPL(logger, EventNotifier);
 
 EventNotifier::~EventNotifier() {
   if (wake_){

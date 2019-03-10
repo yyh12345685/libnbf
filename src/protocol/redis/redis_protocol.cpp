@@ -6,7 +6,6 @@
 
 
 namespace bdf {
-namespace protocol{
 
 LOGGER_CLASS_IMPL(logger_, RedisProtocol);
 
@@ -14,7 +13,7 @@ LOGGER_CLASS_IMPL(logger_, RedisProtocol);
 static const uint32_t MaxSize_Allowed = 8 * 1024 * 1024;
 
 
-MessageBase* RedisProtocol::Decode(common::Buffer &input, bool& failed){
+MessageBase* RedisProtocol::Decode(Buffer &input, bool& failed){
   size_t size = input.GetReadingSize();
   if (0 == size){
     TRACE(logger_, "RedisProtocol::Decode input is empty!");
@@ -68,7 +67,7 @@ MessageBase* RedisProtocol::Decode(common::Buffer &input, bool& failed){
   return NULL;
 }
 
-bool RedisProtocol::Encode(MessageBase *msg, common::Buffer *output){
+bool RedisProtocol::Encode(MessageBase *msg, Buffer *output){
   TRACE(logger_, "RedisProtocol::Encode start.");
   switch (msg->type_id){
   case MessageType::kRedisMessage:

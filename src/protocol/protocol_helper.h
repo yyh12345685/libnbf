@@ -6,7 +6,6 @@
 #include "message_base.h"
 
 namespace bdf{
-namespace protocol{
 
 class ProtocolHelper{
 public:
@@ -97,5 +96,4 @@ public:
   }
 };
 
-}
 }

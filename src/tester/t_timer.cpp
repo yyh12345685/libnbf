@@ -6,7 +6,7 @@
 #include <pthread.h>
 #include "gtest/gtest.h"
 #include "event/timer/timer.h"
-using namespace bdf::event;
+using namespace bdf;
 
 static std::atomic<int> on_times(0);
 

@@ -4,8 +4,6 @@
 
 namespace bdf {
 
-namespace event {
-
 class OnTimerBase {
 public:
   virtual void OnTimer(void* function_data) = 0;
@@ -18,5 +16,4 @@ typedef struct{
   void* function_data;
 }TimerData;
 
-}
 }

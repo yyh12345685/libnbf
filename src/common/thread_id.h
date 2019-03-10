@@ -7,8 +7,6 @@
 
 namespace bdf {
 
-namespace common {
-
 class ThreadId {
  public:
   static uint32_t Get() {
@@ -24,5 +22,4 @@ class ThreadId {
   }
 };
 
-}
 }

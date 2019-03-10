@@ -3,7 +3,8 @@
 #include "agents/agents.h"
 
 namespace bdf {
-namespace agents {
+
+LOGGER_CLASS_IMPL(logger_, AgentSlave)
 
 AgentSlave::AgentSlave():
   agents_(NULL){}
@@ -33,8 +34,6 @@ void AgentSlave::Stop()
 AgentSlave::~AgentSlave() 
 {
   Stop();
-}
-
 }
 
 }

@@ -3,7 +3,7 @@
 
 namespace bdf {
 
-namespace event {
+LOGGER_CLASS_IMPL(logger, EventLoopThread);
 
 EventLoopThread::EventLoopThread() :
   is_run_(false){
@@ -44,5 +44,4 @@ void EventLoopThread::Main(){
   poll_.Run();
 }
 
-}
 }

@@ -1,10 +1,10 @@
 
 #pragma once
 
+#include <vector>
 #include "event/event_loop_thread.h"
 
 namespace bdf {
-namespace agents {
 
 class Agents;
 
@@ -23,11 +23,11 @@ public:
 private:
   AgentSlave(const AgentSlave&);
   AgentSlave& operator=(const AgentSlave&);
+
+  LOGGER_CLASS_DECL(logger_);
 private:
-  std::vector<event::EventLoopThread> slave_event_threads_;
+  std::vector<EventLoopThread> slave_event_threads_;
   const Agents* agents_;
 };
-
-}
 
 }

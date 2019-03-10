@@ -9,8 +9,6 @@
 
 namespace bdf {
 
-namespace common {
-
 class Time {
  public:
 

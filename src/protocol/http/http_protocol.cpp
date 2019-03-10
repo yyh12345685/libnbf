@@ -7,7 +7,6 @@
 #include "common/string_util.h"
 
 namespace bdf {
-namespace protocol {
 
 const unsigned char g_favicon_ico[] = {
   0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x10, 0x10, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x28, 0x01,
@@ -44,7 +43,7 @@ HttpProtocol::~HttpProtocol() {
   BDF_DELETE(agent_)
 }
 
-MessageBase* HttpProtocol::Decode(common::Buffer &input, bool& failed){
+MessageBase* HttpProtocol::Decode(Buffer &input, bool& failed){
 	for(;;){
 	  //not first
 		if(agent_->msgs_.size()){
@@ -156,7 +155,7 @@ const char *ConvertStatusCode(int status, std::string& tmp) {
 }
 
 //HTTP_EVENT
-bool HttpProtocol::Encode(MessageBase *pv, common::Buffer *output){
+bool HttpProtocol::Encode(MessageBase *pv, Buffer *output){
   HttpMessage *msg,one;
 
   switch (pv->type_id)
@@ -196,7 +195,7 @@ bool HttpProtocol::Encode(MessageBase *pv, common::Buffer *output){
   return WirteToBuf(msg, output);
 }
 
-bool HttpProtocol::WirteToBuf(HttpMessage *msg, common::Buffer *output){
+bool HttpProtocol::WirteToBuf(HttpMessage *msg, Buffer *output){
   const char *http_version = NULL;
   switch (msg->http_minor) {
   case 0:
@@ -256,8 +255,6 @@ bool HttpProtocol::WirteToBuf(HttpMessage *msg, common::Buffer *output){
   if (!output->Write("\r\n", 2)) return false;
   if (0 == size) return true;
   return output->Write(msg->http_info.body.c_str(), msg->http_info.body.size());
-}
-
 }
 
 }

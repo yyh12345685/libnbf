@@ -10,8 +10,6 @@ namespace bdf {
 
 class HttpMessage;
 
-namespace protocol {
-
 class HttpAgent;
 
 //NOTICE:you must learn how to use http-parser first, or you may be confused:)
