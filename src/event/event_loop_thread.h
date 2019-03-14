@@ -6,6 +6,8 @@
 
 namespace bdf {
 
+class EventFunctionBase;
+
 class EventLoopThread{
 public:
   EventLoopThread();
@@ -13,8 +15,13 @@ public:
   int Start();
   int Stop();
   void Main();
-  EventDriver *GetPoll();
   static void *Run(void *arg);
+
+  int Add(int fd, EventFunctionBase *ezfd, bool lock = false);
+  int Del(int fd);
+  int Modr(int fd, bool set);
+  int Modw(int fd, bool set);
+  int Wakeup();
 
 private:
   EventDriver poll_;

@@ -24,12 +24,10 @@ void HttpUtil::HttpCookieDecode(const std::string &cookie, Dict& items){
   }
 }
 
-//bool HttpCookieEncode(const Dict &items, std::string *cookie) 
-//{
+//bool HttpCookieEncode(const Dict &items, std::string *cookie){
 //  DictIter it = items.begin();
 //  std::ostringstream oss;
-//  for (int i = 0; it != items.end(); ++it, ++i) 
-//  {
+//  for (int i = 0; it != items.end(); ++it, ++i) {
 //    oss << (i == 0 ? "" : "; ") << it->first << "=" << it->second;
 //  }
 //  *cookie = oss.str();
@@ -188,7 +186,7 @@ std::string HttpUtil::GetRootDomain(const std::string& domain){
   std::string real_domain = GetDomain(domain);
   std::string root_domain;
   std::vector<std::string> field_list;
-  string_util::Split(field_list, real_domain, '.');
+  common::Split(field_list, real_domain, '.');
   if (field_list.size() >= 2){
     if (field_list.size() > 3){
       const std::string& field_section = field_list[field_list.size() - 2];

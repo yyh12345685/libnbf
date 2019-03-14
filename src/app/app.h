@@ -1,30 +1,28 @@
 #pragma once
 
+#include <functional>
+#include "app/appbase.h"
+
 namespace bdf{
 
 template<typename ServiceHandlerType>
 class Application : public AppBase {
 public:
-  typedef std::function<int()> DelegateFunc;
+  typedef std::function<int()> AppFunc;
 
-  GenericApplication& SetOnStart(const DelegateFunc& func) {
+  Application& SetOnStart(const AppFunc& func) {
     on_start_func_ = func;
     return *this;
   }
 
-  GenericApplication& SetOnStop(const DelegateFunc& func) {
+  Application& SetOnStop(const AppFunc& func) {
     on_stop_func_ = func;
     return *this;
   }
 
-  GenericApplication& SetOnFinish(const DelegateFunc& func) {
-    on_finish_func_ = func;
-    return *this;
-  }
-
 protected:
-  virtual ServiceHandler* CreateServiceHandler() {
-    return new ServiceHandlerType(GetIOService());
+  virtual ServiceHandlerType* CreateServiceHandler() {
+    return new ServiceHandlerType();
   }
 
   virtual int OnStart() {
@@ -41,17 +39,9 @@ protected:
     return 0;
   }
 
-  virtual int OnFinish() {
-    if (on_finish_func_) {
-      return on_finish_func_();
-    }
-    return 0;
-  }
-
 private:
-  DelegateFunc on_start_func_;
-  DelegateFunc on_stop_func_;
-  DelegateFunc on_finish_func_;
+  AppFunc on_start_func_;
+  AppFunc on_stop_func_;
 };
 
 }

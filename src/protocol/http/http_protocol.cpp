@@ -40,10 +40,10 @@ HttpProtocol::HttpProtocol(){
 }
 
 HttpProtocol::~HttpProtocol() {
-  BDF_DELETE(agent_)
+  BDF_DELETE(agent_);
 }
 
-MessageBase* HttpProtocol::Decode(Buffer &input, bool& failed){
+EventMessage* HttpProtocol::Decode(Buffer &input, bool& failed){
 	for(;;){
 	  //not first
 		if(agent_->msgs_.size()){
@@ -75,7 +75,6 @@ MessageBase* HttpProtocol::Decode(Buffer &input, bool& failed){
 
     TRACE(logger_, "http decode size is: size:"<<size);
     TRACE(logger_, "http decode info is:"<<input.GetReading());
-    TRACE(logger_, "dsp id is:" << agent_->dsp_id_);
     int parsed = agent_->parser_.HttpParseRequest(input.GetReading(), size);
     if (agent_->parser_.GetHttpParser().upgrade){
       failed = true;
@@ -85,10 +84,10 @@ MessageBase* HttpProtocol::Decode(Buffer &input, bool& failed){
     }else if (parsed != size){
       enum http_errno err = (http_errno)agent_->parser_.GetHttpParser().http_errno;
       failed = true;
-      ERROR(logger_, "dsp id:" << agent_->dsp_id_ << ",Read size is:" << size 
+      ERROR(logger_, ",Read size is:" << size 
         << ",parsed is" << parsed << "input:" << input.GetReading());
       ERROR(logger_, "[" << http_errno_name(err)<< "]: " << http_errno_description(err)
-        << ",event size is:"<<agent_->events_.size());
+        << ",msg size is:"<<agent_->msgs_.size());
       input.DrainReading(size);
       continue;
     }else{
@@ -97,7 +96,7 @@ MessageBase* HttpProtocol::Decode(Buffer &input, bool& failed){
     
     //really this not need, but in test python,http_parser.cpp not to OnMessageComplete
     //so can reslove this bug,but not really good
-    TRACE(logger_, "events size is:" << agent_->events_.size() 
+    TRACE(logger_, "msg size is:" << agent_->msgs_.size() 
       << ",parsed body is:" << agent_->http_request_.body.size());
     if (agent_->http_request_.is_parsed_complete){
       input.DrainReading(size);
@@ -154,8 +153,8 @@ const char *ConvertStatusCode(int status, std::string& tmp) {
   }
 }
 
-//HTTP_EVENT
-bool HttpProtocol::Encode(MessageBase *pv, Buffer *output){
+//HTTP_MSG
+bool HttpProtocol::Encode(EventMessage *pv, Buffer *output){
   HttpMessage *msg,one;
 
   switch (pv->type_id)
@@ -180,7 +179,7 @@ bool HttpProtocol::Encode(MessageBase *pv, Buffer *output){
     break;
   }
   default:
-    ERROR(logger_, "unkown event type:"<<pv->get_type());
+    ERROR(logger_, "unkown msg type:"<<pv->type_id);
     return false;
   }
 

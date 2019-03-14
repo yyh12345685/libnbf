@@ -23,12 +23,17 @@
     <None Include="src\monitor\test\conf\test.conf" />
     <None Include="LICENSE" />
     <None Include=".gitignore" />
+    <None Include="examples\test_server\conf\logger.conf" />
+    <None Include="examples\test_server\conf\test_server.conf" />
+    <None Include="examples\python\rapid_client.py" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />
     <Text Include="src\CMakeLists.txt" />
     <Text Include="src\monitor\test\CMakeLists.txt" />
     <Text Include="src\tester\CMakeLists.txt" />
+    <Text Include="examples\CMakeLists.txt" />
+    <Text Include="examples\test_server\CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\monitor\matrix.cpp">
@@ -155,6 +160,18 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="src\service\service_handle.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\service\io_service.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\app\app_cmd_parser.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="examples\test_server\src\test_main.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="examples\test_server\src\test_server_handle.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -313,6 +330,21 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="src\service\service_handle.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\service\io_service.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\handle_data.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\app\app_cmd_parser.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="examples\test_server\src\test_server_handle.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\handle.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

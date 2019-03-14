@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ostream>
+#include <string.h>
 #include "common/common.h"
 
 namespace bdf {

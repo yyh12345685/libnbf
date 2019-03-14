@@ -12,7 +12,7 @@ public:
   AsyncClientConnect();
   ~AsyncClientConnect();
 
-  virtual void OnDecodeMessage(MessageBase* message);
+  virtual void OnDecodeMessage(EventMessage* message);
 
 private:
   AsyncSequence async_sequence_;

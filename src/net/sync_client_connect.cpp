@@ -5,7 +5,7 @@ namespace bdf {
 
 LOGGER_CLASS_IMPL(logger, SyncClientConnect);
 
-void SyncClientConnect::OnDecodeMessage(MessageBase* message) {
+void SyncClientConnect::OnDecodeMessage(EventMessage* message) {
 
 }
 

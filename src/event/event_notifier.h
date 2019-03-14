@@ -10,7 +10,7 @@ class WakeUpFd : public EventFunctionBase {
 public:
   virtual void OnEvent(EventDriver *poll, int fd, short event);
 private:
-  LOGGER_CLASS_DECL(logger);
+  LOGGER_CLASS_DECL(logger_);
 };
 
 class EventNotifier {
@@ -33,7 +33,7 @@ private:
 
   EventDriver* event_driver_;
 
-  LOGGER_CLASS_DECL(logger);
+  LOGGER_CLASS_DECL(logger_);
 };
 
 }

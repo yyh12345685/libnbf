@@ -1,34 +1,24 @@
 
-
 #include "agents/agents.h"
 #include "agents/agent_master.h"
 #include "agents/agent_slave.h"
+#include "app/config_info.h"
 #include "monitor/mem_profile.h"
-//#include "app.h"
-//#include "handler.h"
 
 namespace bdf {
 
 LOGGER_CLASS_IMPL(logger_, Agents)
 
-Agents::Agents(const AppCofing* conf) :
+Agents::Agents(const IoServiceConfig* conf) :
   conf_(conf),
   agent_master_(NULL),
   agent_slaves_(NULL)
 	{}
 
-bool Agents::Init(const HandlerMessageFactoryBase*factory){
-  //for (int idx = 0; idx < conf_->slave_thread_count_; idx++){
-  //  HandlerMessageBase* handle = factory->NewHandler();
-  //  handle->Init();
-
-		//std::tr1::shared_ptr<HandlerMessageBase> handle_ptr(handle);
-  //  handle_list_.push_back(handle_ptr);
-  //}
+bool Agents::Init(){
 
   agent_slaves_ = BDF_NEW(AgentSlave);
-
-	if(!agent_slaves_->Init(conf_->slave_thread_count_,this)){
+	if(!agent_slaves_->Init(conf_->slave_thread_count)){
 		return false;
 	}
 
@@ -37,9 +27,6 @@ bool Agents::Init(const HandlerMessageFactoryBase*factory){
 }
 
 bool Agents::Start() {
-  for (const auto& handle : handle_list_){
-    handle->Start();
-  }
 
   bool ret = agent_master_->Start();
   if (!ret){
@@ -56,9 +43,22 @@ void Agents::Stop(){
     agent_master_->Stop();
 	if(NULL != agent_slaves_)
     agent_slaves_->Stop();
-  for (const auto& handle:handle_list_){
-    handle->Finish();
-  }
+}
+
+int Agents::AddModr(EventFunctionBase *ezfd,int fd,  bool set){
+  return agent_slaves_->AddModr(ezfd,fd,  set);
+}
+
+int Agents::Modr(EventFunctionBase* ezfd, int fd, bool set){
+  return agent_slaves_->Modr(ezfd, fd, set);
+}
+
+int Agents::Modw(EventFunctionBase* ezfd, int fd, bool set){
+  return agent_slaves_->Modw(ezfd, fd, set);
+}
+
+int Agents::Del(EventFunctionBase* ezfd, int fd){
+  return agent_slaves_->Del(ezfd, fd);
 }
 
 Agents::~Agents() {

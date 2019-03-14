@@ -5,7 +5,7 @@
 
 namespace bdf {
 
-class MessageBase;
+class EventMessage;
 class Buffer;
 
 class ProtocolBase {
@@ -19,14 +19,15 @@ public:
     kEncodeSuccess = 0,
     kEncodeFail = 1,
   };
+  ProtocolBase(){}
+  virtual ~ProtocolBase() {}
 public:
   virtual bool IsSynchronous() = 0;
   virtual void Release() = 0;
-  virtual MessageBase *Decode(Buffer &input, bool &failed) = 0;
-  virtual bool Encode(MessageBase *msg, Buffer *output) = 0;
+  virtual EventMessage *Decode(Buffer &input, bool &failed) = 0;
+  virtual bool Encode(EventMessage *msg, Buffer *output) = 0;
   virtual ProtocolBase* Clone() = 0;
-protected:
-  virtual ~ProtocolBase() {}
+  
 };
 
 class ProtocolFactory {

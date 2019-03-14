@@ -1,6 +1,7 @@
 #pragma once
 
 #include "common/spin_lock.h"
+#include "common/logger.h"
 
 namespace bdf {
 
@@ -30,9 +31,9 @@ struct FdEvent{
 class EventData{
 public:
   bool InitEventData();
-  bool ReInitEventData();
+  bool ReInitEventData(int& fd);
 
-  bool ReInitClosed();
+  bool ReInitClosed(int& fd);
   void RemoveClosed();
   ~EventData();
 
@@ -44,6 +45,9 @@ public:
   FdEvent **closed_;
 
   SpinLock lock_;
+
+private:
+  LOGGER_CLASS_DECL(logger_);
 };
 
 }

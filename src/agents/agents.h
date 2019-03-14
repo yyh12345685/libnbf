@@ -3,22 +3,22 @@
 
 #include <vector>
 #include <memory>
-
+#include "common/common.h"
 #include "common/logger.h"
 
 namespace bdf {
 
-struct AppCofing;
+struct IoServiceConfig;
+class IoService;
 class AgentMaster;
 class AgentSlave;
-class HandlerMessageFactoryBase;
-class HandlerMessageBase;
+class EventFunctionBase;
 
 class Agents {
 public:
-  Agents(const AppCofing* conf);
+  Agents(const IoServiceConfig* conf);
 
-  bool Init(const HandlerMessageFactoryBase* factory);
+  bool Init();
   bool Start();
 
   void Stop();
@@ -27,18 +27,21 @@ public:
   AgentMaster* GetMaster()const{ return agent_master_; }
   AgentSlave* GetSlave()const{ return agent_slaves_; }
 
+  int AddModr(EventFunctionBase *ezfd, int fd, bool set);
+  int Modr(EventFunctionBase* ezfd, int fd, bool set);
+  int Modw(EventFunctionBase* ezfd, int fd, bool set);
+  int Del(EventFunctionBase* ezfd, int fd);
+
 private:
-  Agents(const Agents&);
   Agents();
-  Agents& operator=(const Agents&);
 
-  LOGGER_CLASS_DECL(logger);
+  LOGGER_CLASS_DECL(logger_);
 
-  const AppCofing* conf_;
+  const IoServiceConfig* conf_;
   AgentMaster* agent_master_;
   AgentSlave* agent_slaves_; 
 
-  //std::vector<std::tr1::shared_ptr<HandlerMessageBase> >handle_list_;
+  DISALLOW_COPY_AND_ASSIGN(Agents)
 };
 
 }

@@ -23,6 +23,11 @@ public:
 
   void TryConnect();
 
+  virtual int RegisterAddModr(int fd, bool set);
+  virtual int RegisterModr(int fd, bool set);
+  virtual int RegisterModw(int fd, bool set);
+  virtual int RegisterDel(int fd);
+
 private:
   LOGGER_CLASS_DECL(logger);
 };

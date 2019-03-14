@@ -2,18 +2,18 @@
 
 namespace bdf {
 
-LOGGER_CLASS_IMPL(logger, SyncSequence);
+LOGGER_CLASS_IMPL(logger_, SyncSequence);
 
-int SyncSequence::Put(MessageBase* message) {
+int SyncSequence::Put(EventMessage* message) {
   return 0;
 }
 
-MessageBase* SyncSequence::Get(uint32_t sequence_id) {
+EventMessage* SyncSequence::Get(uint32_t sequence_id) {
   return NULL;
 }
 
-std::queue<MessageBase*> SyncSequence::Timeout() {
-
+std::queue<EventMessage*> SyncSequence::Timeout() {
+  return std::queue<EventMessage*>();
 }
 
 }

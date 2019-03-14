@@ -6,6 +6,7 @@
 #include <netinet/tcp.h>
 #include <sys/uio.h>
 #include "net/socket.h"
+#include "protocol/protocol_helper.h"
 
 namespace bdf {
 
@@ -198,8 +199,9 @@ int Socket::WriteVecNonBlock(int fd, iovec* iov, size_t& num_iov){
 std::pair<int, bool> Socket::Connect(const char* ip, int port, bool is_non_block){
   std::string final_ip;
   if (!isIpAddr(ip)){
+    //here is bug,TODO
     std::vector<std::string> ip_list;
-    GetIpByDomain(ip, ip_list);
+    ProtocolHelper::GetIpByDomain(ip, ip_list);
     if (ip_list.size() > 0){
       final_ip = ip_list[0];
     }

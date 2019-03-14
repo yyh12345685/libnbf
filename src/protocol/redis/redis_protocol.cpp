@@ -13,7 +13,7 @@ LOGGER_CLASS_IMPL(logger_, RedisProtocol);
 static const uint32_t MaxSize_Allowed = 8 * 1024 * 1024;
 
 
-MessageBase* RedisProtocol::Decode(Buffer &input, bool& failed){
+EventMessage* RedisProtocol::Decode(Buffer &input, bool& failed){
   size_t size = input.GetReadingSize();
   if (0 == size){
     TRACE(logger_, "RedisProtocol::Decode input is empty!");
@@ -67,7 +67,7 @@ MessageBase* RedisProtocol::Decode(Buffer &input, bool& failed){
   return NULL;
 }
 
-bool RedisProtocol::Encode(MessageBase *msg, Buffer *output){
+bool RedisProtocol::Encode(EventMessage *msg, Buffer *output){
   TRACE(logger_, "RedisProtocol::Encode start.");
   switch (msg->type_id){
   case MessageType::kRedisMessage:
@@ -102,7 +102,7 @@ bool RedisProtocol::Encode(MessageBase *msg, Buffer *output){
     return output->PourWriting(request.length());
   }
   default:
-    ERROR(logger_, "RedisProtocol::Encode unkown msg type:" << msg->get_type());
+    ERROR(logger_, "RedisProtocol::Encode unkown msg type:" << msg->type_id);
     return false;
   }
 }

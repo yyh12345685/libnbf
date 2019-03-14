@@ -7,17 +7,17 @@
 
 namespace bdf {
 
-class MessageBase;
+class EventMessage;
 
 class AsyncSequence{
 public: 
   AsyncSequence();
   ~AsyncSequence();
 
-  int Put(MessageBase* message);
-  MessageBase* Get(uint32_t sequence_id);
+  int Put(EventMessage* message);
+  EventMessage* Get(uint32_t sequence_id);
 
-  std::queue<MessageBase*> Timeout();
+  std::queue<EventMessage*> Timeout();
 
   inline uint32_t GenerateSequenceId() { 
     return ++sequence_id_;
@@ -27,9 +27,9 @@ private:
   std::atomic<uint32_t> sequence_id_;
   uint32_t timeout_ms_;
 
-  std::unordered_map<uint32_t, MessageBase*> registery_;
+  std::unordered_map<uint32_t, EventMessage*> registery_;
 
-  std::queue<MessageBase*> queue_;
+  std::queue<EventMessage*> queue_;
 
   LOGGER_CLASS_DECL(logger);
 };

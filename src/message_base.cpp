@@ -11,9 +11,14 @@ std::string MessageBase::ToString() const {
 
 void MessageBase::Dump(std::ostream& os) const {
   os << "{\"type\": \"MessageBase\""
-     << ", \"type_id\": " << type_id << "}";
+    << ", \"type_id\": " << MessageType::ToString(type_id)
+    << ", \"type_io_event\": " << MessageType::ToIoEventString(type_io_event)
+    << ", \"direction\": " << direction
+    << ", \"status\": " << status
+    << ", \"sequence_id\": " << sequence_id
+    << ", \"birthtime\": " << birthtime
+    << "}";
 };
-
 
 void EventMessage::Dump(std::ostream& os) const {
   os << "{\"type\": \"EventMessage\""

@@ -6,34 +6,77 @@ namespace bdf {
 
 LOGGER_CLASS_IMPL(logger_, AgentSlave)
 
-AgentSlave::AgentSlave():
-  agents_(NULL){}
+AgentSlave::AgentSlave(){
 
-bool AgentSlave::Init(int slave_thread_count, const Agents* agents)
-{
-  agents_ = agents;
-  slave_event_threads_.resize(slave_thread_count);
-  return true;
 }
 
-bool AgentSlave::Start() 
-{
-  for (auto& thread: slave_event_threads_){
-    thread.Start();
-  }
-  return true;
-}
-
-void AgentSlave::Stop() 
-{
-  for (auto& thread : slave_event_threads_) {
-    thread.Stop();
-  }
-}
-
-AgentSlave::~AgentSlave() 
-{
+AgentSlave::~AgentSlave() {
   Stop();
+  for (auto& thread : slave_event_threads_) {
+    delete thread;
+  }
+}
+
+bool AgentSlave::Init(int slave_thread_count){
+  for (int ix = 0; ix < slave_thread_count;ix++) {
+    EventLoopThread* evt = new EventLoopThread;
+    slave_event_threads_.push_back(evt);
+  }
+  return true;
+}
+
+bool AgentSlave::Start() {
+  for (auto& thread: slave_event_threads_){
+    thread->Start();
+  }
+  return true;
+}
+
+void AgentSlave::Stop() {
+  for (auto& thread : slave_event_threads_) {
+    thread->Stop();
+  }
+}
+
+int AgentSlave::AddModr(EventFunctionBase* ezfd,int fd,  bool set, bool lock){
+  uint64_t idx = (uint64_t)((void*)ezfd) % slave_event_threads_.size();
+  if (0!= slave_event_threads_[idx]->Add(fd, ezfd, lock)){
+    WARN(logger_, "slave_event_threads_[idx].Add failed.");
+    return -1;
+  }
+
+  if (0 != slave_event_threads_[idx]->Modr(fd,set)) {
+    WARN(logger_, "slave_event_threads_[idx].Modr failed.");
+    return -2;
+  }
+
+  return slave_event_threads_[idx]->Wakeup();
+}
+
+int AgentSlave::Modr(EventFunctionBase* ezfd,int fd,  bool set){
+  uint64_t idx = (uint64_t)((void*)ezfd) % slave_event_threads_.size();
+  if (0 != slave_event_threads_[idx]->Modr(fd, set)) {
+    WARN(logger_, "slave_event_threads_[idx].Modr failed.");
+    return -1;
+  }
+  return 0;
+}
+int AgentSlave::Modw(EventFunctionBase* ezfd,int fd,  bool set){
+  uint64_t idx = (uint64_t)((void*)ezfd) % slave_event_threads_.size();
+  if (0 != slave_event_threads_[idx]->Modw(fd, set)) {
+    WARN(logger_, "slave_event_threads_[idx].Modr failed.");
+    return -1;
+  }
+  return 0;
+}
+
+int AgentSlave::Del(EventFunctionBase* ezfd, int fd){
+  uint64_t idx = (uint64_t)((void*)ezfd) % slave_event_threads_.size();
+  if (0 != slave_event_threads_[idx]->Del(fd)) {
+    WARN(logger_, "slave_event_threads_[idx].Modr failed.");
+    return -1;
+  }
+  return 0;
 }
 
 }

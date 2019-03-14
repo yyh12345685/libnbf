@@ -1,14 +1,13 @@
 
 #pragma once
 
-#include "event/event_data.h"
-#include "event/event_notifier.h"
 #include <unordered_set>
 #include <deque>
+#include "event/event_data.h"
+#include "event/event_notifier.h"
 
 namespace bdf{
 
-//template <typename LockPolicy=NoLock>
 class EventDriver{
 public:
   EventDriver();
@@ -23,14 +22,7 @@ public:
   int Modw(int fd, bool set);
   int Poll(int timeout/*msecs*/);
 
-  //if used for agent_master
-  std::unordered_set<int>& GetListenedListFd(){
-    return listened_list_fd_; 
-  }
-
-  void AddListenedListFd(int fd){ 
-    listened_list_fd_.insert(fd); 
-  }
+  int Wakeup();
 
   bool GetRun(){ return run_; }
 private:
@@ -46,8 +38,6 @@ private:
   uint32_t event_out_;
 
   LOGGER_CLASS_DECL(logger_);
-
-  std::unordered_set<int> listened_list_fd_;
 
   EventData event_data_;
 

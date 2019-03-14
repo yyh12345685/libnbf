@@ -1,11 +1,13 @@
-#pragma once
 
+#include <string.h>
 #include "event/event_data.h"
 
 namespace bdf {
 
 static int incr_fd2data = 4096;
 static int init_fd2data = 40960;
+
+LOGGER_CLASS_IMPL(logger_, EventData);
 
 bool EventData::InitEventData(){
   fd2data_ = (FdEvent **)malloc((init_fd2data + 1) * sizeof(*fd2data_));
@@ -23,7 +25,7 @@ bool EventData::InitEventData(){
   return true;
 }
 
-bool EventData::ReInitEventData(){
+bool EventData::ReInitEventData(int& fd){
   INFO(logger_, "before FdEvent realloc, fd2data_size_:" << fd2data_size_);
 
   int data_size_tmp = fd2data_size_ + incr_fd2data;
@@ -32,34 +34,30 @@ bool EventData::ReInitEventData(){
     data_size_tmp += incr_fd2data;
 
   FdEvent **tmp = (FdEvent **)realloc(fd2data_, (data_size_tmp + 1) * sizeof(*tmp));
-  if (!tmp)
-  {
-    WARN(logger_, "EventDriver::Add realloc error.");
-    delete data;
-    return -2;
+  if (!tmp){
+    WARN(logger_, "EventData::Add realloc error.");
+    return false;
   }
   fd2data_ = tmp;
   memset(fd2data_ + fd2data_size_ + 1, 0, sizeof(*fd2data_) * (data_size_tmp - fd2data_size_));
   fd2data_size_ = data_size_tmp;
 
   INFO(logger_, "after FdEvent realloc, fd2data_size_:" << fd2data_size_);
+  return true;
 }
 
-bool EventData::ReInitClosed(){
+bool EventData::ReInitClosed(int& fd){
   lock_.Lock();
-  if (closed_count_ >= closed_size_)
-  {
+  if (closed_count_ >= closed_size_){
     FdEvent **tmp = (FdEvent **)realloc(closed_, (closed_size_ + 1) * sizeof(*tmp));
-    if (!tmp)
-    {
+    if (!tmp){
       lock_.UnLock();
-      return -3;
+      return false;
     }
     closed_ = tmp;
     closed_size_++;
   }
-  if (NULL != fd2data_[fd])
-  {
+  if (NULL != fd2data_[fd]){
     closed_[closed_count_++] = fd2data_[fd];
     fd2data_[fd]->closed_ = true;
   }
@@ -69,10 +67,8 @@ bool EventData::ReInitClosed(){
 
 void EventData::RemoveClosed(){
   lock_.Lock();
-  for (int i = 0; i < closed_count_; ++i)
-  {
-    if (closed_[i]->closed_)
-    {
+  for (int i = 0; i < closed_count_; ++i){
+    if (closed_[i]->closed_){
       delete closed_[i];
       closed_[i] = NULL;
     }

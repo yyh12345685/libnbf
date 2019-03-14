@@ -16,7 +16,7 @@ Timer::~Timer() {
 }
 
 uint64_t Timer::AddTimer(uint64_t after_ms, TimerData& data){
-  uint64_t cur_time_ms = common::Time::GetMillisecond();
+  uint64_t cur_time_ms = Time::GetMillisecond();
   data.time_out_ms = cur_time_ms + after_ms;
   size_t time_id;
   heap_timer_.Insert(data, time_id);
@@ -29,7 +29,7 @@ int Timer::DelTimer(uint64_t id){
 }
 
 int Timer::ProcessTimer(){
-  uint64_t cur_time_ms = common::Time::GetMillisecond();
+  uint64_t cur_time_ms = Time::GetMillisecond();
   TimerData* event_timeo = heap_timer_.Top();
   while (NULL != event_timeo
     && cur_time_ms > event_timeo->time_out_ms 

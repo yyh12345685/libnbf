@@ -12,7 +12,7 @@ public:
   SyncClientConnect();
   ~SyncClientConnect();
 
-  virtual void OnDecodeMessage(MessageBase* message);
+  virtual void OnDecodeMessage(EventMessage* message);
 
 private:
   SyncSequence sync_sequence_;

@@ -1,20 +1,30 @@
 #pragma once
 
 #include "common/logger.h"
+#include "handle.h"
 
 namespace bdf{
 
-class MessageBase;
+class EventMessage;
 class HttpMessage;
 class RapidMessage;
+struct HandleData;
 
-class ServiceHandler{
+class ServiceHandler:public Handler{
 public:
-  virtual void Run();
+  ServiceHandler():
+    Handler(){
+  }
+  virtual ~ServiceHandler(){
+  }
+  static void Run(void* handle, HandleData* data);
+
+  virtual ServiceHandler* Clone() {
+    return new ServiceHandler();
+  }
 
 protected:
-
-  virtual void Handle(MessageBase* message);
+  void Handle(EventMessage* message);
 
   virtual void OnHttpRequestMessage(HttpMessage* message);
   virtual void OnHttpResponseMessage(HttpMessage* message);

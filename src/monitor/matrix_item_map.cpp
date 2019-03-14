@@ -12,27 +12,27 @@ LOGGER_CLASS_IMPL(logger, MatrixItemMap);
 thread_local uint32_t MatrixItemMap::token_id_ = 0;
 
 int MatrixBucketItemMap::GenerateToken(uint64_t token, const std::string& name) {
-  lock_.lock();
+  lock_.Lock();
   int ret = 
     map_.insert(std::make_pair(
           token, 
-          new MatrixItem(Matrix::kTimeDistribute, name, common::Time::GetMicrosecond()))).second ?
+          new MatrixItem(Matrix::kTimeDistribute, name, Time::GetMicrosecond()))).second ?
     0 : -1;
-  lock_.unlock();
+  lock_.UnLock();
   return ret;
 }
 
 int MatrixBucketItemMap::FetchToken(uint64_t token, MatrixItem** item) {
-  lock_.lock();
+  lock_.Lock();
   auto it = map_.find(token);
   if (it != map_.end()) {
-    it->second->val = common::Time::GetMicrosecond() - it->second->val;
+    it->second->val = Time::GetMicrosecond() - it->second->val;
     *item = it->second;
     map_.erase(it);
-    lock_.unlock();
+    lock_.UnLock();
     return 0;
   }
-  lock_.unlock();
+  lock_.UnLock();
   return -1;
 }
 
@@ -46,7 +46,7 @@ MatrixItemMap::~MatrixItemMap() {
 }
 
 uint64_t MatrixItemMap::GenerateToken(const std::string& name) {
-  uint64_t token = (((uint64_t)(common::ThreadId::Get()) << 32) | (++token_id_));
+  uint64_t token = (((uint64_t)(ThreadId::Get()) << 32) | (++token_id_));
   MatrixBucketItemMap& bucket = GetBucket(token);
   if (0 != bucket.GenerateToken(token, name)) {
     ERROR(logger, "MatrixItemMap::GenerateToken fail" 

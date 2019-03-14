@@ -20,7 +20,41 @@ set(BDF_SRC
   monitor/matrix_stat.cpp
   monitor/matrix_stat_map.cpp
 
-  timer/timer.cpp
+  event/timer/timer.cpp
+  event/event_data.cpp
+  event/event_driver.cpp
+  event/event_notifier.cpp
+  event/event_loop_thread.cpp
+
+  protocol/http/third/http_parser.c
+  protocol/http/http_helper.cpp
+  protocol/http/http_protocol.cpp
+  protocol/http/http_util.cpp
+  protocol/rapid/rapid_protocol.cpp
+  protocol/redis/redis_parser.cpp
+  protocol/redis/redis_protocol.cpp
+  protocol/protocol_base.cpp
+
+  agents/agent_slave.cpp
+  agents/agent_master.cpp
+  agents/agents.cpp
+
+  net/socket.cpp
+  net/connect.cpp
+  net/client_connect.cpp
+  net/async_client_connect.cpp
+  net/async_sequence.cpp
+  net/sync_client_connect.cpp
+  net/sync_sequence.cpp
+  net/server_connect.cpp
+  net/io_handle.cpp
+
+  service/service_handle.cpp
+  service/io_service.cpp
+
+  app/config_info.cpp
+  app/app_cmd_parser.cpp
+  app/appbase.cpp
 )
 
 add_library(bdf

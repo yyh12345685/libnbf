@@ -6,7 +6,7 @@
 
 namespace bdf {
 
-LOGGER_CLASS_IMPL(logger_, CustomProtocol);
+LOGGER_CLASS_IMPL(logger_, RapidProtocol);
 
 struct RapidHead{
   static const uint16_t kMagic = 11111;
@@ -29,7 +29,7 @@ void Int32To64(uint32_t high, uint32_t low, uint64_t& value){
   value = ((uint64_t)(high) << 32) | low;
 }
 
-MessageBase* RapidProtocol::Decode(Buffer &input, bool& failed){
+EventMessage* RapidProtocol::Decode(Buffer &input, bool& failed){
   size_t total = input.GetReadingSize();
   if (total < sizeof(RapidHead)){
     return NULL;
@@ -61,7 +61,7 @@ MessageBase* RapidProtocol::Decode(Buffer &input, bool& failed){
     TRACE(logger_, "some bytes will decode next time,total:"<<total<<",size:"<<size);
     failed = true;
 
-    if (total >300* 1024 * 1024){
+    if (total >30* 1024 * 1024){
       input.DrainReading(total);
       WARN(logger_, "CustomProtocol DrainReading invalid data,total:" << total);
     }
@@ -74,13 +74,12 @@ MessageBase* RapidProtocol::Decode(Buffer &input, bool& failed){
   msg->body.assign(data + sizeof(RapidHead), size - sizeof(RapidHead));
   Int32To64(sqid_high_tmp, sqid_low_tmp, msg->sequence_id);
   input.DrainReading(size);
-  TRACE(logger_, "receive msg is:"<< msg->body<<",seqid:"<< msg->seqid);
+  TRACE(logger_, "receive msg is:"<< msg->body<<",seqid:"<< msg->sequence_id);
   return msg;
 }
 
-bool RapidProtocol::Encode(MessageBase *pv, Buffer *output){
+bool RapidProtocol::Encode(EventMessage *pv, Buffer *output){
   RapidMessage *msg = NULL;
-
   switch (pv->type_id) {
   case MessageType::kRapidMessage:
     msg = dynamic_cast<RapidMessage *>(pv);

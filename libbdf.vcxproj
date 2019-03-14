@@ -119,6 +119,9 @@
   <ItemGroup>
     <None Include=".gitignore" />
     <None Include="basic.cmake" />
+    <None Include="examples\python\rapid_client.py" />
+    <None Include="examples\test_server\conf\logger.conf" />
+    <None Include="examples\test_server\conf\test_server.conf" />
     <None Include="LICENSE" />
     <None Include="src\monitor\test\conf\test.conf" />
     <None Include="third\lib\googletest-release-1.8.1.zip" />
@@ -128,15 +131,20 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />
+    <Text Include="examples\CMakeLists.txt" />
+    <Text Include="examples\test_server\CMakeLists.txt" />
     <Text Include="src\CMakeLists.txt" />
     <Text Include="src\monitor\test\CMakeLists.txt" />
     <Text Include="src\tester\CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="examples\test_server\src\test_main.cpp" />
+    <ClCompile Include="examples\test_server\src\test_server_handle.cpp" />
     <ClCompile Include="src\agents\agents.cpp" />
     <ClCompile Include="src\agents\agent_master.cpp" />
     <ClCompile Include="src\agents\agent_slave.cpp" />
     <ClCompile Include="src\app\appbase.cpp" />
+    <ClCompile Include="src\app\app_cmd_parser.cpp" />
     <ClCompile Include="src\app\config_info.cpp" />
     <ClCompile Include="src\common\ini_files.cpp" />
     <ClCompile Include="src\common\buffer.cpp" />
@@ -173,15 +181,18 @@
     <ClCompile Include="src\protocol\rapid\rapid_protocol.cpp" />
     <ClCompile Include="src\protocol\redis\redis_parser.cpp" />
     <ClCompile Include="src\protocol\redis\redis_protocol.cpp" />
+    <ClCompile Include="src\service\io_service.cpp" />
     <ClCompile Include="src\service\service_handle.cpp" />
     <ClCompile Include="src\tester\t_timer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="examples\test_server\src\test_server_handle.h" />
     <ClInclude Include="src\agents\agents.h" />
     <ClInclude Include="src\agents\agent_master.h" />
     <ClInclude Include="src\agents\agent_slave.h" />
     <ClInclude Include="src\app\app.h" />
     <ClInclude Include="src\app\appbase.h" />
+    <ClInclude Include="src\app\app_cmd_parser.h" />
     <ClInclude Include="src\app\config_info.h" />
     <ClInclude Include="src\common\common.h" />
     <ClInclude Include="src\common\heap.h" />
@@ -198,6 +209,8 @@
     <ClInclude Include="src\event\event_notifier.h" />
     <ClInclude Include="src\event\timer\timer.h" />
     <ClInclude Include="src\event\timer\timer_base.h" />
+    <ClInclude Include="src\handle.h" />
+    <ClInclude Include="src\handle_data.h" />
     <ClInclude Include="src\message.h" />
     <ClInclude Include="src\message_base.h" />
     <ClInclude Include="src\monitor\matrix.h" />
@@ -228,6 +241,7 @@
     <ClInclude Include="src\protocol\rapid\rapid_protocol.h" />
     <ClInclude Include="src\protocol\redis\redis_parser.h" />
     <ClInclude Include="src\protocol\redis\redis_protocol.h" />
+    <ClInclude Include="src\service\io_service.h" />
     <ClInclude Include="src\service\service_handle.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

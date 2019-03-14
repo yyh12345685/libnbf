@@ -13,16 +13,19 @@ struct ServiceConfig {
   std::string name;
 };
 
-struct IOServiceConfig {
-  IOServiceConfig()
-    : slave_count(65535)
+struct IoServiceConfig {
+  IoServiceConfig()
+    : slave_thread_count(3)
+    , service_count(1)
     , stack_size(2048)
     , monitor_token_bucket(16)
     , monitor_queue_bucket(16)
     , monitor_queue_size(1024 * 512) {
   }
 
-  int slave_count;
+  int slave_thread_count;
+  int service_count;
+  std::vector<ServiceConfig> services_config;
 
   // coroutine 
   uint32_t stack_size;
@@ -34,6 +37,8 @@ struct IOServiceConfig {
 
   void Dump(std::ostream& os) const;
 };
+
+std::ostream& operator << (std::ostream& os, const IoServiceConfig& config);
 
 struct ClientConfig {
   std::string address;
@@ -50,7 +55,6 @@ struct ClientRouterConfig {
 
 class ConfigInfo {
 public:
-  typedef std::vector<ServiceConfig> ServicesConfig;
   typedef std::vector<ClientRouterConfig> ClientRoutersConfig;
 
   ConfigInfo();
@@ -58,32 +62,27 @@ public:
 
   int LoadConfig(const std::string& config_path);
 
-  IOServiceConfig& GetIOServiceConfig() { return io_service_config_; }
-
-  ServicesConfig GetServicesConfig() { return services_config_; }
+  IoServiceConfig& GetIOServiceConfig() { return io_service_config_; }
 
   ClientRoutersConfig GetClientRoutersConfig() { return client_routers_config_; }
 
   virtual void Dump(std::ostream& os) const;
 
 protected:
-  virtual int LoadIOServiceConfig(CIniFileS& ini, IOServiceConfig* config);
+  virtual int LoadIoServiceConfig(CIniFileS& ini, IoServiceConfig* config);
 
   virtual int LoadApplicationConfig(CIniFileS& ini);
 
-  virtual int LoadServicesConfig(CIniFileS& ini, ServicesConfig* config);
-
-  virtual int LoadClientRoutersConfig(CIniFileS& ini, ClientRoutersConfig* config);
+  virtual int LoadServicesConfig(CIniFileS& ini, int srv_cnt,std::vector<ServiceConfig>& config);
 
 private:
-  LOGGER_CLASS_DECL(logger);
+  LOGGER_CLASS_DECL(logger_);
 
-  IOServiceConfig io_service_config_;
-  ServicesConfig services_config_;
+  IoServiceConfig io_service_config_;
   ClientRoutersConfig client_routers_config_;
 };
 
+std::ostream& operator << (std::ostream& os, const ConfigInfo& config);
 
 }
 
-}

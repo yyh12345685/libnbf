@@ -9,7 +9,7 @@
 
 namespace bdf {
 
-class MessageBase;
+class EventMessage;
 class Buffer;
 
 struct HttpAgent;
@@ -33,8 +33,8 @@ public:
     return new HttpProtocol(); 
   }
 
-  virtual MessageBase *Decode(Buffer &input, bool& failed);
-  virtual bool Encode(MessageBase *msg, Buffer *output);
+  virtual EventMessage *Decode(Buffer &input, bool& failed);
+  virtual bool Encode(EventMessage *msg, Buffer *output);
 private:
   bool WirteToBuf(HttpMessage *msg, Buffer *output);
   LOGGER_CLASS_DECL(logger_);

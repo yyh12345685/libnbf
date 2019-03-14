@@ -86,10 +86,11 @@ int EventDriver::Add(int fd, EventFunctionBase *ezfd,bool lock){
   data->event_ = EVENT_NONE;
   data->closed_ = false;
   if (fd > maxfd_){
-	  if(fd > event_data_.fd2data_size_){
-      event_data_.ReInitEventData();
+    if (fd > event_data_.fd2data_size_ 
+      && !event_data_.ReInitEventData(fd)){
+      delete data;
+      return -2;
     }
-
     maxfd_ = fd;
   }
   event_data_.fd2data_[fd] = data;
@@ -106,11 +107,6 @@ int EventDriver::Add(int fd, EventFunctionBase *ezfd,bool lock){
 }
 
 int EventDriver::Del(int fd){
-  if (listened_list_fd_.find(fd) != listened_list_fd_.end()){
-    WARN(logger_, " fd:" << fd << ",is in listened_list_fd_, only when process exited,canbe remove...");
-    return -1;
-  }
-
   if(NULL == event_data_.fd2data_
       || fd < 0
       || fd > maxfd_
@@ -120,7 +116,7 @@ int EventDriver::Del(int fd){
   }
 
   if (inloop_){
-    event_data_.ReInitClosed();
+    event_data_.ReInitClosed(fd);
   }else{
     delete event_data_.fd2data_[fd];
   }
@@ -169,10 +165,8 @@ int EventDriver::Poll(int timeout){
   for (int i = 0; i < numfd; ++i){
     FdEvent *data = (FdEvent *)events[i].data.ptr;
     EventFunctionBase *ezfd = data->ezfd_;
-    //if (data->closed_) // bugfix, i have missed this check before
-    //    continue;
     bool expected_event = false;
-    short event = Event::EVENT_NONE; // bugfix, double check, i have missed too!
+    short event = EVENT_NONE; // bugfix, double check, i have missed too!
     if ((data->event_ & EVENT_READ) && (events[i].events & EPOLLIN)){
       event |= EVENT_READ;
       expected_event = true;
@@ -198,6 +192,10 @@ int EventDriver::Poll(int timeout){
 
   inloop_ = false;
   return 0;
+}
+
+int EventDriver::Wakeup(){
+  return event_notifier_.Wakeup();
 }
 
 int EventDriver::Mod(int fd){

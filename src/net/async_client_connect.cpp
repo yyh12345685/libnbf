@@ -4,7 +4,7 @@ namespace bdf{
 
 LOGGER_CLASS_IMPL(logger, AsyncClientConnect);
 
-void AsyncClientConnect::OnDecodeMessage(MessageBase* message){
+void AsyncClientConnect::OnDecodeMessage(EventMessage* message){
 
 }
 

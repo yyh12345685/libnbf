@@ -4,40 +4,36 @@
 #include <unordered_map>
 #include "event/event_loop_thread.h"
 #include "event/event_data.h"
+#include "common/common.h"
 
 namespace bdf {
 
+struct IoServiceConfig;
+class IoService;
 class Agents;
-class AppCofing;
-class Connecting;
-
-struct ListenInfo{
-  int cate;
-  std::string addr;
-};
 
 class AgentMaster:public EventFunctionBase {
 public:
   AgentMaster();
-  bool Init(const AppCofing* confs, const Agents* agents);
-  bool Start();
-
-  void Stop();
   virtual ~AgentMaster();
+
+  bool Init(const IoServiceConfig* confs,const Agents* agents);
+  bool Start();
+  void Stop();
 
   virtual void OnEvent(EventDriver *poll, int fd, short event);
 private:
-  AgentMaster(const AgentMaster&);
-  AgentMaster& operator=(const AgentMaster&);
 
-  const AppCofing* conf_;
+  const IoServiceConfig* conf_;
   const Agents* agents_;
 
   EventLoopThread master_event_thread_;
 
-  std::unordered_map<int, ListenInfo> listened_list_;
+  std::unordered_map<int,int> listened_fd_list_;
 
   LOGGER_CLASS_DECL(logger_);
+
+  DISALLOW_COPY_AND_ASSIGN(AgentMaster)
 };
 
 }

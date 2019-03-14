@@ -15,7 +15,7 @@ namespace monitor {
 class MatrixBucketItemMap {
  public:
   typedef std::unordered_map<uint64_t, MatrixItem*> ItemMap;
-  typedef common::SpinLock LockType;
+  typedef SpinLock LockType;
 
   int GenerateToken(uint64_t token, const std::string& name);
   int FetchToken(uint64_t token, MatrixItem** item);

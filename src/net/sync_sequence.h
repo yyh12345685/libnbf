@@ -5,23 +5,23 @@
 
 namespace bdf {
 
-class MessageBase;
+class EventMessage;
 
 class SyncSequence {
 public:
   SyncSequence();
   ~SyncSequence();
 
-  int Put(MessageBase* message);
-  MessageBase* Get(uint32_t sequence_id);
+  int Put(EventMessage* message);
+  EventMessage* Get(uint32_t sequence_id);
 
-  std::queue<MessageBase*> Timeout();
+  std::queue<EventMessage*> Timeout();
 
 private:
   uint32_t timeout_ms_;
-  std::queue<MessageBase*> queue_;
+  std::queue<EventMessage*> queue_;
 
-  LOGGER_CLASS_DECL(logger);
+  LOGGER_CLASS_DECL(logger_);
 
 };
 

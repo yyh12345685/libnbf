@@ -4,18 +4,20 @@
 #include "event/timer/timer.h"
 #include "event/timer/timer_base.h"
 #include "common/logger.h"
+#include "handle.h"
 
 namespace bdf{
 
-class MessageBase;
+class EventMessage;
+struct HandleData;
 
-class IoHandler{
+class IoHandler:public Handler{
 public:
-  IoHandler();
-  ~IoHandler();
+  IoHandler(){}
+  virtual ~IoHandler() {}
     
-  void Run(void* data);
-  void Handle(MessageBase* message);
+  static void Run(void* handle,HandleData* data);
+  void Handle(EventMessage* message);
 
   static IoHandler* GetCurrentIOHandler() {
     return &io_handler_;
@@ -30,6 +32,9 @@ public:
   }
 
 private:
+
+  void HandleIoMessageEvent(EventMessage* message);
+  void HandleIoActiveCloseEvent(EventMessage* message);
 
   static thread_local IoHandler io_handler_;
 

@@ -5,8 +5,8 @@
 
 namespace bdf {
 
-struct HeartBeatMessage : public MessageBase{
-  HeartBeatMessage() :MessageBase(MessageType::kHeartBeatMessage) {
+struct HeartBeatMessage : public EventMessage {
+  HeartBeatMessage() :EventMessage(MessageType::kHeartBeatMessage) {
   }
   virtual ~HeartBeatMessage() {}
   bool IsSynchronous() { return true; }
@@ -21,23 +21,23 @@ Stream& operator << (Stream &os, const HeartBeatMessage &msg){
   return os;
 }
 
-struct RapidMessage : public MessageBase{
-  RapidMessage() :MessageBase(MessageType::kRapidMessage), command(0) {}
+struct RapidMessage : public EventMessage {
+  RapidMessage() :EventMessage(MessageType::kRapidMessage), command(0) {}
   virtual ~RapidMessage() {}
   bool IsSynchronous() { return false; }
   std::string body;
   int command;
 };
 
-struct RedisMessage : public MessageBase{
-  RedisMessage() :MessageBase(MessageType::kRedisMessage) {}
+struct RedisMessage : public EventMessage {
+  RedisMessage() :EventMessage(MessageType::kRedisMessage) {}
   virtual ~RedisMessage() {}
   bool IsSynchronous() { return true; }
   std::vector<std::string> bodys;
 };
 
-struct HttpMessage : public MessageBase{
-  HttpMessage() :MessageBase(MessageType::kHttpMessage) {}
+struct HttpMessage : public EventMessage {
+  HttpMessage() :EventMessage(MessageType::kHttpMessage) {}
   virtual ~HttpMessage() {}
   uint16_t http_major;
   uint16_t http_minor;
@@ -45,7 +45,7 @@ struct HttpMessage : public MessageBase{
   bool keep_alive;
   bool encode_gzip;
 
-  protocol::HttpRequestInfo http_info;
+  HttpRequestInfo http_info;
 
   bool IsSynchronous() { return true; }
 
@@ -89,7 +89,7 @@ struct HttpMessage : public MessageBase{
     this->direction = MessageBase::kOutgoingRequest;
   }
 protected:
-  HttpMessage(int type) :MessageBase(type) {}
+  HttpMessage(int type) :EventMessage(type) {}
 };
 
 /// helper for stream-style output

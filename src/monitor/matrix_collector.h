@@ -31,9 +31,9 @@ class MatrixCollector {
   inline int Send(const MatrixItem* item) {
     int idx = 0;
     QueueType* queue = GetQueue(idx);
-    locks_[idx]->lock();
+    locks_[idx]->Lock();
     queue->push(item);
-    locks_[idx]->unlock();
+    locks_[idx]->UnLock();
     return 0;
   }
 
@@ -47,7 +47,7 @@ class MatrixCollector {
   LOGGER_CLASS_DECL(collector_logger_simple);
 
   inline QueueType* GetQueue(int& idx) {
-    idx = common::ThreadId::Get() & (bucket_count_ - 1);
+    idx = ThreadId::Get() & (bucket_count_ - 1);
     return queue_.at(idx);
   }
 
@@ -59,7 +59,7 @@ class MatrixCollector {
   bool GetFileName(std::string& new_name);
 
   std::vector<QueueType*> queue_;
-  std::vector<common::SpinLock*>locks_;
+  std::vector<SpinLock*>locks_;
   uint32_t bucket_count_;
   uint32_t queue_size_;
   std::thread* thread_;

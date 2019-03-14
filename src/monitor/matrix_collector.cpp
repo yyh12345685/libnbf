@@ -33,7 +33,7 @@ MatrixCollector::MatrixCollector(
   }
   locks_.resize(queue_.size());
   for (auto& lock : locks_){
-    lock = new common::SpinLock();
+    lock = new SpinLock();
   }
 
   monitor_file_name_ = AppendData(monitor_file_name_pre_);
@@ -148,10 +148,10 @@ void MatrixCollector::ProcessQueueList(MatrixStatMapPtr stat_map){
 
 void MatrixCollector::ProcessQueue(QueueType* queue, MatrixStatMapPtr stat_map, uint32_t& idx) {
   while (!queue->empty()) {
-    locks_[idx]->lock();
+    locks_[idx]->Lock();
     const MatrixItem* item = queue->front();
     queue->pop();
-    locks_[idx]->unlock();
+    locks_[idx]->UnLock();
     switch (item->operation) {
       case Matrix::kSet : stat_map->Set(item->name, item->val, item->persistent); break;
       case Matrix::kAdd : stat_map->Add(item->name, item->val, item->persistent); break;

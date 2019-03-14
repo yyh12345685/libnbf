@@ -4,16 +4,16 @@ namespace bdf{
 
 LOGGER_CLASS_IMPL(logger, AsyncSequence);
 
-int AsyncSequence::Put(MessageBase* message){
+int AsyncSequence::Put(EventMessage* message){
   return 0;
 }
 
-MessageBase* AsyncSequence::Get(uint32_t sequence_id){
+EventMessage* AsyncSequence::Get(uint32_t sequence_id){
   return NULL;
 }
 
-std::queue<MessageBase*> AsyncSequence::Timeout(){
-
+std::queue<EventMessage*> AsyncSequence::Timeout(){
+  return std::queue<EventMessage*>();
 }
 
 }

@@ -15,7 +15,8 @@ ProtocolFactory::ProtocolFactory() {
 
 ProtocolFactory::~ProtocolFactory() {
   for (auto protocol : protocol_) {
-    if (protocol) BDF_DELETE(protocol);
+    if (protocol) 
+      BDF_DELETE(protocol);
   }
 }
 

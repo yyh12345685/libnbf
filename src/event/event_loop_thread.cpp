@@ -1,4 +1,5 @@
 
+#include <functional>
 #include "event/event_loop_thread.h"
 
 namespace bdf {
@@ -6,12 +7,12 @@ namespace bdf {
 LOGGER_CLASS_IMPL(logger, EventLoopThread);
 
 EventLoopThread::EventLoopThread() :
-  is_run_(false){
+  is_run_(false),
+  thread_(nullptr){
   poll_.Init();
 }
 
 EventLoopThread::~EventLoopThread(){
-  //poll_.ShutDown();
 }
 
 int EventLoopThread::Start(){
@@ -42,6 +43,23 @@ void* EventLoopThread::Run(void *arg){
 
 void EventLoopThread::Main(){
   poll_.Run();
+}
+
+int EventLoopThread::Add(int fd, EventFunctionBase *ezfd, bool lock) {
+  return poll_.Add(fd, ezfd, lock);
+}
+int EventLoopThread::Del(int fd) {
+  return poll_.Del(fd);
+}
+int EventLoopThread::Modr(int fd, bool set) {
+  return poll_.Modr(fd, set);
+}
+int EventLoopThread::Modw(int fd, bool set) {
+  return poll_.Modw(fd, set);
+}
+
+int EventLoopThread::Wakeup(){
+  return poll_.Wakeup();
 }
 
 }

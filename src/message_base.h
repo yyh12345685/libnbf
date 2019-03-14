@@ -19,6 +19,12 @@ class MessageType {
     kRedisMessage,
   };
 
+  enum {
+    kIoUnknownEvent = 0,
+    kIoMessageEvent,
+    kIoActiveCloseEvent,
+  };
+
   static const char* ToString(int type) {
     static const char* str[] = {
       "unknown event",
@@ -26,6 +32,20 @@ class MessageType {
       "rapid protocol message",
       "http protocol message",
       "redis protocol message",
+    };
+
+    if (type < 0 || type >= (int)(sizeof(str) / sizeof(const char*))) {
+      return "unknown event";
+    }
+
+    return str[type];
+  }
+
+  static const char* ToIoEventString(int type) {
+    static const char* str[] = {
+      "unknown io event",
+      "io message event",
+      "io active close event",
     };
 
     if (type < 0 || type >= (int)(sizeof(str) / sizeof(const char*))) {
@@ -54,8 +74,9 @@ public:
   };
 public:
 
-  MessageBase(uint8_t type_id) 
-    : type_id(type_id) {
+  MessageBase(uint8_t type_id) :
+    type_id(type_id),
+    type_io_event(0){
   }
 
   virtual ~MessageBase() {};
@@ -64,27 +85,29 @@ public:
   virtual void Dump(std::ostream& os) const;
 
   uint8_t type_id;
+  uint8_t type_io_event;
   uint8_t direction;
   uint8_t status;
   uint64_t sequence_id;
+  uint64_t birthtime;
 };
 
 class EventMessage : public MessageBase {
  public:
-  EventMessage() 
+  EventMessage(uint8_t type_id)
       : MessageBase(MessageType::kUnknownEvent), descriptor_id(0) {
   }
 
   EventMessage(
       uint8_t type_id_, 
-      uint64_t descriptor_id_) 
+      int64_t descriptor_id_) 
       : MessageBase(type_id_), 
       descriptor_id(descriptor_id_){
   }
 
   virtual void Dump(std::ostream& os) const;
 
-  uint64_t descriptor_id;//convert object
+  int64_t descriptor_id;//convert object
 };
 
 class MessageFactory {
