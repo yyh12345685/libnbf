@@ -8,12 +8,12 @@ class RapidClient(object):
     self.sock.connect((host, port))
 
   def send_recv(self, data):
-    magic = 11111
+    magic = socket.htons(11111)
     version = 0
     cmd = 0
     sqid_high = 0
     sqid_low = 0
-    size = 16 + len(data)
+    size = socket.htonl(16 + len(data))
 
     msg = struct.pack("HBBIII", magic, version, cmd,\
       sqid_high, sqid_low, size)

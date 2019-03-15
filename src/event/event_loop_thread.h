@@ -21,6 +21,7 @@ public:
   int Del(int fd);
   int Modr(int fd, bool set);
   int Modw(int fd, bool set);
+  int Modrw(int fd, bool set);
   int Wakeup();
 
 private:

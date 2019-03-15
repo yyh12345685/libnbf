@@ -15,9 +15,6 @@ public:
 
   virtual void OnDecodeMessage(EventMessage* message);
 
-  virtual int RegisterAddModr(int fd, bool set);
-  virtual int RegisterModr(int fd, bool set);
-  virtual int RegisterModw(int fd, bool set);
   virtual int RegisterDel(int fd);
 
 private:

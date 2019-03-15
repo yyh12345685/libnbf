@@ -58,6 +58,10 @@ int EventLoopThread::Modw(int fd, bool set) {
   return poll_.Modw(fd, set);
 }
 
+int EventLoopThread::Modrw(int fd, bool set){
+  return poll_.Modrw(fd, set);
+}
+
 int EventLoopThread::Wakeup(){
   return poll_.Wakeup();
 }

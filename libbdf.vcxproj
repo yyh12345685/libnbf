@@ -119,7 +119,11 @@
   <ItemGroup>
     <None Include=".gitignore" />
     <None Include="basic.cmake" />
+    <None Include="examples\python\http_client.py" />
     <None Include="examples\python\rapid_client.py" />
+    <None Include="examples\test_client_server\conf\logger.conf" />
+    <None Include="examples\test_client_server\conf\router.conf" />
+    <None Include="examples\test_client_server\conf\test_client_server.conf" />
     <None Include="examples\test_server\conf\logger.conf" />
     <None Include="examples\test_server\conf\test_server.conf" />
     <None Include="LICENSE" />
@@ -146,6 +150,9 @@
     <ClCompile Include="src\app\appbase.cpp" />
     <ClCompile Include="src\app\app_cmd_parser.cpp" />
     <ClCompile Include="src\app\config_info.cpp" />
+    <ClCompile Include="src\client\client.cpp" />
+    <ClCompile Include="src\client\client_mgr.cpp" />
+    <ClCompile Include="src\client\client_router.cpp" />
     <ClCompile Include="src\common\ini_files.cpp" />
     <ClCompile Include="src\common\buffer.cpp" />
     <ClCompile Include="src\common\string_util.cpp" />
@@ -194,6 +201,9 @@
     <ClInclude Include="src\app\appbase.h" />
     <ClInclude Include="src\app\app_cmd_parser.h" />
     <ClInclude Include="src\app\config_info.h" />
+    <ClInclude Include="src\client\client.h" />
+    <ClInclude Include="src\client\client_mgr.h" />
+    <ClInclude Include="src\client\client_router.h" />
     <ClInclude Include="src\common\common.h" />
     <ClInclude Include="src\common\heap.h" />
     <ClInclude Include="src\common\ini_files.h" />

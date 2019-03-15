@@ -39,18 +39,14 @@ public:
 
   void OnActiveClose();
 protected:
-  virtual int RegisterAddModr( int fd, bool set);
-  virtual int RegisterModr(int fd, bool set);
-  virtual int RegisterModw(int fd, bool set);
+  virtual int RegisterAddModrw(int fd, bool set);
   virtual int RegisterDel(int fd);
 
   virtual void OnDecodeMessage(EventMessage* message) = 0;
 
-  virtual void OnCloseConnection(EventDriver *poll,int fd);
-  virtual void OnError(EventDriver *poll);
+  void RegisterDel(EventDriver *poll, int fd);
 
   void OnReadWriteClose();
-  void Close(EventDriver* poll);
   void Clean();
 
   void Destroy() {

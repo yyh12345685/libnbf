@@ -6,9 +6,11 @@
 namespace bdf {
 
 struct HeartBeatMessage : public EventMessage {
-  HeartBeatMessage() :EventMessage(MessageType::kHeartBeatMessage) {
+  HeartBeatMessage() :
+    EventMessage(MessageType::kHeartBeatMessage) {
   }
-  virtual ~HeartBeatMessage() {}
+  virtual ~HeartBeatMessage() {
+  }
   bool IsSynchronous() { return true; }
   uint64_t load_avg;
   int heart_type;
@@ -22,23 +24,32 @@ Stream& operator << (Stream &os, const HeartBeatMessage &msg){
 }
 
 struct RapidMessage : public EventMessage {
-  RapidMessage() :EventMessage(MessageType::kRapidMessage), command(0) {}
-  virtual ~RapidMessage() {}
+  RapidMessage() :
+    EventMessage(MessageType::kRapidMessage), command(0) {
+  }
+  virtual ~RapidMessage() {
+  }
   bool IsSynchronous() { return false; }
   std::string body;
   int command;
 };
 
 struct RedisMessage : public EventMessage {
-  RedisMessage() :EventMessage(MessageType::kRedisMessage) {}
-  virtual ~RedisMessage() {}
+  RedisMessage() :
+    EventMessage(MessageType::kRedisMessage) {
+  }
+  virtual ~RedisMessage() {
+  }
   bool IsSynchronous() { return true; }
   std::vector<std::string> bodys;
 };
 
 struct HttpMessage : public EventMessage {
-  HttpMessage() :EventMessage(MessageType::kHttpMessage) {}
-  virtual ~HttpMessage() {}
+  HttpMessage() :
+    EventMessage(MessageType::kHttpMessage) {
+  }
+  virtual ~HttpMessage() {
+  }
   uint16_t http_major;
   uint16_t http_minor;
   uint16_t status_code;

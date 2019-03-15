@@ -20,7 +20,7 @@ public:
   void Handle(EventMessage* message);
 
   static IoHandler* GetCurrentIOHandler() {
-    return &io_handler_;
+    return io_handler_;
   }
 
   uint64_t StartTimer(TimerData& data) {
@@ -36,7 +36,7 @@ private:
   void HandleIoMessageEvent(EventMessage* message);
   void HandleIoActiveCloseEvent(EventMessage* message);
 
-  static thread_local IoHandler io_handler_;
+  static thread_local IoHandler* io_handler_;
 
   Timer timer_;
 

@@ -21,15 +21,19 @@ public:
 
   virtual void OnTimer(void* function_data);
 
-  void TryConnect();
+  int TryConnect();
+  int Stop();
 
-  virtual int RegisterAddModr(int fd, bool set);
-  virtual int RegisterModr(int fd, bool set);
-  virtual int RegisterModw(int fd, bool set);
+  virtual int RegisterAddModrw(int fd, bool set);
   virtual int RegisterDel(int fd);
+
+  inline int GetStatus() const { return status_; }
+  inline void SetStatus(int status) { status_ = status; }
 
 private:
   LOGGER_CLASS_DECL(logger);
+
+  int status_;
 };
 
 

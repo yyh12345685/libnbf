@@ -38,7 +38,6 @@ public:
 protected:
   virtual int OnStart() = 0;
   virtual int OnStop() = 0;
-  virtual int OnFinish() = 0;
 
   virtual ServiceHandler* CreateServiceHandler() = 0;
 

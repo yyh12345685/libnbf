@@ -33,6 +33,7 @@ bool AgentSlave::Start() {
 }
 
 void AgentSlave::Stop() {
+  TRACE(logger_, "AgentSlave::Stop.");
   for (auto& thread : slave_event_threads_) {
     thread->Stop();
   }
@@ -51,23 +52,6 @@ int AgentSlave::AddModr(EventFunctionBase* ezfd,int fd,  bool set, bool lock){
   }
 
   return slave_event_threads_[idx]->Wakeup();
-}
-
-int AgentSlave::Modr(EventFunctionBase* ezfd,int fd,  bool set){
-  uint64_t idx = (uint64_t)((void*)ezfd) % slave_event_threads_.size();
-  if (0 != slave_event_threads_[idx]->Modr(fd, set)) {
-    WARN(logger_, "slave_event_threads_[idx].Modr failed.");
-    return -1;
-  }
-  return 0;
-}
-int AgentSlave::Modw(EventFunctionBase* ezfd,int fd,  bool set){
-  uint64_t idx = (uint64_t)((void*)ezfd) % slave_event_threads_.size();
-  if (0 != slave_event_threads_[idx]->Modw(fd, set)) {
-    WARN(logger_, "slave_event_threads_[idx].Modr failed.");
-    return -1;
-  }
-  return 0;
 }
 
 int AgentSlave::Del(EventFunctionBase* ezfd, int fd){

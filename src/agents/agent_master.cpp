@@ -17,6 +17,9 @@ AgentMaster::AgentMaster() :
   conf_(NULL){
 }
 
+AgentMaster::~AgentMaster() {
+}
+
 bool AgentMaster::Init(const IoServiceConfig* confs,const Agents* agents){
   conf_ = confs;
   agents_ = agents;
@@ -33,13 +36,14 @@ bool AgentMaster::Init(const IoServiceConfig* confs,const Agents* agents){
       continue;
     }
 
-    if (master_event_thread_.Add(fd, this) == -1){
-      WARN(logger_, "AgentMaster::Init master_event_thread_.Add error, ip:"
+    if (0!=master_event_thread_.Add(fd, this) 
+      || 0!= master_event_thread_.Modr(fd, true)){
+      WARN(logger_, "AgentMaster::Init Add or Modr error, ip:"
 					<< ip << "port:" << port <<",fd:"<<fd);
       Socket::Close(fd);
       continue;
     }
-    master_event_thread_.Modr(fd, true);
+    
     listened_fd_list_.insert(std::pair<int,int>(fd,cate));
   }
 
@@ -71,7 +75,11 @@ void AgentMaster::OnEvent(EventDriver *poll, int fd, short event){
     svr_con->SetFd(sock);
     svr_con->SetPort(port);
     svr_con->SetProtocol(cate);
-    agents_->GetSlave()->AddModr(svr_con,sock, true);
+    if (0!= agents_->GetSlave()->AddModr(svr_con, sock, true)){
+      WARN(logger_, "AddModr faild...");
+      delete svr_con;
+      break;
+    }
 
     TRACE(logger_, "accept client ip:" << ip_str << ",port:" << port 
       << ",sock:" << sock << ",con's addr:" << svr_con);
@@ -87,11 +95,8 @@ bool AgentMaster::Start() {
 }
 
 void AgentMaster::Stop() {
+  TRACE(logger_, "AgentMaster::Stop.");
   master_event_thread_.Stop();
-}
-
-AgentMaster::~AgentMaster(){
-  Stop();
 }
 
 }

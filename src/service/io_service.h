@@ -49,17 +49,16 @@ public:
   int Wait();
 
   void SendToIoHandle(EventMessage* msg);
+  void SendCloseToIoHandle(EventMessage* msg);
   void SendToIoHandleServiceHandle(EventMessage* msg);
 
   const std::string& GetMatrixReport();
   void HandleSignal();
 
-  int AgentsAddModr(EventFunctionBase *ezfd, int fd, bool set);
-  int AgentsModr(EventFunctionBase* ezfd, int fd, bool set);
-  int AgentsModw(EventFunctionBase* ezfd, int fd, bool set);
   int AgentsDel(EventFunctionBase* ezfd, int fd);
 
 private:
+  void SendToIoHandleInner(EventMessage* msg);
   int ThreadWait();
   int ThreadStop();
   LOGGER_CLASS_DECL(logger);

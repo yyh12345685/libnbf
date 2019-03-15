@@ -72,9 +72,6 @@ int AppBase::Stop() {
   INFO(logger, "Applciation::StopIOService");
   StopIoService();
 
-  INFO(logger, "Applciation::OnFinish");
-  OnFinish();
-
   return 0;
 }
 

@@ -17,13 +17,40 @@ void IoServiceConfig::Dump(std::ostream& os) const {
         << ", \"address\": " << srv_conf.address
         << "}";
     }
-    os << ", \"monitor_token_bucket\": " << monitor_token_bucket
+    os << ", \"router_file\": " << router_file
+    << ", \"monitor_token_bucket\": " << monitor_token_bucket
     << ", \"monitor_queue_bucket\": " << monitor_queue_bucket
     << ", \"monitor_queue_size\": " << monitor_queue_size
     << "}";
 }
 
 std::ostream& operator << (std::ostream& os, const IoServiceConfig& config) {
+  config.Dump(os);
+  return os;
+}
+
+void ClientRoutersConfig::Dump(std::ostream& os) const {
+  os << "{\"type\": \"ClientRoutersConfig\",\"router\":";
+  for (const auto& router : client_router_config) {
+    os << "[\"name\":" << router.name
+      << ", \"mapping\": " << router.mapping
+      << "\"clients\":";
+      for (const auto& cli: router.clients){
+        os << "[\"heartbeat\":" << cli.heartbeat
+          << "\"timeout\":" << cli.timeout
+          << "\"single_addr_connect_count\":" << cli.single_addr_connect_count
+          << "\"address\":";
+        for (const auto& addr : cli.address) {
+          os << "[\"addr\":" << addr << "]";
+        }
+        os << "]";
+      }
+      os << "]";
+  }
+  os << "}";
+}
+
+std::ostream& operator << (std::ostream& os, const ClientRoutersConfig& config) {
   config.Dump(os);
   return os;
 }
@@ -35,24 +62,27 @@ ConfigInfo::~ConfigInfo() {
 }
 
 int ConfigInfo::LoadConfig(const std::string& config_path){
-
   CIniFileS ini_config;
   if (!ini_config.Open(config_path.c_str())) {
     WARN(logger_, "open config file error,path:" << config_path);
-    return false;
+    return -1;
   }
 
   if (0 != LoadIoServiceConfig(ini_config, &io_service_config_)) {
-    return -1;
+    return -2;
   }
   
   if (0 != LoadServicesConfig(
     ini_config, io_service_config_.service_count,io_service_config_.services_config)) {
-    return -1;
+    return -3;
   }
 
-  if (0 != LoadApplicationConfig(ini_config)) {
-    return -1;
+  if (0!= LoadRouterConfig(io_service_config_.router_file)){
+    return -4;
+  }
+
+  if (0 != LoadApplicationConfig(ini_config)){
+    return -5;
   }
   
   TRACE(logger_, "config info" << *this);
@@ -62,6 +92,9 @@ int ConfigInfo::LoadConfig(const std::string& config_path){
 int ConfigInfo::LoadIoServiceConfig(CIniFileS& ini, IoServiceConfig* config){
   config->slave_thread_count = ini.GetValueInt("io_service", "slave_thread_count", 2);
   config->service_count = ini.GetValueInt("io_service", "services_count", 1);
+
+  config->router_file = ini.GetValueInt("io_service", "router_file", 1);
+
   config->stack_size = ini.GetValueInt("io_service", "stack_size", 2048);
 
   config->monitor_token_bucket = ini.GetValueInt("io_service", "monitor_token_bucket", 16);
@@ -88,12 +121,44 @@ int ConfigInfo::LoadServicesConfig(CIniFileS& ini, int srv_cnt, std::vector<Serv
   return 0;
 }
 
+int ConfigInfo::LoadRouterConfig(const std::string& file_path){
+  CIniFileS ini_config;
+  if (!ini_config.Open(file_path.c_str())) {
+    WARN(logger_, "open router config file error,path:" << file_path);
+    return -1;
+  }
+
+  int clients_cnt = ini_config.GetValueInt("router", "client_count", 1);
+  for (int idx = 0; idx < clients_cnt;idx++) {
+    std::string section("client");
+    section.append(common::ToString(idx));
+    ClientRouterConfig router;
+    router.name  = ini_config.GetValue(section.c_str(), "name", "");
+    router.mapping = ini_config.GetValue(section.c_str(), "mapping", "");
+    int addr_cnt = ini_config.GetValueInt(section.c_str(), "address_count", 1);
+
+    for (int jdx = 0; jdx < addr_cnt; jdx++) {
+      ClientConfig client;
+      client.single_addr_connect_count =
+        ini_config.GetValueInt(section.c_str(), "single_addr_connect_count", 3);
+      client.heartbeat = ini_config.GetValueInt(section.c_str(), "heartbeat_ms", 3000);
+      client.timeout = ini_config.GetValueInt(section.c_str(), "timeout_ms", 100);
+      std::string section1("address");
+      section1.append(common::ToString(jdx));
+      std::string addr = ini_config.GetValue(section.c_str(), section1.c_str(), "");
+      client.address.push_back(addr);
+    }
+  }
+  return 0;
+}
+
 int ConfigInfo::LoadApplicationConfig(CIniFileS& ini){
   return 0;
 }
 
 void ConfigInfo::Dump(std::ostream& os) const{
   os << "IOServiceConfig:" << io_service_config_ << std::endl;
+  os << "ClientRouterConfig:" << client_routers_config_ << std::endl;
 }
 
 std::ostream& operator << (std::ostream& os, const ConfigInfo& config){

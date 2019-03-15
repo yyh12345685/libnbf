@@ -6,6 +6,7 @@
 #include "agents/agents.h"
 #include "service/service_handle.h"
 #include "net/io_handle.h"
+#include "message_base.h"
 #include "monitor/matrix.h"
 #include "monitor/matrix_stat_map.h"
 
@@ -39,7 +40,7 @@ int IoService::Start(ServiceHandler* handle){
 
     HandleData* hd_io = new HandleData;
     hd_io->handle_ = new IoHandler();
-    hd->is_run = true;
+    hd_io->is_run = true;
     handle_thread_.io_handle_data_.push_back(hd_io);
     std::thread* thread_io = new std::thread(std::bind(&IoHandler::Run, hd_io->handle_, hd_io));
     handle_thread_.io_handle_thread_.push_back(thread_io);
@@ -49,14 +50,17 @@ int IoService::Start(ServiceHandler* handle){
 }
 
 int IoService::ThreadWait(){
+  TRACE(logger, "IoService::ThreadWait start.");
   for (int cn = 0; cn < io_service_config_.slave_thread_count; cn++){
     handle_thread_.service_handle_thread_[cn]->join();
     handle_thread_.io_handle_thread_[cn]->join();
   }
+  TRACE(logger, "IoService::ThreadWait end.");
   return 0;
 }
 
 int IoService::ThreadStop(){
+  TRACE(logger, "IoService::ThreadStop.");
   for (int cn = 0; cn < io_service_config_.slave_thread_count; cn++) {
     handle_thread_.service_handle_data_[cn]->is_run = false;
     handle_thread_.io_handle_data_[cn]->is_run = false;
@@ -68,7 +72,6 @@ int IoService::Stop(){
   agents_->Stop();
 
   ThreadStop();
-  ThreadWait();
 
   if (agents_ != nullptr) {
     delete agents_;
@@ -80,19 +83,29 @@ int IoService::Wait(){
   return ThreadWait();
 }
 
+void IoService::SendCloseToIoHandle(EventMessage* msg){
+  msg->type_io_event = MessageType::kIoActiveCloseEvent;
+  SendToIoHandleInner(msg);
+}
+
 void IoService::SendToIoHandle(EventMessage* msg){
-  static thread_local std::atomic<uint32_t> id_io(0);
-  HandleData* hd =
-    handle_thread_.io_handle_data_.at(id_io%handle_thread_.io_handle_data_.size());
-  hd->lock_.lock();
-  hd->data_.emplace(msg);
-  hd->lock_.unlock();
+  msg->type_io_event = MessageType::kIoMessageEvent;
+  SendToIoHandleInner(msg);
 }
 
 void IoService::SendToIoHandleServiceHandle(EventMessage* msg){
   static thread_local std::atomic<uint32_t> id_hs(0);
   HandleData* hd = 
-    handle_thread_.service_handle_data_.at(id_hs%handle_thread_.service_handle_data_.size());
+    handle_thread_.service_handle_data_.at((id_hs++)%handle_thread_.service_handle_data_.size());
+  hd->lock_.lock();
+  hd->data_.emplace(msg);
+  hd->lock_.unlock();
+}
+
+void IoService::SendToIoHandleInner(EventMessage* msg){
+  static thread_local std::atomic<uint32_t> id_io(0);
+  HandleData* hd =
+    handle_thread_.io_handle_data_.at((id_io++) % handle_thread_.io_handle_data_.size());
   hd->lock_.lock();
   hd->data_.emplace(msg);
   hd->lock_.unlock();
@@ -108,18 +121,6 @@ const std::string& IoService::GetMatrixReport(){
   } else {
     return stat_map->ToString();
   }
-}
-
-int IoService::AgentsAddModr(EventFunctionBase *ezfd, int fd, bool set) {
-  return agents_->AddModr(ezfd, fd, set);
-}
-
-int IoService::AgentsModr(EventFunctionBase* ezfd, int fd, bool set) {
-  return agents_->Modr(ezfd, fd, set);
-}
-
-int IoService::AgentsModw(EventFunctionBase* ezfd, int fd, bool set) {
-  return agents_->Modw(ezfd, fd, set);
 }
 
 int IoService::AgentsDel(EventFunctionBase* ezfd, int fd){

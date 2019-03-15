@@ -52,6 +52,10 @@ set(BDF_SRC
   service/service_handle.cpp
   service/io_service.cpp
 
+  client/client.cpp
+  client/client_router.cpp
+  client/client_mgr.cpp
+
   app/config_info.cpp
   app/app_cmd_parser.cpp
   app/appbase.cpp

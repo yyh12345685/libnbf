@@ -22,9 +22,10 @@ Connecting::~Connecting(){
 }
 
 void Connecting::OnEvent(EventDriver *poll, int fd, short event){
-  if (event & EVENT_CONNECT_CLOSED){
-    OnCloseConnection(poll,fd);
-    return;
+  if ((event & EVENT_CONNECT_CLOSED) || (event & EVENT_ERROR)){
+    TRACE(logger_, "Connecting::OnEvent,OnError event:"<< event);
+    //do not close socket ,error message allways hava read message for close
+    RegisterDel(poll,fd);
   }
 
   if (event & EVENT_READ){
@@ -32,10 +33,6 @@ void Connecting::OnEvent(EventDriver *poll, int fd, short event){
   }
   if (event & EVENT_WRITE){
     OnWrite();
-  }
-  if (event & EVENT_ERROR){
-    TRACE(logger_, "Connecting::OnEvent,EVENT_ERROR.");
-    OnError(poll);
   }
 }
 
@@ -61,12 +58,12 @@ void Connecting::OnRead(EventDriver *poll){
       } else{
         INFO(logger_, "TCP read failed, fd is:" << fd_ << ",ip:" << GetIp() << ",port:" 
           << GetPort()<< ",total_read:" << total_read << ",errno:" << strerror(errno));
-        Close(poll);
+        OnReadWriteClose();
         return;
       }
     } else if (0 == nread){
       DEBUG(logger_, "TCP client is closed: fd=" << fd_ << ",ip:" << ip_ << ",port:" << port_);
-      this->Close(poll);
+      OnReadWriteClose();;
       return;
     }
 
@@ -88,7 +85,7 @@ void Connecting::OnRead(EventDriver *poll){
   }
   TRACE(logger_, "Read data size is:" << total_read);
   if (0!= DecodeMsg()){
-    Close(poll);
+    OnReadWriteClose();
   }
 }
 
@@ -132,7 +129,7 @@ void Connecting::OnWrite(){
       send += ret;
       outbuf_.DrainReading(ret);
       if (send >= should_send_size){
-        RegisterModw(fd_, false);
+        //RegisterModw(fd_, false);
         break;
       }
       TRACE(logger_, "send size is:" << ret);
@@ -154,7 +151,7 @@ void Connecting::OnWrite(){
           TRACE(logger_, "will be lose size:" << (should_send_size - send));
         } else{
           // this operation will let the event poll to call the function habdleWrite when the write-cache enable to write 
-          RegisterModw(fd_, true);
+          //RegisterModw(fd_, true);
         }
       } else{
         TRACE(logger_, "socket not ok or server is cannot handled,errno" << errno);
@@ -181,38 +178,14 @@ int Connecting::EncodeMsg(EventMessage* message){
   return 0;
 }
 
-int Connecting::RegisterAddModr(int fd, bool set) {
-  WARN(logger_, "not should to here Connecting::AddModr.");
+int Connecting::RegisterAddModrw(int fd, bool set){
+  WARN(logger_, "not should to here Connecting::RegisterAddModrw.");
   return 0;
 }
 
 int Connecting::RegisterDel(int fd){
   WARN(logger_, "not should to here Connecting::RegisterDel.");
   return 0;
-}
-
-int Connecting::RegisterModr(int fd, bool set){
-  WARN(logger_, "not should to here Connecting::Modr.");
-  return 0;
-}
-
-int Connecting::RegisterModw(int fd, bool set){
-  WARN(logger_, "not should to here Connecting::Modw.");
-  return 0;
-}
-//when read
-void Connecting::Close(EventDriver* poll){
-  TRACE(logger_, "Connecting::Close,sock:" << fd_ 
-    << ",ip:" << ip_ << ",port:" << port_);
-  if (fd_ < 0 || nullptr == poll){
-    return ;
-  }
-
-  if (0 != poll->Del(fd_)){
-    TRACE(logger_, "Connecting::Close,poll_->Del error,sock:" << fd_);
-  }
-
-  Clean();
 }
 
 void Connecting::OnActiveClose(){
@@ -225,9 +198,11 @@ void Connecting::OnActiveClose(){
   }
 }
 
+//when read write
 void Connecting::OnReadWriteClose(){
-  OnActiveClose();
+  //events is delete in (event & EVENT_CONNECT_CLOSED) || (event & EVENT_ERROR)
   Clean();
+  OnClose();
 }
 
 void Connecting::OnClose(){
@@ -246,20 +221,15 @@ void Connecting::Clean(){
   outbuf_.ResetAll();
 }
 
-void Connecting::OnCloseConnection(EventDriver *poll,int fd){
-  TRACE(logger_, "client close fd:" << fd);
-  if (fd != fd_){
-    WARN(logger_, "sock may be not inited,fd:" << fd << ",sock:" << fd_);
+void Connecting::RegisterDel(EventDriver *poll, int fd){
+  TRACE(logger_, "Connecting::RegisterDel,sock:" << fd_
+    << ",ip:" << ip_ << ",port:" << port_);
+  if (fd_ < 0 || nullptr == poll) {
+    return;
   }
-  Close(poll);
-  OnClose();
-}
 
-void Connecting::OnError(EventDriver *poll){
-  if (fd_ > 0){
-    INFO(logger_, "HandleError close fd:" << fd_ << ",ip:" << ip_ << ",port:" << port_);
-    Close(poll);
-    OnClose();
+  if (0 != poll->Del(fd_)) {
+    TRACE(logger_, "Connecting::Close,poll_->Del error,sock:" << fd_);
   }
 }
 

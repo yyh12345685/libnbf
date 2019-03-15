@@ -156,6 +156,24 @@ int EventDriver::Modw(int fd, bool set){
 	return ret;
 }
 
+int EventDriver::Modrw(int fd, bool set){
+  if (fd < 0 || fd > maxfd_ || NULL == event_data_.fd2data_[fd]) {
+    TRACE(logger_, "fd2data_ is NULL, fd" << fd << ",maxfd" << maxfd_);
+    return -1;
+  }
+
+  if (set) {
+    event_data_.fd2data_[fd]->event_ |= EVENT_WRITE;
+    event_data_.fd2data_[fd]->event_ |= EVENT_READ;
+  } else {
+    event_data_.fd2data_[fd]->event_ &= ~EVENT_WRITE;
+    event_data_.fd2data_[fd]->event_ &= ~EVENT_READ;
+  }
+
+  int ret = EventDriver::Mod(fd);
+  return ret;
+}
+
 int EventDriver::Poll(int timeout){
   inloop_ = true;
   struct epoll_event events[4096];
@@ -204,7 +222,9 @@ int EventDriver::Mod(int fd){
   event.data.ptr = data;
   event.events = (data->event_ & EVENT_READ ? event_in_ : 0) 
     | (data->event_ & EVENT_WRITE ? event_out_ : 0);
-  epoll_ctl(epfd_, EPOLL_CTL_MOD, fd, &event);
+  if ( 0!= epoll_ctl(epfd_, EPOLL_CTL_MOD, fd, &event)){
+    return -1;
+  }
   return 0;
 }
 

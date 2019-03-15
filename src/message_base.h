@@ -82,7 +82,7 @@ public:
   virtual ~MessageBase() {};
 
   std::string ToString() const;
-  virtual void Dump(std::ostream& os) const;
+  void Dump(std::ostream& os) const;
 
   uint8_t type_id;
   uint8_t type_io_event;
@@ -95,7 +95,7 @@ public:
 class EventMessage : public MessageBase {
  public:
   EventMessage(uint8_t type_id)
-      : MessageBase(MessageType::kUnknownEvent), descriptor_id(0) {
+      : MessageBase(type_id), descriptor_id(0) {
   }
 
   EventMessage(
@@ -105,7 +105,17 @@ class EventMessage : public MessageBase {
       descriptor_id(descriptor_id_){
   }
 
-  virtual void Dump(std::ostream& os) const;
+  virtual ~EventMessage() {}
+
+  void Dump(std::ostream& os) const;
+
+  void SetDescriptorId(const int64_t& desc_id){
+    descriptor_id = desc_id;
+  }
+
+  int64_t GetDescriptorId() {
+    return descriptor_id;
+  }
 
   int64_t descriptor_id;//convert object
 };

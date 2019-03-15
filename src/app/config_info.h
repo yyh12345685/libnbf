@@ -27,6 +27,8 @@ struct IoServiceConfig {
   int service_count;
   std::vector<ServiceConfig> services_config;
 
+  std::string router_file;
+
   // coroutine 
   uint32_t stack_size;
 
@@ -41,39 +43,40 @@ struct IoServiceConfig {
 std::ostream& operator << (std::ostream& os, const IoServiceConfig& config);
 
 struct ClientConfig {
-  std::string address;
+  std::vector<std::string> address;
   uint32_t timeout;
   uint32_t heartbeat;
-  int count;
+  int single_addr_connect_count;
 };
 
 struct ClientRouterConfig {
   std::string name;
-  std::string router;
+  std::string mapping;
   std::vector<ClientConfig> clients;
+};
+
+struct ClientRoutersConfig {
+  std::vector<ClientRouterConfig> client_router_config;
+  void Dump(std::ostream& os) const;
 };
 
 class ConfigInfo {
 public:
-  typedef std::vector<ClientRouterConfig> ClientRoutersConfig;
-
   ConfigInfo();
   virtual ~ConfigInfo();
 
   int LoadConfig(const std::string& config_path);
 
   IoServiceConfig& GetIOServiceConfig() { return io_service_config_; }
-
   ClientRoutersConfig GetClientRoutersConfig() { return client_routers_config_; }
-
   virtual void Dump(std::ostream& os) const;
 
 protected:
   virtual int LoadIoServiceConfig(CIniFileS& ini, IoServiceConfig* config);
+  virtual int LoadServicesConfig(CIniFileS& ini, int srv_cnt,std::vector<ServiceConfig>& config);
+  virtual int LoadRouterConfig(const std::string& file_path);
 
   virtual int LoadApplicationConfig(CIniFileS& ini);
-
-  virtual int LoadServicesConfig(CIniFileS& ini, int srv_cnt,std::vector<ServiceConfig>& config);
 
 private:
   LOGGER_CLASS_DECL(logger_);
@@ -83,6 +86,7 @@ private:
 };
 
 std::ostream& operator << (std::ostream& os, const ConfigInfo& config);
+
 
 }
 

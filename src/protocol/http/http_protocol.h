@@ -15,8 +15,7 @@ class Buffer;
 struct HttpAgent;
 class HttpMessage;
 
-class HttpProtocol : public ProtocolBase
-{
+class HttpProtocol : public ProtocolBase{
 public:
   HttpProtocol();
   virtual ~HttpProtocol();

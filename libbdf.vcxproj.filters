@@ -26,6 +26,10 @@
     <None Include="examples\test_server\conf\logger.conf" />
     <None Include="examples\test_server\conf\test_server.conf" />
     <None Include="examples\python\rapid_client.py" />
+    <None Include="examples\python\http_client.py" />
+    <None Include="examples\test_client_server\conf\logger.conf" />
+    <None Include="examples\test_client_server\conf\test_client_server.conf" />
+    <None Include="examples\test_client_server\conf\router.conf" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />
@@ -172,6 +176,15 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="examples\test_server\src\test_server_handle.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\client\client_mgr.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\client\client.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\client\client_router.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -345,6 +358,15 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="src\handle.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\client\client_mgr.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\client\client.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\client\client_router.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

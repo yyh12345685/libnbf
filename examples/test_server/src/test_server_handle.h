@@ -11,6 +11,9 @@ public:
   TestHandler(){}
   virtual ~TestHandler() {}
 
+  virtual ServiceHandler* Clone() {
+    return new TestHandler();
+  }
 protected:
   virtual void OnHttpRequestMessage(HttpMessage* message);
   virtual void OnRapidRequestMessage(RapidMessage* message);

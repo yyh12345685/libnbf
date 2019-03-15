@@ -155,6 +155,7 @@ const char *ConvertStatusCode(int status, std::string& tmp) {
 
 //HTTP_MSG
 bool HttpProtocol::Encode(EventMessage *pv, Buffer *output){
+  TRACE(logger_, "HttpProtocol::Encode.");
   HttpMessage *msg,one;
 
   switch (pv->type_id)

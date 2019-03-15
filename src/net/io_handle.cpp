@@ -9,8 +9,12 @@ namespace bdf{
 
 LOGGER_CLASS_IMPL(logger, IoHandler);
 
+thread_local IoHandler* IoHandler::io_handler_ = NULL;
+
 void IoHandler::Run(void* handle, HandleData* data){
+  TRACE(logger, "IoHandler::Run start.");
   IoHandler* io_handle = (IoHandler*)handle;
+  io_handler_ = io_handle;
   while (data->is_run) {
     if (data->data_.empty()) {
       usleep(10);
@@ -28,10 +32,11 @@ void IoHandler::Run(void* handle, HandleData* data){
       io_handle->Handle(msg);
     }
   }
+  TRACE(logger, "IoHandler::Run exit.");
 }
 
 void IoHandler::Handle(EventMessage* message){
-  TRACE(logger, "IoHandler::Handle " << *message);
+  //TRACE(logger, "IoHandler::Handle " << *message);
 
   switch (message->type_io_event) {
     case MessageType::kIoMessageEvent:

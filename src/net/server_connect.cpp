@@ -23,19 +23,6 @@ void ServerConnect::OnDecodeMessage(EventMessage* message) {
   IoService::GetInstance().SendToIoHandleServiceHandle(message);
 }
 
-int ServerConnect::RegisterAddModr(int fd, bool set){
-  return IoService::GetInstance().AgentsAddModr(this, fd, set);
-}
-
-int ServerConnect::RegisterModr(int fd, bool set) {
-  return IoService::GetInstance().AgentsModr(this, fd, set);
-}
-
-int ServerConnect::RegisterModw(int fd, bool set){
-  return IoService::GetInstance().AgentsModw(this, fd, set);
-
-}
-
 int ServerConnect::RegisterDel(int fd){
   return IoService::GetInstance().AgentsDel(this, fd);
 }
