@@ -5,6 +5,7 @@
 #include <deque>
 #include "event/event_data.h"
 #include "event/event_notifier.h"
+#include "event/timer/timer.h"
 
 namespace bdf{
 
@@ -26,6 +27,14 @@ public:
   int Wakeup();
 
   bool GetRun(){ return run_; }
+
+  uint64_t StartTimer(TimerData& data) {
+    return timer_.AddTimer(data.time_out_ms, data);
+  }
+
+  void CancelTimer(uint64_t timer_id) {
+    timer_.DelTimer(timer_id);
+  }
 private:
 
   int Mod(int fd);
@@ -43,6 +52,8 @@ private:
   EventData event_data_;
 
   EventNotifier event_notifier_;
+
+  Timer timer_;
 };
 
 }

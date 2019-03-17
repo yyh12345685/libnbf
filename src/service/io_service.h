@@ -55,6 +55,7 @@ public:
   const std::string& GetMatrixReport();
   void HandleSignal();
 
+  int AgentsAddModr(EventFunctionBase* ezfd, int fd);
   int AgentsDel(EventFunctionBase* ezfd, int fd);
 
 private:

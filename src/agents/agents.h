@@ -27,6 +27,7 @@ public:
   AgentMaster* GetMaster()const{ return agent_master_; }
   AgentSlave* GetSlave()const{ return agent_slaves_; }
 
+  int AddModr(EventFunctionBase *ezfd, int fd, bool set, bool lock = false);
   int Del(EventFunctionBase* ezfd, int fd);
 
 private:

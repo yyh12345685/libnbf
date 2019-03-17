@@ -153,6 +153,7 @@
     <ClCompile Include="src\client\client.cpp" />
     <ClCompile Include="src\client\client_mgr.cpp" />
     <ClCompile Include="src\client\client_router.cpp" />
+    <ClCompile Include="src\client\client_routers.cpp" />
     <ClCompile Include="src\common\ini_files.cpp" />
     <ClCompile Include="src\common\buffer.cpp" />
     <ClCompile Include="src\common\string_util.cpp" />
@@ -204,6 +205,7 @@
     <ClInclude Include="src\client\client.h" />
     <ClInclude Include="src\client\client_mgr.h" />
     <ClInclude Include="src\client\client_router.h" />
+    <ClInclude Include="src\client\client_routers.h" />
     <ClInclude Include="src\common\common.h" />
     <ClInclude Include="src\common\heap.h" />
     <ClInclude Include="src\common\ini_files.h" />

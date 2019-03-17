@@ -39,10 +39,8 @@ void ClientRoutersConfig::Dump(std::ostream& os) const {
         os << "[\"heartbeat\":" << cli.heartbeat
           << "\"timeout\":" << cli.timeout
           << "\"single_addr_connect_count\":" << cli.single_addr_connect_count
-          << "\"address\":";
-        for (const auto& addr : cli.address) {
-          os << "[\"addr\":" << addr << "]";
-        }
+          << "\"address\":"<<cli.address;
+      
         os << "]";
       }
       os << "]";
@@ -145,8 +143,8 @@ int ConfigInfo::LoadRouterConfig(const std::string& file_path){
       client.timeout = ini_config.GetValueInt(section.c_str(), "timeout_ms", 100);
       std::string section1("address");
       section1.append(common::ToString(jdx));
-      std::string addr = ini_config.GetValue(section.c_str(), section1.c_str(), "");
-      client.address.push_back(addr);
+      client.address = ini_config.GetValue(section.c_str(), section1.c_str(), "");
+      router.clients.push_back(client);
     }
   }
   return 0;

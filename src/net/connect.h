@@ -29,6 +29,7 @@ public:
   int GetPort() { return port_; }
 
   inline void SetProtocol(int cate) { protocol_ = protocol_factory_.Create(cate); }
+  inline void SetProtocol(ProtocolBase* protocol) { protocol_ = protocol; }
   inline ProtocolBase* GetProtocol() { return protocol_; }
 
   virtual void OnRead(EventDriver *poll);
@@ -38,6 +39,7 @@ public:
   int EncodeMsg(EventMessage* message);
 
   void OnActiveClose();
+  void Destroy() { delete this; }
 protected:
   virtual int RegisterAddModrw(int fd, bool set);
   virtual int RegisterDel(int fd);
@@ -49,9 +51,6 @@ protected:
   void OnReadWriteClose();
   void Clean();
 
-  void Destroy() {
-    delete this;
-  }
   virtual void OnClose();
 
 private:

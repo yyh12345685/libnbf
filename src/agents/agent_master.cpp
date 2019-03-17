@@ -28,6 +28,10 @@ bool AgentMaster::Init(const IoServiceConfig* confs,const Agents* agents){
     char ip[1024];
     int port;
     int cate = ProtocolHelper::ParseSpecAddr(addr.address.c_str(), ip, &port);
+    if (cate == MessageType::kUnknownEvent) {
+      WARN(logger, "ParseSpecAddr faild,address:" << address);
+      continue;
+    }
 
     int fd = Socket::Listen(ip, port, 20480);
     if (fd<0){

@@ -1,5 +1,9 @@
 #include "client/client.h"
 #include "service/io_service.h"
+#include "app/config_info.h"
+#include "protocol/protocol_helper.h"
+#include "net/async_client_connect.h"
+#include "net/sync_client_connect.h"
 
 namespace bdf{
 
@@ -38,7 +42,29 @@ int Client::Start() {
 
 ClientConnect* Client::CreateClient(
   const std::string& address, uint32_t timeout_ms, uint32_t heartbeat_ms){
-  return nullptr;
+  char ip[1024];
+  int port;
+  int protocol_type = ProtocolHelper::ParseSpecAddr(address.c_str(),ip,&port);
+  if (protocol_type == MessageType::kUnknownEvent){
+    WARN(logger, "ParseSpecAddr faild,address:" << address);
+    return nullptr;
+  }
+
+  ProtocolFactory protocol_factory;
+  ProtocolBase* protocol = protocol_factory.Create(protocol_type);
+
+  ClientConnect* client_connect = NULL;
+
+  if (protocol->IsSynchronous()) {
+    client_connect = new SyncClientConnect(timeout_ms, heartbeat_ms);
+  } else {
+    client_connect = new AsyncClientConnect(timeout_ms, heartbeat_ms);
+  }
+
+  client_connect->SetIp(ip);
+  client_connect->SetPort(port);
+  client_connect->SetProtocol(protocol);
+  return client_connect;
 }
 
 int Client::Stop() {
@@ -47,6 +73,7 @@ int Client::Stop() {
   }
 
   int ret = connect_->Stop();
+  connect_->Destroy();
   connect_ = NULL;
   return ret;
 }
@@ -79,7 +106,7 @@ EventMessage* Client::DoSendRecieve(EventMessage* message, uint32_t timeout_ms) 
   if (GetClientStatus() != kWorking) {
     //DEBUG(logger, "Client::Send Channel Broken" << *this);
     MessageFactory::Destroy(message);
-    return NULL;
+    return nullptr;
   }
 
   message->sequence_id = GetSequenceId();

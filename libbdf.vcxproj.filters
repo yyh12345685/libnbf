@@ -187,6 +187,9 @@
     <ClCompile Include="src\client\client_router.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\client\client_routers.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\monitor\matrix.h">
@@ -367,6 +370,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="src\client\client_router.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\client\client_routers.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

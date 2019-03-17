@@ -11,7 +11,7 @@ class ServerConnect :public Connecting {
 
 public:
   ServerConnect();
-  ~ServerConnect();
+  virtual ~ServerConnect();
 
   virtual void OnDecodeMessage(EventMessage* message);
 

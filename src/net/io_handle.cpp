@@ -16,6 +16,7 @@ void IoHandler::Run(void* handle, HandleData* data){
   IoHandler* io_handle = (IoHandler*)handle;
   io_handler_ = io_handle;
   while (data->is_run) {
+    io_handle->GetTimer().ProcessTimer();
     if (data->data_.empty()) {
       usleep(10);
       continue;

@@ -9,31 +9,26 @@ namespace bdf{
 
 class EventMessage;
 class Client;
+struct ClientConfig;
 
 class ClientRouter{
 public:
   ClientRouter(const std::string& name);
   ~ClientRouter();
 
-  int AddClient(const std::string& address, uint32_t timeout_ms);
-
-  int Start();
+  int Start(const ClientConfig&cli_config);
   int Stop();
 
   bool Send(EventMessage * message);
 
-  template<typename T>
-  typename T::ResponseType * SendRecieve(T* message, uint32_t timeout_ms = 0) {
-    return (typename T::ResponseType*)DoSendRecieve(message, timeout_ms);
+  EventMessage* SendRecieve(EventMessage* message, uint32_t timeout_ms = 0){
+    return DoSendRecieve(message, timeout_ms);
   }
 
 private:
   LOGGER_CLASS_DECL(logger);
 
   EventMessage* DoSendRecieve(EventMessage* message, uint32_t timeout_ms = 0);
-
-  Client* GetNextClient();
-  Client* GetHashClient(uint32_t hash);
 
   std::string name_;
   std::vector<Client*> clients_;

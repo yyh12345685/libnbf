@@ -43,7 +43,7 @@ struct IoServiceConfig {
 std::ostream& operator << (std::ostream& os, const IoServiceConfig& config);
 
 struct ClientConfig {
-  std::vector<std::string> address;
+  std::string address;
   uint32_t timeout;
   uint32_t heartbeat;
   int single_addr_connect_count;
@@ -52,6 +52,7 @@ struct ClientConfig {
 struct ClientRouterConfig {
   std::string name;
   std::string mapping;
+  //每个ClientConfig可以有不一样的address
   std::vector<ClientConfig> clients;
 };
 

@@ -9,7 +9,7 @@ namespace bdf{
 class SyncClientConnect:public ClientConnect{
 
 public:
-  SyncClientConnect();
+  SyncClientConnect(uint32_t timeout_ms, uint32_t heartbeat_ms);
   ~SyncClientConnect();
 
   virtual void OnDecodeMessage(EventMessage* message);

@@ -12,7 +12,7 @@ class EventMessage;
 class AsyncSequence{
 public: 
   AsyncSequence();
-  ~AsyncSequence();
+  virtual ~AsyncSequence();
 
   int Put(EventMessage* message);
   EventMessage* Get(uint32_t sequence_id);

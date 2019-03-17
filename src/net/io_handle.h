@@ -19,7 +19,7 @@ public:
   static void Run(void* handle,HandleData* data);
   void Handle(EventMessage* message);
 
-  static IoHandler* GetCurrentIOHandler() {
+  static IoHandler* GetIoHandler() {
     return io_handler_;
   }
 
@@ -32,6 +32,7 @@ public:
   }
 
 private:
+  Timer& GetTimer() { return timer_; }
 
   void HandleIoMessageEvent(EventMessage* message);
   void HandleIoActiveCloseEvent(EventMessage* message);

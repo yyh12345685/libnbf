@@ -1,13 +1,15 @@
 #pragma once
 
 #include <map>
+#include <string>
 #include "common/logger.h"
 #include "common/common.h"
 
 namespace bdf{
 
 struct ClientRoutersConfig;
-class ClientRouter;
+class ClientRouters;
+class EventMessage;
 
 class ClientMgr{
 
@@ -17,13 +19,26 @@ public:
     return inst;
   }
 
-  int Start(ClientRoutersConfig& routers_config);
+  int Start(const ClientRoutersConfig& routers_config);
   int Stop();
 
-  ClientRouter* GetClientRouter(const std::string& name) const;
+  bool Send(const std::string& router,EventMessage* message);
+  bool SendHash(const std::string& router, EventMessage* message, uint32_t hash);
+
+  EventMessage* SendRecieve(
+    const std::string& router,
+    EventMessage* message,
+    uint32_t timeout_ms = 0);
+  EventMessage* SendRecieveHash(
+    const std::string& router,
+    EventMessage* message,
+    uint32_t hash,
+    uint32_t timeout_ms = 0);
 
 private:
-  std::map<std::string, ClientRouter*> router_;
+  std::map<std::string, ClientRouters* > router_maps_;
+
+  ClientRouters* GetClientRouters(const std::string& router);
 
   DISALLOW_COPY_ASSIGN_CONSTRUCTION(ClientMgr)
 

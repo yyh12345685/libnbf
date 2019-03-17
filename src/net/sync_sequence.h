@@ -10,7 +10,7 @@ class EventMessage;
 class SyncSequence {
 public:
   SyncSequence();
-  ~SyncSequence();
+  virtual ~SyncSequence();
 
   int Put(EventMessage* message);
   EventMessage* Get(uint32_t sequence_id);

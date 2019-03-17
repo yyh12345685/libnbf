@@ -24,6 +24,14 @@ public:
   int Modrw(int fd, bool set);
   int Wakeup();
 
+  uint64_t StartTimer(TimerData& data) {
+    return poll_.StartTimer(data);
+  }
+
+  void CancelTimer(uint64_t timer_id) {
+    poll_.CancelTimer(timer_id);
+  }
+
 private:
   EventDriver poll_;
   bool is_run_;

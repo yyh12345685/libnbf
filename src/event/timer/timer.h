@@ -13,7 +13,6 @@ struct GetTimeOut {
   int64_t operator()(const T& t) const { return t.time_out_ms; }
 };
 
-//template <typename TD= TimerData>
 class Timer {
 public:
 

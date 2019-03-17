@@ -175,6 +175,9 @@ int EventDriver::Modrw(int fd, bool set){
 }
 
 int EventDriver::Poll(int timeout){
+  //process timer
+  timer_.ProcessTimer();
+
   inloop_ = true;
   struct epoll_event events[4096];
   int numfd = epoll_wait(epfd_, events, 4096, timeout);

@@ -9,7 +9,7 @@ namespace bdf{
 class EventMessage;
 
 class Client {
-
+public:
   enum {
     kWorking = 0,
     kBroken = 1,
@@ -33,9 +33,8 @@ class Client {
   int Stop();
 
   bool Send(EventMessage* message);
-  template<typename T>
-  typename T::ResponseType * SendRecieve(T* message, uint32_t timeout_ms = 0) {
-    return (typename T::ResponseType*)DoSendRecieve(message, timeout_ms);
+  EventMessage* SendRecieve(EventMessage* message, uint32_t timeout_ms = 0){
+    return DoSendRecieve(message, timeout_ms);
   }
 
   int GetClientStatus() const {

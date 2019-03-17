@@ -123,6 +123,10 @@ const std::string& IoService::GetMatrixReport(){
   }
 }
 
+int IoService::AgentsAddModr(EventFunctionBase* ezfd, int fd){
+  agents_->AddModr(ezfd, fd,true);
+}
+
 int IoService::AgentsDel(EventFunctionBase* ezfd, int fd){
   return agents_->Del(ezfd, fd);
 }
