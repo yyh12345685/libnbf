@@ -8,7 +8,7 @@
 namespace bdf{
 
 class ServiceHandler;
-//class ClientManager;
+class ClientMgr;
 class ConfigInfo;
 
 class AppBase{
@@ -28,7 +28,7 @@ public:
 
   ConfigInfo* GetConfigInfo() { return config_info_; }
 
-  //ClientManager* GetClientManager() { return client_manager_; }
+  ClientMgr* GetClientMgr() { return client_mgr_; }
 
   int Run(int argc, char* argv[]);
   int Start(int argc, char* argv[]);
@@ -37,6 +37,7 @@ public:
 
 protected:
   virtual int OnStart() = 0;
+  virtual int OnAfterStart() = 0;
   virtual int OnStop() = 0;
 
   virtual ServiceHandler* CreateServiceHandler() = 0;
@@ -50,11 +51,11 @@ private:
   int LoadConfig();
   int StartIoService();
 
-  //int StartClientManager();
+  int StartClientManager();
 
   int WaitIoService();
 
-  //int StopClientManager();
+  int StopClientManager();
   int StopIoService();
 
   static AppBase* application_;
@@ -62,7 +63,8 @@ private:
   IoServiceConfig io_service_config_;
 
   ConfigInfo* config_info_;
-  //ClientManager* client_manager_;
+
+  ClientMgr* client_mgr_;
 
   AppCmdParser cmd_parser_;
 };

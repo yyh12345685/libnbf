@@ -29,7 +29,7 @@ bool AgentMaster::Init(const IoServiceConfig* confs,const Agents* agents){
     int port;
     int cate = ProtocolHelper::ParseSpecAddr(addr.address.c_str(), ip, &port);
     if (cate == MessageType::kUnknownEvent) {
-      WARN(logger, "ParseSpecAddr faild,address:" << address);
+      WARN(logger_, "ParseSpecAddr faild,address:" << addr.address);
       continue;
     }
 

@@ -20,7 +20,7 @@ void ServerConnect::OnDecodeMessage(EventMessage* message) {
   message->direction = MessageBase::kIncomingRequest;
   message->descriptor_id = (int64_t)((void*)this);
 
-  IoService::GetInstance().SendToIoHandleServiceHandle(message);
+  IoService::GetInstance().SendToServiceHandle(message);
 }
 
 int ServerConnect::RegisterDel(int fd){

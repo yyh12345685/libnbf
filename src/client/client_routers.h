@@ -27,7 +27,7 @@ public:
     EventMessage* message, uint32_t hash, uint32_t timeout_ms = 0);
 
 private:
-  LOGGER_CLASS_DECL(logger);
+  LOGGER_CLASS_DECL(logger_);
 
   std::string name_;
   std::string mapping_;

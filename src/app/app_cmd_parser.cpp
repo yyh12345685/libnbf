@@ -40,16 +40,16 @@ int AppCmdParser::Usage(int argc, char* argv[]){
 
 int AppCmdParser::ParseArgv(int argc, char* argv[]){
   for (int i = 1; i < argc; ++i){
-    if (0 == strcmp(argv[i], "--c")){
+    if (0 == strcmp(argv[i], "-c")|| 0 == strcmp(argv[i], "--config")){
       if (++i < argc)
         application_config_ = argv[i];
       continue;
     }
-    if (0 == strcmp(argv[i], "--d")){
+    if (0 == strcmp(argv[i], "-d")|| 0 == strcmp(argv[i], "--daemon")){
       daemon_mode_ = true;
       continue;
     }
-    if (0 == strcmp(argv[i], "--l")) {
+    if (0 == strcmp(argv[i], "-l") || 0 == strcmp(argv[i], "--log")) {
       if (++i < argc)
         logger_config_ = argv[i];
       continue;

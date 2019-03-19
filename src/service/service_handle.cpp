@@ -31,6 +31,10 @@ void ServiceHandler::Run(void* handle, HandleData* data){
 }
 
 void ServiceHandler::Handle(EventMessage* message) {
+  //if (message->status != EventMessage::kStatusOK) {
+  //  MessageFactory::Destroy(message);
+  //  return;
+  //}
   switch (message->type_id) {
   case MessageType::kHttpMessage:
     return message->direction == MessageBase::kIncomingRequest

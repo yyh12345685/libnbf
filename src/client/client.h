@@ -43,7 +43,7 @@ public:
   }
 
 private:
-  LOGGER_CLASS_DECL(logger);
+  LOGGER_CLASS_DECL(logger_);
 
   ClientConnect* CreateClient(
     const std::string& address, uint32_t timeout_ms, uint32_t heartbeat_ms);

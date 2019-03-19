@@ -95,7 +95,7 @@ bool RapidProtocol::Encode(EventMessage *pv, Buffer *output){
   }
 
   if (msg->body.empty() && msg->command == 0){
-    WARN(logger_, "msg->body & cmd is empty");
+    WARN(logger_, "msg->body || cmd is empty");
     return false;
   }
 
@@ -124,6 +124,16 @@ bool RapidProtocol::Encode(EventMessage *pv, Buffer *output){
     memcpy(data, msg->body.c_str(), length);
   return output->PourWriting(size);
 
+}
+
+EventMessage* RapidProtocol::HeartBeatRequest(){
+  RapidMessage* rapid_message = MessageFactory::Allocate<RapidMessage>();
+  rapid_message->type_id = MessageType::kHeartBeatMessage;
+  return rapid_message;
+}
+
+EventMessage* RapidProtocol::HeartBeatResponse(EventMessage* request){
+  return request;
 }
 
 }

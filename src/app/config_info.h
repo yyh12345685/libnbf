@@ -68,8 +68,8 @@ public:
 
   int LoadConfig(const std::string& config_path);
 
-  IoServiceConfig& GetIOServiceConfig() { return io_service_config_; }
-  ClientRoutersConfig GetClientRoutersConfig() { return client_routers_config_; }
+  const IoServiceConfig& GetIOServiceConfig() { return io_service_config_; }
+  const ClientRoutersConfig& GetClientRoutersConfig() { return client_routers_config_; }
   virtual void Dump(std::ostream& os) const;
 
 protected:

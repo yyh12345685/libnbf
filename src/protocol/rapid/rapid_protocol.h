@@ -21,7 +21,10 @@ public:
   virtual bool Encode(EventMessage *msg, Buffer *output);
 
   virtual ProtocolBase* Clone() { return new RapidProtocol(); }
-  virtual void Release() { delete this; };
+  virtual void Release() { delete this; }
+
+  virtual EventMessage* HeartBeatRequest();
+  virtual EventMessage* HeartBeatResponse(EventMessage* request);
  private:
   LOGGER_CLASS_DECL(logger_);
 };

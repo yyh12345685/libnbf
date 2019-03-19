@@ -5,6 +5,8 @@
 
 namespace bdf{
 
+LOGGER_CLASS_IMPL(logger_, ClientRouter)
+
 ClientRouter::ClientRouter(const std::string& name):
   name_(name),
   current_(0){
@@ -20,6 +22,10 @@ int ClientRouter::Start(const ClientConfig& cli_config){
   for (int idx = 0; idx < cli_config.single_addr_connect_count;idx++) {
     Client* client = new Client(
       name_, cli_config.address, cli_config.timeout, cli_config.heartbeat);
+    if (0!= client->Start()){
+      delete client;
+      return -1;
+    }
     clients_.push_back(client);
   }
   return 0;
@@ -47,7 +53,7 @@ EventMessage* ClientRouter::DoSendRecieve(EventMessage* message, uint32_t timeou
   uint32_t idx = current_++;
   Client* cli = clients_[idx%clients_.size()];
   if (!cli) {
-    DEBUG(logger, "ClientRouter::DoSendRecieve no avaliable client:" << name_);
+    DEBUG(logger_, "ClientRouter::DoSendRecieve no avaliable client:" << name_);
     MessageFactory::Destroy(message);
     return nullptr;
   }

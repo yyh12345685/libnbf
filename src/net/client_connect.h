@@ -25,6 +25,7 @@ public:
   int Stop();
 
   virtual int RegisterAddModrw(int fd);
+  virtual int RegisterAddModr(int fd);
   virtual int RegisterDel(int fd);
 
   inline int GetStatus() const { return status_; }
@@ -37,26 +38,39 @@ protected:
     kUnKown = 0,
     kClientTimerTypeReconnect = 1,
     kClientTimerTypeTimeout,
-    kClientTimerTypeHeartBeat，
+    kClientTimerTypeHeartBeat,
   };
   uint8_t client_timer_type_reconnect_ = kClientTimerTypeReconnect;
   uint8_t client_timer_type_timeout_ = kClientTimerTypeTimeout;
-  uint8_t client_timer_type_heartbeat_ = kClientTimerTypeHeartBeat，;
+  uint8_t client_timer_type_heartbeat_ = kClientTimerTypeHeartBeat;
+
+  //这几个timer相关的线程，只有iohandle回调的时候才能调用
   int StartReconnectTimer();
   int StartTimeoutTimer();
   int StartHeartBeatTimer();
   void CancelTimer();
+
+  void OnWrite();
+  void OnConnectWrite();
+  bool IsConnected(uint32_t time_ms, int wait_time = 1);
+
+  virtual void OnHeartBeat();
+  virtual void OnTimeout() = 0;
+  virtual void CleanSequenceQueue() = 0;
+
+  void DoSendBack(EventMessage* message, int status);
+  void CleanClient();
 private:
   LOGGER_CLASS_DECL(logger);
 
-  int status_;
+  int status_ ;
 
   uint32_t timeout_ms_;
   uint32_t heartbeat_ms_;
 
-  uint64_t reconnect_timer_;
-  uint64_t timeout_timer_;
-  uint64_t heartbeat_timer_;
+  uint64_t reconnect_timer_ = 0;
+  uint64_t timeout_timer_ = 0;
+  uint64_t heartbeat_timer_= 0;
 };
 
 

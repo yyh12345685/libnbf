@@ -14,10 +14,9 @@ class EventMessage;
 class ClientMgr{
 
 public:
-  static ClientMgr& GetInstance() {
-    static ClientMgr inst;
-    return inst;
-  }
+
+  ClientMgr();
+  ~ClientMgr();
 
   int Start(const ClientRoutersConfig& routers_config);
   int Stop();
@@ -36,11 +35,12 @@ public:
     uint32_t timeout_ms = 0);
 
 private:
+  LOGGER_CLASS_DECL(logger_);
   std::map<std::string, ClientRouters* > router_maps_;
 
   ClientRouters* GetClientRouters(const std::string& router);
 
-  DISALLOW_COPY_ASSIGN_CONSTRUCTION(ClientMgr)
+  DISALLOW_COPY_AND_ASSIGN(ClientMgr)
 
 };
 

@@ -136,12 +136,15 @@
   <ItemGroup>
     <Text Include="CMakeLists.txt" />
     <Text Include="examples\CMakeLists.txt" />
+    <Text Include="examples\test_client_server\CMakeLists.txt" />
     <Text Include="examples\test_server\CMakeLists.txt" />
     <Text Include="src\CMakeLists.txt" />
     <Text Include="src\monitor\test\CMakeLists.txt" />
     <Text Include="src\tester\CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="examples\test_client_server\src\test_main.cpp" />
+    <ClCompile Include="examples\test_client_server\src\test_client_server_handle.cpp" />
     <ClCompile Include="examples\test_server\src\test_main.cpp" />
     <ClCompile Include="examples\test_server\src\test_server_handle.cpp" />
     <ClCompile Include="src\agents\agents.cpp" />
@@ -194,6 +197,7 @@
     <ClCompile Include="src\tester\t_timer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="examples\test_client_server\src\test_client_server_handle.h" />
     <ClInclude Include="examples\test_server\src\test_server_handle.h" />
     <ClInclude Include="src\agents\agents.h" />
     <ClInclude Include="src\agents\agent_master.h" />

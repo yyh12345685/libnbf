@@ -10,15 +10,6 @@ class Buffer;
 
 class ProtocolBase {
 public:
-  enum {
-    kDecodeSuccess = 0,
-    kDecodeContinue = 1,
-    kDecodeFail = 2,
-  };
-  enum {
-    kEncodeSuccess = 0,
-    kEncodeFail = 1,
-  };
   ProtocolBase(){}
   virtual ~ProtocolBase() {}
 public:
@@ -27,7 +18,9 @@ public:
   virtual EventMessage *Decode(Buffer &input, bool &failed) = 0;
   virtual bool Encode(EventMessage *msg, Buffer *output) = 0;
   virtual ProtocolBase* Clone() = 0;
-  
+
+  virtual EventMessage* HeartBeatRequest() = 0;
+  virtual EventMessage* HeartBeatResponse(EventMessage* request) = 0;
 };
 
 class ProtocolFactory {

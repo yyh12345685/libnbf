@@ -7,6 +7,8 @@
 
 namespace bdf{
 
+LOGGER_CLASS_IMPL(logger_, Client)
+
 Client::Client(
   const std::string& name,
   const std::string& address,
@@ -26,12 +28,12 @@ Client::~Client(){
 int Client::Start() {
   ClientConnect* con = CreateClient(address_, timeout_ms_, heartbeat_ms_);
   if (!con) {
-    ERROR(logger, "Client::Start CreateClient fail"<< ", address:" << address_);
+    ERROR(logger_, "Client::Start CreateClient fail"<< ", address:" << address_);
     return -1;
   }
 
   if (0 != con->TryConnect()) {
-    ERROR(logger, "Client::Start fail"<< ", address:" << address_);
+    ERROR(logger_, "Client::Start fail"<< ", address:" << address_);
     delete con;
     return -2;
   }
@@ -46,7 +48,7 @@ ClientConnect* Client::CreateClient(
   int port;
   int protocol_type = ProtocolHelper::ParseSpecAddr(address.c_str(),ip,&port);
   if (protocol_type == MessageType::kUnknownEvent){
-    WARN(logger, "ParseSpecAddr faild,address:" << address);
+    WARN(logger_, "ParseSpecAddr faild,address:" << address);
     return nullptr;
   }
 
@@ -73,7 +75,8 @@ int Client::Stop() {
   }
 
   int ret = connect_->Stop();
-  connect_->Destroy();
+  //may be a bug
+  //connect_->Destroy();
   connect_ = NULL;
   return ret;
 }

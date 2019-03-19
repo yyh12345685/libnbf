@@ -38,6 +38,7 @@
     <Text Include="src\tester\CMakeLists.txt" />
     <Text Include="examples\CMakeLists.txt" />
     <Text Include="examples\test_server\CMakeLists.txt" />
+    <Text Include="examples\test_client_server\CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\monitor\matrix.cpp">
@@ -188,6 +189,12 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="src\client\client_routers.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="examples\test_client_server\src\test_main.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="examples\test_client_server\src\test_client_server_handle.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -373,6 +380,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="src\client\client_routers.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="examples\test_client_server\src\test_client_server_handle.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

@@ -54,6 +54,7 @@ set(BDF_SRC
 
   client/client.cpp
   client/client_router.cpp
+  client/client_routers.cpp
   client/client_mgr.cpp
 
   app/config_info.cpp

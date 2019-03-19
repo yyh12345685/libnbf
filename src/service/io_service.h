@@ -50,11 +50,12 @@ public:
 
   void SendToIoHandle(EventMessage* msg);
   void SendCloseToIoHandle(EventMessage* msg);
-  void SendToIoHandleServiceHandle(EventMessage* msg);
+  void SendToServiceHandle(EventMessage* msg);
 
   const std::string& GetMatrixReport();
   void HandleSignal();
 
+  int AgentsAddModrw(EventFunctionBase* ezfd, int fd);
   int AgentsAddModr(EventFunctionBase* ezfd, int fd);
   int AgentsDel(EventFunctionBase* ezfd, int fd);
 

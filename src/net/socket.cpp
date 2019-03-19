@@ -294,4 +294,14 @@ bool Socket::SetSoLinger(int fd, int seconds){
   return true;
 }
 
+sockaddr_in Socket::GenerateAddr(const char *ip, const unsigned short port) {
+  struct sockaddr_in sa;
+  memset(&sa, 0, sizeof(sa));
+  sa.sin_family = AF_INET;
+  sa.sin_port = htons(port);
+  sa.sin_addr.s_addr = htonl(INADDR_ANY);
+  inet_aton(ip, &sa.sin_addr);
+  return sa;
+}
+
 }

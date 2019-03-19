@@ -22,6 +22,7 @@ public:
   void Stop();
   virtual ~AgentSlave();
 
+  int AddModrw(EventFunctionBase *ezfd, int fd, bool set, bool lock = false);
   int AddModr(EventFunctionBase *ezfd,int fd,  bool set,bool lock = false);
   int Del(EventFunctionBase* ezfd, int fd);
 

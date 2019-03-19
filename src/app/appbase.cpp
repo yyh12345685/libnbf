@@ -1,5 +1,6 @@
 #include <unistd.h>
 #include "app/appbase.h"
+#include "client/client_mgr.h"
 
 namespace bdf{
 
@@ -7,13 +8,18 @@ LOGGER_CLASS_IMPL(logger, AppBase);
 
 AppBase* AppBase::application_ = NULL;
 
-AppBase::AppBase()
-  : config_info_(nullptr){}
+AppBase::AppBase():
+  config_info_(nullptr),
+  client_mgr_(new ClientMgr()){}
 
 AppBase::~AppBase() {
   if (config_info_) {
     delete config_info_;
     config_info_ = nullptr;
+  }
+  if (client_mgr_){
+    delete client_mgr_;
+    client_mgr_ = nullptr;
   }
 }
 
@@ -47,11 +53,19 @@ int AppBase::Start(int argc, char* argv[]) {
     return -1;
   }
 
+  if (0 != OnStart()) {
+    return -1;
+  }
+
   if (0 != StartIoService()) {
     return -1;
   }
 
-  if (0 != OnStart()) {
+  if (0 != StartClientManager()){
+    return -1;
+  }
+
+  if (0 != OnAfterStart()) {
     return -1;
   }
 
@@ -66,10 +80,13 @@ int AppBase::Wait() {
 }
 
 int AppBase::Stop() {
-  INFO(logger, "Applciation::OnStop");
-
+  INFO(logger, "AppBase::OnStop");
   OnStop();
-  INFO(logger, "Applciation::StopIOService");
+
+  INFO(logger, "AppBase::StopClientManager");
+  StopClientManager();
+
+  INFO(logger, "AppBase::StopIoService");
   StopIoService();
 
   return 0;
@@ -125,6 +142,14 @@ int AppBase::StartIoService() {
   }
 
   return 0;
+}
+
+int AppBase::StartClientManager(){
+  return client_mgr_->Start(config_info_->GetClientRoutersConfig());
+}
+
+int AppBase::StopClientManager(){
+  return client_mgr_->Stop();
 }
 
 int AppBase::WaitIoService() {

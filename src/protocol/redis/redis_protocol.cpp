@@ -107,4 +107,14 @@ bool RedisProtocol::Encode(EventMessage *msg, Buffer *output){
   }
 }
 
+EventMessage* RedisProtocol::HeartBeatRequest() {
+  RedisMessage* redis_message = MessageFactory::Allocate<RedisMessage>();
+  redis_message->type_id = MessageType::kHeartBeatMessage;
+  return redis_message;
+}
+
+EventMessage* RedisProtocol::HeartBeatResponse(EventMessage* request) {
+  return request;
+}
+
 }

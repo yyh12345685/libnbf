@@ -257,4 +257,14 @@ bool HttpProtocol::WirteToBuf(HttpMessage *msg, Buffer *output){
   return output->Write(msg->http_info.body.c_str(), msg->http_info.body.size());
 }
 
+EventMessage* HttpProtocol::HeartBeatRequest() {
+  HttpMessage* http_message = MessageFactory::Allocate<HttpMessage>();
+  http_message->type_id = MessageType::kHeartBeatMessage;
+  return http_message;
+}
+
+EventMessage* HttpProtocol::HeartBeatResponse(EventMessage* request) {
+  return request;
+}
+
 }

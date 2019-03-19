@@ -58,6 +58,8 @@ class Socket{
 
   inline static bool isIpAddr(const char* ip);
 
+  static sockaddr_in GenerateAddr(const char *ip, const unsigned short port);
+
 private:
 	LOGGER_CLASS_DECL(logger_);
 };

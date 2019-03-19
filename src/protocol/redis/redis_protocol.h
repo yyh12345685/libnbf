@@ -22,6 +22,9 @@ public:
 
   virtual ProtocolBase* Clone() { return new RedisProtocol(); }
   virtual void Release() { delete this; };
+
+  virtual EventMessage* HeartBeatRequest();
+  virtual EventMessage* HeartBeatResponse(EventMessage* request);
 private:
   LOGGER_CLASS_DECL(logger_);
 };

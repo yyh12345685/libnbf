@@ -34,6 +34,10 @@ public:
 
   virtual EventMessage *Decode(Buffer &input, bool& failed);
   virtual bool Encode(EventMessage *msg, Buffer *output);
+
+  virtual EventMessage* HeartBeatRequest();
+  virtual EventMessage* HeartBeatResponse(EventMessage* request);
+
 private:
   bool WirteToBuf(HttpMessage *msg, Buffer *output);
   LOGGER_CLASS_DECL(logger_);

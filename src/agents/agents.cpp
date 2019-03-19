@@ -45,8 +45,12 @@ void Agents::Stop(){
     agent_slaves_->Stop();
 }
 
+int Agents::AddModrw(EventFunctionBase *ezfd, int fd, bool set, bool lock){
+  return agent_slaves_->AddModrw(ezfd, fd, set, lock);
+}
+
 int Agents::AddModr(EventFunctionBase *ezfd, int fd, bool set, bool lock){
-  agent_slaves_->AddModr(ezfd, fd, set, lock);
+  return agent_slaves_->AddModr(ezfd, fd, set, lock);
 }
 
 int Agents::Del(EventFunctionBase* ezfd, int fd){

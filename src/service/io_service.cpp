@@ -93,7 +93,7 @@ void IoService::SendToIoHandle(EventMessage* msg){
   SendToIoHandleInner(msg);
 }
 
-void IoService::SendToIoHandleServiceHandle(EventMessage* msg){
+void IoService::SendToServiceHandle(EventMessage* msg){
   static thread_local std::atomic<uint32_t> id_hs(0);
   HandleData* hd = 
     handle_thread_.service_handle_data_.at((id_hs++)%handle_thread_.service_handle_data_.size());
@@ -123,8 +123,12 @@ const std::string& IoService::GetMatrixReport(){
   }
 }
 
+int IoService::AgentsAddModrw(EventFunctionBase* ezfd, int fd){
+  return agents_->AddModrw(ezfd, fd, true);
+}
+
 int IoService::AgentsAddModr(EventFunctionBase* ezfd, int fd){
-  agents_->AddModr(ezfd, fd,true);
+  return agents_->AddModr(ezfd, fd,true);
 }
 
 int IoService::AgentsDel(EventFunctionBase* ezfd, int fd){

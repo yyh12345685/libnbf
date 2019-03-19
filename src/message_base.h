@@ -87,7 +87,7 @@ public:
   uint8_t type_id;
   uint8_t type_io_event;
   uint8_t direction;
-  uint8_t status;
+  uint8_t status = kStatusOK;
   uint64_t sequence_id;
   uint64_t birthtime;
 };

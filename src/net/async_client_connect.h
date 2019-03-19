@@ -13,6 +13,12 @@ public:
   virtual ~AsyncClientConnect();
 
   virtual void OnDecodeMessage(EventMessage* message);
+  virtual int EncodeMsg(EventMessage* message);
+
+protected:
+
+  virtual void OnTimeout();
+  virtual void CleanSequenceQueue();
 
 private:
   AsyncSequence async_sequence_;

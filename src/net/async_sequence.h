@@ -1,7 +1,7 @@
 #pragma once
 
 #include <unordered_map>
-#include <queue>
+#include <list>
 #include <atomic>
 #include "common/logger.h"
 
@@ -11,13 +11,14 @@ class EventMessage;
 
 class AsyncSequence{
 public: 
-  AsyncSequence();
+  AsyncSequence(uint32_t timeout_in_ms);
   virtual ~AsyncSequence();
 
   int Put(EventMessage* message);
   EventMessage* Get(uint32_t sequence_id);
 
-  std::queue<EventMessage*> Timeout();
+  std::list<EventMessage*> Timeout();
+  std::list<EventMessage*> Clear();
 
   inline uint32_t GenerateSequenceId() { 
     return ++sequence_id_;
@@ -29,7 +30,7 @@ private:
 
   std::unordered_map<uint32_t, EventMessage*> registery_;
 
-  std::queue<EventMessage*> queue_;
+  std::list<EventMessage*> list_;
 
   LOGGER_CLASS_DECL(logger);
 };

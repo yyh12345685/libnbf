@@ -91,7 +91,7 @@ int ConfigInfo::LoadIoServiceConfig(CIniFileS& ini, IoServiceConfig* config){
   config->slave_thread_count = ini.GetValueInt("io_service", "slave_thread_count", 2);
   config->service_count = ini.GetValueInt("io_service", "services_count", 1);
 
-  config->router_file = ini.GetValueInt("io_service", "router_file", 1);
+  config->router_file = ini.GetValue("io_service", "router_file", "");
 
   config->stack_size = ini.GetValueInt("io_service", "stack_size", 2048);
 
@@ -120,6 +120,10 @@ int ConfigInfo::LoadServicesConfig(CIniFileS& ini, int srv_cnt, std::vector<Serv
 }
 
 int ConfigInfo::LoadRouterConfig(const std::string& file_path){
+  if (file_path.empty()){
+    INFO(logger_, "not need RouterConfig.");
+    return 0;
+  }
   CIniFileS ini_config;
   if (!ini_config.Open(file_path.c_str())) {
     WARN(logger_, "open router config file error,path:" << file_path);
@@ -146,6 +150,7 @@ int ConfigInfo::LoadRouterConfig(const std::string& file_path){
       client.address = ini_config.GetValue(section.c_str(), section1.c_str(), "");
       router.clients.push_back(client);
     }
+    client_routers_config_.client_router_config.push_back(router);
   }
   return 0;
 }

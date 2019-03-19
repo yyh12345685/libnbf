@@ -36,7 +36,7 @@ public:
   virtual void OnWrite();
 
   int DecodeMsg();
-  int EncodeMsg(EventMessage* message);
+  virtual int EncodeMsg(EventMessage* message);
 
   void OnActiveClose();
   void Destroy() { delete this; }
@@ -53,7 +53,7 @@ protected:
 
   virtual void OnClose();
 
-private:
+protected:
   int fd_;
   std::string ip_;
   int port_;
