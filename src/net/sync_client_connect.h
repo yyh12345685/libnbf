@@ -14,14 +14,15 @@ public:
 
   virtual void OnDecodeMessage(EventMessage* message);
   virtual int EncodeMsg(EventMessage* message);
-protected:
-  virtual void OnTimeout();
+
+  void OnTimeout(EventMessage* msg);
   virtual void CleanSequenceQueue();
 
+  void CleanSyncClient();
+protected:
   virtual int DecodeMsg();
-
   void FireMessage();
-
+  
 private:
   SyncSequence sync_sequence_;
 

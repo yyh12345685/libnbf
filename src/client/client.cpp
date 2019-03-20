@@ -32,9 +32,9 @@ int Client::Start() {
     return -1;
   }
 
-  if (0 != con->TryConnect()) {
+  if (0 != con->TryConnect()){
     ERROR(logger_, "Client::Start fail"<< ", address:" << address_);
-    delete con;
+    BDF_DELETE(con);
     return -2;
   }
 
@@ -58,9 +58,9 @@ ClientConnect* Client::CreateClient(
   ClientConnect* client_connect = NULL;
 
   if (protocol->IsSynchronous()) {
-    client_connect = new SyncClientConnect(timeout_ms, heartbeat_ms);
+    client_connect = BDF_NEW (SyncClientConnect,timeout_ms, heartbeat_ms);
   } else {
-    client_connect = new AsyncClientConnect(timeout_ms, heartbeat_ms);
+    client_connect = BDF_NEW (AsyncClientConnect,timeout_ms, heartbeat_ms);
   }
 
   client_connect->SetIp(ip);
@@ -81,6 +81,15 @@ int Client::Stop() {
   return ret;
 }
 
+void Client::Dump(std::ostream& os) const {
+  os << "{\"type\": \"Client\""
+    << ", \"address\": \"" << address_ << "\""
+    << ", \"timeout\": " << timeout_ms_
+    << ", \"heartbeat\": " << heartbeat_ms_
+    << ", \"status\": \"" << connect_->GetStatus() << "\""
+    << "}" << std::endl;
+}
+
 int64_t Client::GetSequenceId(){
   static std::atomic<int64_t> sequence_id_(0);
 
@@ -93,12 +102,12 @@ int64_t Client::GetSequenceId(){
 
 bool Client::Send(EventMessage* message) {
   if (GetClientStatus() != kWorking) {
-    //DEBUG(logger, "Client::Send Channel Broken" << *this);
+    DEBUG(logger_, "Client::Send Channel Broken" << *this);
     MessageFactory::Destroy(message);
     return false;
   }
 
-  message->sequence_id = GetSequenceId();
+  //message->sequence_id = GetSequenceId();
   message->descriptor_id = (int64_t)((void*)connect_);
   message->direction = MessageBase::kOneway;
   IoService::GetInstance().SendToIoHandle(message);
@@ -107,17 +116,24 @@ bool Client::Send(EventMessage* message) {
 
 EventMessage* Client::DoSendRecieve(EventMessage* message, uint32_t timeout_ms) {
   if (GetClientStatus() != kWorking) {
-    //DEBUG(logger, "Client::Send Channel Broken" << *this);
+    DEBUG(logger_, "Client::DoSendRecieve Channel Broken" << *this);
     MessageFactory::Destroy(message);
     return nullptr;
   }
 
-  message->sequence_id = GetSequenceId();
+  if (message->type_id == MessageType::kRapidMessage){
+    message->sequence_id = GetSequenceId();
+  }
   message->descriptor_id = (int64_t)((void*)connect_);
   message->direction = MessageBase::kOutgoingRequest;
   IoService::GetInstance().SendToIoHandle(message);
   //TODO...
   return nullptr;
+}
+
+std::ostream& operator << (std::ostream& os, const Client& client) {
+  client.Dump(os);
+  return os;
 }
 
 }

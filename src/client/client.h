@@ -42,6 +42,8 @@ public:
       ClientConnect::kConnected ? kWorking : kBroken;
   }
 
+  void Dump(std::ostream& os) const;
+
 private:
   LOGGER_CLASS_DECL(logger_);
 
@@ -59,5 +61,7 @@ private:
 
   ClientConnect* connect_;
 };
+
+std::ostream& operator << (std::ostream& os, const Client& client);
 
 }

@@ -39,7 +39,9 @@ public:
   virtual int EncodeMsg(EventMessage* message);
 
   void OnActiveClose();
-  void Destroy() { delete this; }
+  void Destroy() {
+    BDF_DELETE(this);
+  }
 protected:
   virtual int RegisterAddModrw(int fd, bool set);
   virtual int RegisterDel(int fd);

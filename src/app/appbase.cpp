@@ -136,7 +136,8 @@ int AppBase::StartIoService() {
     return -1;
   }
 
-  if (0 != IoService::GetInstance().Start(CreateServiceHandler())) {
+  ServiceHandler* handle_tmp = CreateServiceHandler();
+  if (0 != IoService::GetInstance().Start(handle_tmp)) {
     ERROR(logger, "Application::StartIOService Start fail");
     return -1;
   }

@@ -21,23 +21,31 @@ int IoService::Init(const IoServiceConfig& config){
     return -1;
   }
 
+  monitor::GlobalMatrix::Init(config.monitor_file_name,
+    config.monitor_token_bucket,
+    config.monitor_queue_bucket,
+    config.monitor_queue_size);
+
   io_service_config_ = config;
   return 0;
 }
 
 int IoService::Start(ServiceHandler* handle){
   if (!agents_->Start()){
+    delete handle;
     return -1;
   }
 
-  for (int cn = 0; cn < io_service_config_.slave_thread_count;cn++) {
+  for (int cn = 0; cn < io_service_config_.service_handle_thread_count; cn++) {
     HandleData* hd = new HandleData;
     hd->handle_ = handle->Clone();
     hd->is_run = true;
     handle_thread_.service_handle_data_.push_back(hd);
     std::thread* thread = new std::thread(std::bind(&ServiceHandler::Run, hd->handle_, hd));
     handle_thread_.service_handle_thread_.push_back(thread);
+  }
 
+  for (int cn = 0; cn < io_service_config_.io_handle_thread_count; cn++) {
     HandleData* hd_io = new HandleData;
     hd_io->handle_ = new IoHandler();
     hd_io->is_run = true;
@@ -45,14 +53,17 @@ int IoService::Start(ServiceHandler* handle){
     std::thread* thread_io = new std::thread(std::bind(&IoHandler::Run, hd_io->handle_, hd_io));
     handle_thread_.io_handle_thread_.push_back(thread_io);
   }
-
+  delete handle;
   return 0;
 }
 
 int IoService::ThreadWait(){
   TRACE(logger, "IoService::ThreadWait start.");
-  for (int cn = 0; cn < io_service_config_.slave_thread_count; cn++){
+  for (int cn = 0; cn < io_service_config_.service_handle_thread_count; cn++){
     handle_thread_.service_handle_thread_[cn]->join();
+  }
+
+  for (int cn = 0; cn < io_service_config_.io_handle_thread_count; cn++) {
     handle_thread_.io_handle_thread_[cn]->join();
   }
   TRACE(logger, "IoService::ThreadWait end.");
@@ -61,9 +72,11 @@ int IoService::ThreadWait(){
 
 int IoService::ThreadStop(){
   TRACE(logger, "IoService::ThreadStop.");
-  for (int cn = 0; cn < io_service_config_.slave_thread_count; cn++) {
+  for (int cn = 0; cn < io_service_config_.service_handle_thread_count; cn++) {
     handle_thread_.service_handle_data_[cn]->is_run = false;
-    handle_thread_.io_handle_data_[cn]->is_run = false;
+  }
+  for (int cn = 0; cn < io_service_config_.io_handle_thread_count; cn++) {
+    handle_thread_.service_handle_data_[cn]->is_run = false;
   }
   return 0;
 }
@@ -76,6 +89,8 @@ int IoService::Stop(){
   if (agents_ != nullptr) {
     delete agents_;
   }
+
+  monitor::GlobalMatrix::Destroy();
   return 0;
 }
 
@@ -86,6 +101,11 @@ int IoService::Wait(){
 void IoService::SendCloseToIoHandle(EventMessage* msg){
   msg->type_io_event = MessageType::kIoActiveCloseEvent;
   SendToIoHandleInner(msg);
+}
+
+void IoService::Reply(EventMessage* message){
+  message->direction = EventMessage::kOutgoingResponse;
+  SendToIoHandleInner(message);
 }
 
 void IoService::SendToIoHandle(EventMessage* msg){
@@ -111,7 +131,7 @@ void IoService::SendToIoHandleInner(EventMessage* msg){
   hd->lock_.unlock();
 }
 
-const std::string& IoService::GetMatrixReport(){
+const std::string& IoService::GetMonitorReport(){
   const static std::string k_null = "Null";
 
   monitor::Matrix::MatrixStatMapPtr stat_map = 

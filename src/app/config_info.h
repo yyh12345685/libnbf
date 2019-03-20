@@ -14,16 +14,20 @@ struct ServiceConfig {
 };
 
 struct IoServiceConfig {
-  IoServiceConfig()
-    : slave_thread_count(3)
-    , service_count(1)
-    , stack_size(2048)
-    , monitor_token_bucket(16)
-    , monitor_queue_bucket(16)
-    , monitor_queue_size(1024 * 512) {
+  IoServiceConfig(): 
+    slave_thread_count(2),
+    io_handle_thread_count(2),
+    service_handle_thread_count(2),
+    service_count(1),
+    stack_size(2048),
+    monitor_token_bucket(16), 
+    monitor_queue_bucket(16), 
+    monitor_queue_size(1024 * 512) {
   }
 
   int slave_thread_count;
+  int io_handle_thread_count;
+  int service_handle_thread_count;
   int service_count;
   std::vector<ServiceConfig> services_config;
 
@@ -33,6 +37,7 @@ struct IoServiceConfig {
   uint32_t stack_size;
 
   // monitor
+  std::string monitor_file_name;
   uint32_t monitor_token_bucket;
   uint32_t monitor_queue_bucket;
   uint32_t monitor_queue_size;

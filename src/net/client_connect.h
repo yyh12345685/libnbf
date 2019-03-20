@@ -37,16 +37,13 @@ protected:
   enum {
     kUnKown = 0,
     kClientTimerTypeReconnect = 1,
-    kClientTimerTypeTimeout,
     kClientTimerTypeHeartBeat,
   };
   uint8_t client_timer_type_reconnect_ = kClientTimerTypeReconnect;
-  uint8_t client_timer_type_timeout_ = kClientTimerTypeTimeout;
   uint8_t client_timer_type_heartbeat_ = kClientTimerTypeHeartBeat;
 
   //这几个timer相关的线程，只有iohandle回调的时候才能调用
   int StartReconnectTimer();
-  int StartTimeoutTimer();
   int StartHeartBeatTimer();
   void CancelTimer();
 
@@ -55,7 +52,6 @@ protected:
   bool IsConnected(uint32_t time_ms, int wait_time = 1);
 
   virtual void OnHeartBeat();
-  virtual void OnTimeout() = 0;
   virtual void CleanSequenceQueue() = 0;
 
   void DoSendBack(EventMessage* message, int status);

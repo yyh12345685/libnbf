@@ -72,7 +72,7 @@ void AgentMaster::OnEvent(EventDriver *poll, int fd, short event){
   char ip[256];
   int port;
 	while((sock = Socket::Accept(fd, ip, &port)) > 0){
-    ServerConnect* svr_con = new ServerConnect();
+    ServerConnect* svr_con = BDF_NEW(ServerConnect);
     std::string ip_str;
     ip_str.assign(ip, strlen(ip));
     svr_con->SetIp(ip_str);
@@ -81,7 +81,7 @@ void AgentMaster::OnEvent(EventDriver *poll, int fd, short event){
     svr_con->SetProtocol(cate);
     if (0!= agents_->GetSlave()->AddModr(svr_con, sock, true)){
       WARN(logger_, "AddModr faild...");
-      delete svr_con;
+      BDF_DELETE(svr_con);
       break;
     }
 

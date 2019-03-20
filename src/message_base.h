@@ -60,10 +60,10 @@ class MessageBase {
 public:
   enum{
     kDirectionUnknown = 0,
-    kIncomingRequest,
-    kOutgoingRequest,
-    kIncomingResponse,
-    kOutgoingResponse,
+    kIncomingRequest,//server receive msg
+    kOutgoingRequest,//client send msg
+    kIncomingResponse,//client response msg
+    kOutgoingResponse,//server response msg
     kOneway,
   };
   enum{
@@ -86,7 +86,7 @@ public:
 
   uint8_t type_id;
   uint8_t type_io_event;
-  uint8_t direction;
+  uint8_t direction = 0;
   uint8_t status = kStatusOK;
   uint64_t sequence_id;
   uint64_t birthtime;

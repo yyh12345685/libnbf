@@ -2,14 +2,16 @@
 
 #include <list>
 #include "common/logger.h"
+#include "event/timer/timer_base.h"
 
 namespace bdf {
 
 class EventMessage;
+class SyncClientConnect;
 
-class SyncSequence {
+class SyncSequence :public OnTimerBase {
 public:
-  SyncSequence(uint32_t timeout_in_ms);
+  SyncSequence(SyncClientConnect* sync_client_con,uint32_t timeout_in_ms);
   virtual ~SyncSequence();
 
   int Put(EventMessage* message);
@@ -18,9 +20,10 @@ public:
   EventMessage* Fired();
   EventMessage* Fire();
 
-  std::list<EventMessage*> Timeout();
+  virtual void OnTimer(void* function_data);
   std::list<EventMessage*> Clear();
 private:
+  SyncClientConnect* sync_client_con_;
   uint32_t timeout_ms_;
   std::list<EventMessage*> list_;
 

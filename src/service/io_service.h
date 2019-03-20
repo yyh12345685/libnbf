@@ -48,11 +48,12 @@ public:
   int Stop();
   int Wait();
 
+  void Reply(EventMessage* message);
   void SendToIoHandle(EventMessage* msg);
   void SendCloseToIoHandle(EventMessage* msg);
   void SendToServiceHandle(EventMessage* msg);
 
-  const std::string& GetMatrixReport();
+  const std::string& GetMonitorReport();
   void HandleSignal();
 
   int AgentsAddModrw(EventFunctionBase* ezfd, int fd);

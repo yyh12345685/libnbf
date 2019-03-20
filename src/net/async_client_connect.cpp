@@ -1,5 +1,6 @@
 #include "net/async_client_connect.h"
 #include "service/io_service.h"
+#include "common/time.h"
 
 namespace bdf{
 
@@ -8,16 +9,17 @@ LOGGER_CLASS_IMPL(logger, AsyncClientConnect);
 AsyncClientConnect::AsyncClientConnect(
   uint32_t timeout_ms, uint32_t heartbeat_ms):
   ClientConnect(timeout_ms,heartbeat_ms),
-  async_sequence_(timeout_ms){
+  async_sequence_(this,timeout_ms){
 }
 
 AsyncClientConnect::~AsyncClientConnect(){
 }
 
+//由slave线程触发
 void AsyncClientConnect::OnDecodeMessage(EventMessage* message){
   EventMessage* keeper_message = async_sequence_.Get(message->sequence_id);
   if (!keeper_message) {
-    DEBUG(logger, "AsyncClientConnect::OnDecodeMessage sequence not found"
+    DEBUG(logger, "OnDecodeMessage sequence not found or oneway msg"
       << ", sequence_id:" << message->sequence_id);
     MessageFactory::Destroy(message);
     return;
@@ -30,6 +32,7 @@ void AsyncClientConnect::OnDecodeMessage(EventMessage* message){
     return;
   }
 
+  message->birthtime = Time::GetMillisecond();
   message->status = MessageBase::kStatusOK;
   message->direction = MessageBase::kIncomingResponse;
   message->sequence_id = keeper_message->sequence_id;
@@ -41,6 +44,7 @@ void AsyncClientConnect::OnDecodeMessage(EventMessage* message){
   IoService::GetInstance().SendToServiceHandle(message);
 }
 
+//由io handle线程触发
 int AsyncClientConnect::EncodeMsg(EventMessage* message){
   if (GetStatus() != kConnected) {
     DEBUG(logger, "AsyncClientConnect::EncodeMsg ChannelBroken:" << GetStatus());
@@ -58,25 +62,18 @@ int AsyncClientConnect::EncodeMsg(EventMessage* message){
       return -3;
     }
   }
+
   return 0;
 }
 
-void AsyncClientConnect::OnTimeout(){
-  std::list<EventMessage*> time_out_list = async_sequence_.Timeout();
-  auto it = time_out_list.begin();
-  while (it != time_out_list.end()) {
-    EventMessage* msg = *it;
-    it++;
-    if (msg->type_id == MessageType::kHeartBeatMessage){
-      DEBUG(logger, "AsyncClientChannel::OnTimeout break");
-      CleanClient();
-    } else{
-      DEBUG(logger, "AsyncClientChannel::OnTimeout message");
-    }
-    DoSendBack(msg, EventMessage::kStatusTimeout);
+void AsyncClientConnect::OnTimeout(EventMessage* msg){
+  if (msg->type_id == MessageType::kHeartBeatMessage) {
+    DEBUG(logger, "AsyncClientChannel::OnTimeout break");
+    CleanClient();
+  } else {
+    DEBUG(logger, "AsyncClientChannel::OnTimeout message");
   }
-
-  StartTimeoutTimer();
+  DoSendBack(msg, EventMessage::kStatusTimeout);
 }
 
 void AsyncClientConnect::CleanSequenceQueue(){

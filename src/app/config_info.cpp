@@ -9,6 +9,8 @@ LOGGER_CLASS_IMPL(logger_, ConfigInfo)
 void IoServiceConfig::Dump(std::ostream& os) const {
   os << "{\"type\": \"IoServiceConfig\""
     << ", \"slave_thread_count\": " << slave_thread_count
+    << ", \"io_handle_thread_count\": " << io_handle_thread_count
+    << ", \"service_handle_thread_count\": " << service_handle_thread_count
     << ", \"service_count\": " << service_count
     << ", \"stack_size\": " << stack_size
     << ", \"services_config\": ";
@@ -89,12 +91,15 @@ int ConfigInfo::LoadConfig(const std::string& config_path){
 
 int ConfigInfo::LoadIoServiceConfig(CIniFileS& ini, IoServiceConfig* config){
   config->slave_thread_count = ini.GetValueInt("io_service", "slave_thread_count", 2);
+  config->io_handle_thread_count = ini.GetValueInt("io_service", "io_handle_thread_count", 2);
+  config->service_handle_thread_count = ini.GetValueInt("io_service", "service_handle_thread_count", 2);
   config->service_count = ini.GetValueInt("io_service", "services_count", 1);
 
   config->router_file = ini.GetValue("io_service", "router_file", "");
 
   config->stack_size = ini.GetValueInt("io_service", "stack_size", 2048);
 
+  config->monitor_file_name = ini.GetValue("io_service", "monitor_file", "");
   config->monitor_token_bucket = ini.GetValueInt("io_service", "monitor_token_bucket", 16);
   config->monitor_queue_bucket = ini.GetValueInt("io_service", "monitor_queue_bucket", 16);
   config->monitor_queue_size = ini.GetValueInt("io_service", "monitor_queue_size", 1024*512);

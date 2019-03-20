@@ -4,6 +4,7 @@
 #include "message_base.h"
 #include "handle_data.h"
 #include "net/connect.h"
+#include "service/io_service.h"
 
 namespace bdf{
 
@@ -50,8 +51,6 @@ void IoHandler::Handle(EventMessage* message){
     WARN(logger, "IOHanlder unknown message:" << message->type_id);
     break;
   }
-
-  MessageFactory::Destroy(message);
 }
 
 void IoHandler::HandleIoMessageEvent(EventMessage* message){
@@ -59,14 +58,31 @@ void IoHandler::HandleIoMessageEvent(EventMessage* message){
   Connecting* con = (Connecting*)((void*)(message->descriptor_id));
   if (!con) {
     WARN(logger, "IoHandler::HandleIoMessageEventt descriptor is not Connecting");
+    HandleIoMessageFailed(message);
     return;
   }
 
-  if (0 != con->EncodeMsg(message)) {
+  if (0 != con->EncodeMsg(message)){
+    HandleIoMessageFailed(message);
     return;
+  }
+  //单向消息encode之后即可释放，双向消息会在返回或者超时的时候释放
+  //server答复的消息需要在这里释放掉
+  if (message->direction == EventMessage::kOneway
+    || message->direction == EventMessage::kOutgoingResponse) {
+    MessageFactory::Destroy(message);
   }
 
   con->OnWrite();
+}
+
+void IoHandler::HandleIoMessageFailed(EventMessage* message) {
+  if (message->direction == EventMessage::kOutgoingRequest) {
+    message->status = EventMessage::kInternalFailure;
+    IoService::GetInstance().SendToServiceHandle(message);
+  } else {
+    MessageFactory::Destroy(message);
+  }
 }
 
 void IoHandler::HandleIoActiveCloseEvent(EventMessage* message){
@@ -77,7 +93,9 @@ void IoHandler::HandleIoActiveCloseEvent(EventMessage* message){
     return;
   }
 
+  MessageFactory::Destroy(message);
   con->OnActiveClose();
+  con->Destroy();
 }
 
 }

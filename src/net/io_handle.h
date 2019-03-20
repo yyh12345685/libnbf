@@ -35,6 +35,8 @@ private:
   Timer& GetTimer() { return timer_; }
 
   void HandleIoMessageEvent(EventMessage* message);
+  void HandleIoMessageFailed(EventMessage* message);
+
   void HandleIoActiveCloseEvent(EventMessage* message);
 
   static thread_local IoHandler* io_handler_;

@@ -1,12 +1,15 @@
 #include "net/async_sequence.h"
-#include "common/time.h"
 #include "message.h"
+#include "net/io_handle.h"
+#include "net/async_client_connect.h"
 
 namespace bdf{
 
 LOGGER_CLASS_IMPL(logger, AsyncSequence);
 
-AsyncSequence::AsyncSequence(uint32_t timeout_in_ms):
+AsyncSequence::AsyncSequence(
+  AsyncClientConnect* async_client_con, uint32_t timeout_in_ms):
+  async_client_con_(async_client_con),
   timeout_ms_(timeout_in_ms){
 }
 
@@ -14,49 +17,64 @@ AsyncSequence::~AsyncSequence(){
 }
 
 int AsyncSequence::Put(EventMessage* message){
-  message->birthtime = Time::GetMillisecond();
-
+  registery_lock_.lock();
   if (!registery_.insert(std::make_pair(message->sequence_id, message)).second) {
     WARN(logger, "AsyncSequence::Put duplicate sequence_id:"
       << message->sequence_id);
+    registery_lock_.unlock();
     return -1;
   }
+  registery_lock_.unlock();
 
+  list_lock_.lock();
   list_.emplace_back(message);
-  return 0;
+  list_lock_.unlock();
+
+  TimerData td;
+  td.time_out_ms = timeout_ms_;
+  td.time_proc = this;
+  td.function_data = &(message->sequence_id);
+  IoHandler::GetIoHandler()->StartTimer(td);
+
   return 0;
 }
 
-EventMessage* AsyncSequence::Get(uint32_t sequence_id){
+EventMessage* AsyncSequence::Get(uint64_t sequence_id){
+  registery_lock_.lock();
   auto it = registery_.find(sequence_id);
   if (it == registery_.end()) {
+    registery_lock_.unlock();
     return NULL;
   }
 
   EventMessage* message = it->second;
   registery_.erase(it);
+  registery_lock_.unlock();
 
+  list_lock_.lock();
   list_.remove(message);
+  list_lock_.unlock();
+
   return message;
 }
 
-std::list<EventMessage*> AsyncSequence::Timeout(){
-  uint64_t current_timestamp = Time::GetMillisecond();
-  std::list<EventMessage*> tmp;
-  EventMessage* message = list_.front();
-  while (message && (message->birthtime+timeout_ms_) < current_timestamp){
-    list_.pop_front();
-    tmp.push_back(message);
-    registery_.erase(message->sequence_id);
-    message = list_.front();
+void AsyncSequence::OnTimer(void* function_data){
+  int64_t sequence_id = *((int*)(function_data));
+  EventMessage* msg = Get(sequence_id);
+  if (NULL!= msg){
+    async_client_con_->OnTimeout(msg);
   }
-  return tmp;
 }
 
 std::list<EventMessage*> AsyncSequence::Clear(){
   std::list<EventMessage*> tmp;
+  list_lock_.lock();
   tmp.swap(list_);
+  list_lock_.unlock();
+
+  registery_lock_.lock();
   registery_.clear();
+  registery_lock_.unlock();
   return tmp;
 }
 

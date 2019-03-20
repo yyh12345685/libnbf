@@ -169,12 +169,13 @@ void Connecting::OnWrite(){
 }
 
 int Connecting::EncodeMsg(EventMessage* message){
-
+  //only used in send server response
   if (!protocol_->Encode(message, &outbuf_)){
     //allway not to here
     WARN(logger_, "Connecting::EncodeMsg error.");
     return -1;
   }
+  
   return 0;
 }
 

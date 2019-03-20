@@ -15,9 +15,8 @@ public:
   virtual void OnDecodeMessage(EventMessage* message);
   virtual int EncodeMsg(EventMessage* message);
 
+  void OnTimeout(EventMessage* msg);
 protected:
-
-  virtual void OnTimeout();
   virtual void CleanSequenceQueue();
 
 private:

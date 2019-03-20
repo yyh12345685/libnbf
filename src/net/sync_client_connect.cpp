@@ -1,6 +1,7 @@
 
 #include "net/sync_client_connect.h"
 #include "service/io_service.h"
+#include "common/time.h"
 
 namespace bdf {
 
@@ -9,7 +10,7 @@ LOGGER_CLASS_IMPL(logger, SyncClientConnect);
 SyncClientConnect::SyncClientConnect(
   uint32_t timeout_ms, uint32_t heartbeat_ms):
   ClientConnect(timeout_ms,heartbeat_ms),
-  sync_sequence_(timeout_ms){
+  sync_sequence_(this,timeout_ms){
 }
 
 SyncClientConnect::~SyncClientConnect(){
@@ -18,9 +19,9 @@ SyncClientConnect::~SyncClientConnect(){
 void SyncClientConnect::OnDecodeMessage(EventMessage* message) {
   EventMessage* keeper_message = sync_sequence_.Get();
   if (!keeper_message) {
-    WARN(logger, "SyncClientConnect::OnDecodeMessage keeper not found, might timeout");
+    WARN(logger, "OnDecodeMessage keeper not found, or oneway message.");
     MessageFactory::Destroy(message);
-    CleanClient();
+    CleanSyncClient();
     return;
   }
 
@@ -33,6 +34,7 @@ void SyncClientConnect::OnDecodeMessage(EventMessage* message) {
     return;
   }
 
+  message->birthtime = Time::GetMillisecond();
   message->status = EventMessage::kStatusOK;
   message->direction = EventMessage::kIncomingResponse;
   message->sequence_id = keeper_message->sequence_id;
@@ -52,9 +54,11 @@ int SyncClientConnect::EncodeMsg(EventMessage* message){
     return -1;
   }
 
-  if (0 != sync_sequence_.Put(message)){
-    WARN(logger, "SyncClientConnect::EncodeMsg put fail");
-    return -2;
+  if (message->direction != EventMessage::kOneway){
+    if (0 != sync_sequence_.Put(message)) {
+      WARN(logger, "SyncClientConnect::EncodeMsg put fail");
+      return -2;
+    }
   }
 
   FireMessage();
@@ -75,27 +79,23 @@ void SyncClientConnect::FireMessage(){
       continue;
     }
 
-    OnWrite();
+    //OnWrite();
     break;
   }
 }
 
-void SyncClientConnect::OnTimeout() {
-  std::list<EventMessage*> tmo = sync_sequence_.Timeout();
-  if (tmo.empty()) {
-    DEBUG(logger, "SyncClientConnect::OnTimeout,tmo is empty.");
+void SyncClientConnect::CleanSyncClient(){
+  if (GetStatus() == kConnected) {
     CleanClient();
   }
+}
 
-  EventMessage* message = tmo.front();
-  while (!tmo.empty() && message) {
-    tmo.pop_front();
-    DEBUG(logger, "SyncClientConnect::OnTimeout, message:"<< *message);
-    DoSendBack(message, EventMessage::kStatusTimeout);
-    message = tmo.front();
+void SyncClientConnect::OnTimeout(EventMessage* msg){
+  if (nullptr == msg){
+    return;
   }
-
-  StartTimeoutTimer();
+  DEBUG(logger, "SyncClientConnect::OnTimeout, message:" << *msg);
+  DoSendBack(msg, EventMessage::kStatusTimeout);
 }
 
 void SyncClientConnect::CleanSequenceQueue(){

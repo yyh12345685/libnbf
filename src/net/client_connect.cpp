@@ -26,8 +26,6 @@ void ClientConnect::OnTimer(void* function_data) {
   switch (client_timer_type){
   case kClientTimerTypeReconnect:
     TryConnect();
-  case kClientTimerTypeTimeout:
-    OnTimeout();
   case kClientTimerTypeHeartBeat:
     OnHeartBeat();
   default:
@@ -72,7 +70,6 @@ int ClientConnect::TryConnect(){
     if (IsConnected(20, 3)) {
       TRACE(logger_, "has connected...");
       SetStatus(kConnected);
-      if (is_reconnect) StartTimeoutTimer();
       if (is_reconnect) StartHeartBeatTimer();
     } else {
       INFO(logger_, "wait 60 ms,but not conected,ip:" << GetIp() << ",port:" << GetPort());
@@ -92,20 +89,6 @@ int ClientConnect::StartReconnectTimer() {
   td.time_proc = this;
   td.function_data = &client_timer_type_reconnect_;
   reconnect_timer_ = IoHandler::GetIoHandler()->StartTimer(td);
-  return 0;
-}
-
-int ClientConnect::StartTimeoutTimer() {
-  if (0 == timeout_ms_) {
-    return 0;
-  }
-
-  TimerData td;
-  td.time_out_ms = 5;
-  td.time_proc = this;
-  td.function_data = &client_timer_type_timeout_;
-
-  timeout_timer_ = IoHandler::GetIoHandler()->StartTimer(td);
   return 0;
 }
 
@@ -160,18 +143,19 @@ void ClientConnect::OnConnectWrite(){
     SetStatus(kConnected);
   } else {
     TRACE(logger_, "OnConnectWrite wait 60 ms,but not conected.");
-    //对于一般服务和服务器120ms，连接时间够用，如果是网络很差可能出现一直重连，又连不上的情况
+    //对于一般服务和服务器90ms，连接时间够用，如果是网络很差可能出现一直重连，又连不上的情况
     CleanClient();
+    StartHeartBeatTimer();
     return;
   }
 
   if (0 != RegisterAddModr(GetFd())) {
     WARN(logger_, "RegisterAddModr failed,fd:" << GetFd());
     CleanClient();
+    StartHeartBeatTimer();
     return ;
   }
 
-  StartTimeoutTimer();
   StartHeartBeatTimer();
   Connecting::OnWrite();
 }
@@ -239,9 +223,7 @@ void ClientConnect::DoSendBack(EventMessage* message, int status) {
 
 void ClientConnect::CleanClient(){
   Clean();
-
   SetStatus(kBroken);
-  StartReconnectTimer();
 }
 
 int ClientConnect::Stop(){

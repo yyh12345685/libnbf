@@ -2,35 +2,36 @@
 
 #include <unordered_map>
 #include <list>
-#include <atomic>
+#include <mutex>
 #include "common/logger.h"
+#include "event/timer/timer_base.h"
 
 namespace bdf {
 
 class EventMessage;
+class AsyncClientConnect;
 
-class AsyncSequence{
+class AsyncSequence:public OnTimerBase {
 public: 
-  AsyncSequence(uint32_t timeout_in_ms);
+  AsyncSequence(AsyncClientConnect* async_client_con,uint32_t timeout_in_ms);
   virtual ~AsyncSequence();
 
   int Put(EventMessage* message);
-  EventMessage* Get(uint32_t sequence_id);
+  EventMessage* Get(uint64_t sequence_id);
 
-  std::list<EventMessage*> Timeout();
+  virtual void OnTimer(void* function_data);
+
   std::list<EventMessage*> Clear();
 
-  inline uint32_t GenerateSequenceId() { 
-    return ++sequence_id_;
-  }
-
 private:
-  std::atomic<uint32_t> sequence_id_;
+  AsyncClientConnect* async_client_con_;
   uint32_t timeout_ms_;
 
   std::unordered_map<uint32_t, EventMessage*> registery_;
+  std::mutex registery_lock_;
 
   std::list<EventMessage*> list_;
+  std::mutex list_lock_;
 
   LOGGER_CLASS_DECL(logger);
 };
