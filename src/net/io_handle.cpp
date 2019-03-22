@@ -12,12 +12,11 @@ LOGGER_CLASS_IMPL(logger, IoHandler);
 
 thread_local IoHandler* IoHandler::io_handler_ = NULL;
 
-void IoHandler::Run(void* handle, HandleData* data){
+void IoHandler::Run(HandleData* data){
   TRACE(logger, "IoHandler::Run start.");
-  IoHandler* io_handle = (IoHandler*)handle;
-  io_handler_ = io_handle;
+  io_handler_ = this;
   while (data->is_run) {
-    io_handle->GetTimer().ProcessTimer();
+    GetTimer().ProcessTimer();
     if (data->data_.empty()) {
       usleep(10);
       continue;
@@ -31,7 +30,7 @@ void IoHandler::Run(void* handle, HandleData* data){
     while (!temp.empty()) {
       EventMessage *msg = temp.front();
       temp.pop();
-      io_handle->Handle(msg);
+      Handle(msg);
     }
   }
   TRACE(logger, "IoHandler::Run exit.");

@@ -52,6 +52,7 @@ public:
   void SendToIoHandle(EventMessage* msg);
   void SendCloseToIoHandle(EventMessage* msg);
   void SendToServiceHandle(EventMessage* msg);
+  void SendTaskToServiceHandle(Task* task);
 
   const std::string& GetMonitorReport();
   void HandleSignal();

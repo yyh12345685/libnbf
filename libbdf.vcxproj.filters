@@ -30,6 +30,9 @@
     <None Include="examples\test_client_server\conf\logger.conf" />
     <None Include="examples\test_client_server\conf\test_client_server.conf" />
     <None Include="examples\test_client_server\conf\router.conf" />
+    <None Include="examples\coroutine_test_server\conf\logger.conf" />
+    <None Include="examples\coroutine_test_server\conf\router.conf" />
+    <None Include="examples\coroutine_test_server\conf\coroutine_test_server.conf" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />
@@ -39,6 +42,8 @@
     <Text Include="examples\CMakeLists.txt" />
     <Text Include="examples\test_server\CMakeLists.txt" />
     <Text Include="examples\test_client_server\CMakeLists.txt" />
+    <Text Include="examples\README.txt" />
+    <Text Include="examples\coroutine_test_server\CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\monitor\matrix.cpp">
@@ -195,6 +200,24 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="examples\test_client_server\src\test_client_server_handle.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\coroutine\coroutine_schedule.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\coroutine\coroutine_context.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\service\coroutine_service_handle.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\coroutine\coroutine_actor.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="examples\coroutine_test_server\src\test_main.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="examples\coroutine_test_server\src\app_test_server_handle.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -383,6 +406,27 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="examples\test_client_server\src\test_client_server_handle.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\coroutine\coroutine_context.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\coroutine\coroutine_schedule.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\service\coroutine_service_handle.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\coroutine\coroutine.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\coroutine\coroutine_actor.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="examples\coroutine_test_server\src\app_test_server_handle.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\task.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

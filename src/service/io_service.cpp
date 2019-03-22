@@ -41,7 +41,7 @@ int IoService::Start(ServiceHandler* handle){
     hd->handle_ = handle->Clone();
     hd->is_run = true;
     handle_thread_.service_handle_data_.push_back(hd);
-    std::thread* thread = new std::thread(std::bind(&ServiceHandler::Run, hd->handle_, hd));
+    std::thread* thread = new std::thread(std::bind(&Handler::Run, hd->handle_, hd));
     handle_thread_.service_handle_thread_.push_back(thread);
   }
 
@@ -50,7 +50,7 @@ int IoService::Start(ServiceHandler* handle){
     hd_io->handle_ = new IoHandler();
     hd_io->is_run = true;
     handle_thread_.io_handle_data_.push_back(hd_io);
-    std::thread* thread_io = new std::thread(std::bind(&IoHandler::Run, hd_io->handle_, hd_io));
+    std::thread* thread_io = new std::thread(std::bind(&Handler::Run, hd_io->handle_, hd_io));
     handle_thread_.io_handle_thread_.push_back(thread_io);
   }
   delete handle;
@@ -72,7 +72,7 @@ int IoService::ThreadWait(){
 
 int IoService::ThreadStop(){
   TRACE(logger, "IoService::ThreadStop.");
-  for (int cn = 0; cn < io_service_config_.service_handle_thread_count; cn++) {
+  for (int cn = 0; cn < io_service_config_.service_handle_thread_count; cn++){
     handle_thread_.service_handle_data_[cn]->is_run = false;
   }
   for (int cn = 0; cn < io_service_config_.io_handle_thread_count; cn++) {
@@ -115,11 +115,18 @@ void IoService::SendToIoHandle(EventMessage* msg){
 
 void IoService::SendToServiceHandle(EventMessage* msg){
   static thread_local std::atomic<uint32_t> id_hs(0);
-  HandleData* hd = 
-    handle_thread_.service_handle_data_.at((id_hs++)%handle_thread_.service_handle_data_.size());
+  HandleData* hd = handle_thread_.service_handle_data_.at(
+    (id_hs++)%handle_thread_.service_handle_data_.size());
   hd->lock_.lock();
   hd->data_.emplace(msg);
   hd->lock_.unlock();
+}
+
+void IoService::SendTaskToServiceHandle(Task* task){
+  static thread_local std::atomic<uint32_t> id_task(0);
+  HandleData* hd =handle_thread_.service_handle_data_.at(
+    (id_task++) % handle_thread_.service_handle_data_.size());
+  hd->task_.emplace(task);
 }
 
 void IoService::SendToIoHandleInner(EventMessage* msg){

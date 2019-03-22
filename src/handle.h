@@ -2,13 +2,15 @@
 
 namespace bdf{
 
-class IoService;
+class HandleData;
 
 class Handler {
 public:
   Handler(){}
   virtual ~Handler(){
   }
+
+  virtual void Run(HandleData* data) =0;
 };
 
 }

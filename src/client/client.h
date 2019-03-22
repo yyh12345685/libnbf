@@ -51,6 +51,8 @@ private:
     const std::string& address, uint32_t timeout_ms, uint32_t heartbeat_ms);
 
   EventMessage* DoSendRecieve(EventMessage* message, uint32_t timeout_ms = 0);
+  void DoSend(EventMessage* message);
+  EventMessage* DoRecieve(uint32_t timeout_ms = 0);
 
   static int64_t GetSequenceId();
 

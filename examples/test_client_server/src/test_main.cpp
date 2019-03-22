@@ -12,7 +12,7 @@ int RapidClientTest(void* data) {
   TRACE(logger, "RapidClientTest start");
   bdf::Application<bdf::testserver::TestClientServerHandler>* app = 
     (bdf::Application<bdf::testserver::TestClientServerHandler>*)data;
-
+  bdf::ForTest::Inst().SetForTest(true);
   int times = 1000000;
   while (times-- > 0){
     bdf::monitor::MatrixScope matrix_scope(
@@ -25,9 +25,10 @@ int RapidClientTest(void* data) {
     rapid_message_2->body = "aaa";
     bdf::EventMessage* msg2_resp =
       app->GetClientMgr()->SendRecieve("rapid_test_client", rapid_message_2, 10);
-    if (nullptr == msg2_resp) {
+    if (nullptr == msg2_resp){
       TRACE(logger, "msg2_resp is null.");
-      continue;
+      //continue;
+      break;
     }
     TRACE(logger, "receive msg:" << *msg2_resp);
     if (msg2_resp->status != bdf::EventMessage::kStatusOK) {
@@ -44,7 +45,7 @@ int HttpClientTest(void* data) {
   TRACE(logger, "HttpClientTest start");
   bdf::Application<bdf::testserver::TestClientServerHandler>* app =
     (bdf::Application<bdf::testserver::TestClientServerHandler>*)data;
-
+  bdf::ForTest::Inst().SetForTest(true);
   int times = 10000000;
   while (times-- > 0) {
     bdf::monitor::MatrixScope matrix_scope(
@@ -67,7 +68,8 @@ int HttpClientTest(void* data) {
       app->GetClientMgr()->SendRecieve("http_test_client", hmsg2, 10);
     if (nullptr == hmsg2_resp) {
       TRACE(logger, "msg2_resp is null.");
-      continue;
+      //continue;
+      break;
     }
     TRACE(logger, "receive msg:" << *hmsg2_resp);
 

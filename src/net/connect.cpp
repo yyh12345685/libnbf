@@ -10,9 +10,11 @@ LOGGER_CLASS_IMPL(logger_, Connecting);
 
 const static int max_send_buf_failed_size = 10 * 1024 * 1024+1;//10M
 
-Connecting::Connecting()
-  :fd_(-1)
-  ,protocol_(nullptr){
+Connecting::Connecting():
+  fd_(-1),
+  port_(-1),
+  is_server_(false),
+  protocol_(nullptr){
 }
 
 Connecting::~Connecting(){

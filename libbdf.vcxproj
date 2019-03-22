@@ -119,6 +119,9 @@
   <ItemGroup>
     <None Include=".gitignore" />
     <None Include="basic.cmake" />
+    <None Include="examples\coroutine_test_server\conf\logger.conf" />
+    <None Include="examples\coroutine_test_server\conf\router.conf" />
+    <None Include="examples\coroutine_test_server\conf\coroutine_test_server.conf" />
     <None Include="examples\python\http_client.py" />
     <None Include="examples\python\rapid_client.py" />
     <None Include="examples\test_client_server\conf\logger.conf" />
@@ -136,6 +139,8 @@
   <ItemGroup>
     <Text Include="CMakeLists.txt" />
     <Text Include="examples\CMakeLists.txt" />
+    <Text Include="examples\coroutine_test_server\CMakeLists.txt" />
+    <Text Include="examples\README.txt" />
     <Text Include="examples\test_client_server\CMakeLists.txt" />
     <Text Include="examples\test_server\CMakeLists.txt" />
     <Text Include="src\CMakeLists.txt" />
@@ -143,6 +148,8 @@
     <Text Include="src\tester\CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="examples\coroutine_test_server\src\app_test_server_handle.cpp" />
+    <ClCompile Include="examples\coroutine_test_server\src\test_main.cpp" />
     <ClCompile Include="examples\test_client_server\src\test_main.cpp" />
     <ClCompile Include="examples\test_client_server\src\test_client_server_handle.cpp" />
     <ClCompile Include="examples\test_server\src\test_main.cpp" />
@@ -160,6 +167,9 @@
     <ClCompile Include="src\common\ini_files.cpp" />
     <ClCompile Include="src\common\buffer.cpp" />
     <ClCompile Include="src\common\string_util.cpp" />
+    <ClCompile Include="src\coroutine\coroutine_actor.cpp" />
+    <ClCompile Include="src\coroutine\coroutine_context.cpp" />
+    <ClCompile Include="src\coroutine\coroutine_schedule.cpp" />
     <ClCompile Include="src\event\event_data.cpp" />
     <ClCompile Include="src\event\event_driver.cpp" />
     <ClCompile Include="src\event\event_loop_thread.cpp" />
@@ -192,11 +202,13 @@
     <ClCompile Include="src\protocol\rapid\rapid_protocol.cpp" />
     <ClCompile Include="src\protocol\redis\redis_parser.cpp" />
     <ClCompile Include="src\protocol\redis\redis_protocol.cpp" />
+    <ClCompile Include="src\service\coroutine_service_handle.cpp" />
     <ClCompile Include="src\service\io_service.cpp" />
     <ClCompile Include="src\service\service_handle.cpp" />
     <ClCompile Include="src\tester\t_timer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="examples\coroutine_test_server\src\app_test_server_handle.h" />
     <ClInclude Include="examples\test_client_server\src\test_client_server_handle.h" />
     <ClInclude Include="examples\test_server\src\test_server_handle.h" />
     <ClInclude Include="src\agents\agents.h" />
@@ -219,6 +231,10 @@
     <ClInclude Include="src\common\string_util.h" />
     <ClInclude Include="src\common\thread_id.h" />
     <ClInclude Include="src\common\time.h" />
+    <ClInclude Include="src\coroutine\coroutine.h" />
+    <ClInclude Include="src\coroutine\coroutine_actor.h" />
+    <ClInclude Include="src\coroutine\coroutine_schedule.h" />
+    <ClInclude Include="src\coroutine\coroutine_context.h" />
     <ClInclude Include="src\event\event_data.h" />
     <ClInclude Include="src\event\event_driver.h" />
     <ClInclude Include="src\event\event_loop_thread.h" />
@@ -257,8 +273,10 @@
     <ClInclude Include="src\protocol\rapid\rapid_protocol.h" />
     <ClInclude Include="src\protocol\redis\redis_parser.h" />
     <ClInclude Include="src\protocol\redis\redis_protocol.h" />
+    <ClInclude Include="src\service\coroutine_service_handle.h" />
     <ClInclude Include="src\service\io_service.h" />
     <ClInclude Include="src\service\service_handle.h" />
+    <ClInclude Include="src\task.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

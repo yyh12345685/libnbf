@@ -4,6 +4,9 @@
 #include "protocol/protocol_helper.h"
 #include "net/async_client_connect.h"
 #include "net/sync_client_connect.h"
+#include "coroutine/coroutine_actor.h"
+#include "coroutine/coroutine_context.h"
+#include "client/client_mgr.h"
 
 namespace bdf{
 
@@ -121,14 +124,25 @@ EventMessage* Client::DoSendRecieve(EventMessage* message, uint32_t timeout_ms) 
     return nullptr;
   }
 
-  if (message->type_id == MessageType::kRapidMessage){
-    message->sequence_id = GetSequenceId();
-  }
+  message->sequence_id = GetSequenceId();
   message->descriptor_id = (int64_t)((void*)connect_);
   message->direction = MessageBase::kOutgoingRequest;
+  if (ForTest::Inst().GetForTest()){
+    DoSend(message);
+    return nullptr;
+  }
+  CoroutineContext::Instance().GetCoroutine()->SetWaitingId(message->sequence_id);
+  DoSend(message);
+  EventMessage* response = DoRecieve(timeout_ms);
+  return response;
+}
+
+void Client::DoSend(EventMessage* message){
   IoService::GetInstance().SendToIoHandle(message);
-  //TODO...
-  return nullptr;
+}
+
+EventMessage* Client::DoRecieve(uint32_t timeout_ms){
+  return CoroutineContext::Instance().GetCoroutine()->RecieveMessage(timeout_ms);
 }
 
 std::ostream& operator << (std::ostream& os, const Client& client) {

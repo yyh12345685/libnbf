@@ -25,6 +25,9 @@ public:
   void SetFd(const int& fd) { fd_ = fd; }
   int GetFd() { return fd_; }
 
+  void SetIsServer() { is_server_ = true; }
+  bool GetIsServer() { return is_server_; }
+
   void SetPort(const int& port) { port_ = port; }
   int GetPort() { return port_; }
 
@@ -61,6 +64,7 @@ protected:
   int port_;
   Buffer inbuf_;
   Buffer outbuf_;
+  bool is_server_;
 
   ProtocolBase* protocol_;
   ProtocolFactory protocol_factory_;

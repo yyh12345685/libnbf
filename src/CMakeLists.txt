@@ -49,8 +49,13 @@ set(BDF_SRC
   net/server_connect.cpp
   net/io_handle.cpp
 
-  service/service_handle.cpp
+  coroutine/coroutine_actor.cpp
+  coroutine/coroutine_context.cpp
+  coroutine/coroutine_schedule.cpp
+
   service/io_service.cpp
+  service/service_handle.cpp
+  service/coroutine_service_handle.cpp
 
   client/client.cpp
   client/client_router.cpp

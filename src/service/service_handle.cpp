@@ -8,9 +8,7 @@ namespace bdf {
 
 LOGGER_CLASS_IMPL(logger, ServiceHandler);
 
-void ServiceHandler::Run(void* handle, HandleData* data){
-  ServiceHandler* srv_handle = (ServiceHandler*)handle;
-
+void ServiceHandler::Run( HandleData* data){
   while (data->is_run) {
     if (data->data_.empty()){
       usleep(10);
@@ -25,7 +23,7 @@ void ServiceHandler::Run(void* handle, HandleData* data){
     while (!temp.empty()){
       EventMessage *msg = temp.front();
       temp.pop();
-      srv_handle->Handle(msg);
+      Handle(msg);
     }
   }
 }

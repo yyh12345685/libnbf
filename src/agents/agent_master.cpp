@@ -79,6 +79,7 @@ void AgentMaster::OnEvent(EventDriver *poll, int fd, short event){
     svr_con->SetFd(sock);
     svr_con->SetPort(port);
     svr_con->SetProtocol(cate);
+    svr_con->SetIsServer();
     if (0!= agents_->GetSlave()->AddModr(svr_con, sock, true)){
       WARN(logger_, "AddModr faild...");
       BDF_DELETE(svr_con);

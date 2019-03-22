@@ -16,7 +16,7 @@ public:
   IoHandler(){}
   virtual ~IoHandler() {}
     
-  static void Run(void* handle,HandleData* data);
+  virtual void Run(HandleData* data);
   void Handle(EventMessage* message);
 
   static IoHandler* GetIoHandler() {

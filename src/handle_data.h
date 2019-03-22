@@ -8,6 +8,7 @@
 namespace bdf{
 
 class EventMessage;
+class Task;
 
 struct HandleData {
   ~HandleData() {
@@ -16,6 +17,8 @@ struct HandleData {
     }
   }
   std::queue<EventMessage*> data_;
+
+  std::queue<Task*> task_;
 
   std::mutex lock_;
   bool is_run = false;

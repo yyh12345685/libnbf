@@ -4,6 +4,7 @@ project(libbdf)
 
 add_subdirectory(test_server)
 add_subdirectory(test_client_server)
+add_subdirectory(coroutine_test_server)
 
 EXECUTE_PROCESS(
   COMMAND mkdir -p ${CMAKE_CURRENT_BINARY_DIR}/python

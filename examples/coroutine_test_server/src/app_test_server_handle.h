@@ -1,31 +1,22 @@
 #pragma once
-
+#include "service/coroutine_service_handle.h"
 #include "common/logger.h"
-#include "handle.h"
 
 namespace bdf{
 
-class EventMessage;
-class HttpMessage;
-class RapidMessage;
-struct HandleData;
+namespace testserver{
 
-class ServiceHandler:public Handler {
+class AppTestServerHandler: public CoroutineServiceHandler {
 public:
-  ServiceHandler():
-    Handler(){
-  }
-  virtual ~ServiceHandler(){
-  }
-  virtual void Run(HandleData* data);
+  AppTestServerHandler() {}
+  virtual ~AppTestServerHandler() {}
 
   virtual ServiceHandler* Clone() {
-    return new ServiceHandler();
+    return new AppTestServerHandler();
   }
 
+  virtual void OnTimer(void* function_data);
 protected:
-  void Handle(EventMessage* message);
-
   virtual void OnHttpRequestMessage(HttpMessage* message);
   virtual void OnHttpResponseMessage(HttpMessage* message);
 
@@ -33,8 +24,10 @@ protected:
   virtual void OnRapidResponseMessage(RapidMessage* message);
 
 private:
-  LOGGER_CLASS_DECL(logger);
+  LOGGER_CLASS_DECL(logger_);
 
 };
 
 }
+}
+
