@@ -11,8 +11,14 @@ namespace bdf {
 class HandleData;
 class CoroutineActor;
 
-class CoroutineServiceHandler : public ServiceHandler, public OnTimerBase {
- public:
+class CoroutineServiceHandler : 
+  public ServiceHandler, public OnTimerBase {
+public:
+  CoroutineServiceHandler():
+    current_coroutine_id_(-1){
+  }
+  virtual ~CoroutineServiceHandler(){
+  }
 
   virtual void Run(HandleData* data);
 
@@ -25,15 +31,18 @@ protected:
 private:
   LOGGER_CLASS_DECL(logger_);
 
-  static void Process(CoroutineActor* coroutine, void* data);
+  static void ProcessCoroutine(CoroutineActor* coroutine, void* data);
   void ProcessTimer();
   void Process(HandleData* data);
 
   void ProcessTask(HandleData* data);
 
   void ProcessMessage(std::queue<EventMessage*>& msg_list);
+  void ProcessMessageHandle(std::queue<EventMessage*>& msg_list);
 
-  int current_coroutine_id_ = -1;
+  void ProcessItem(EventMessage* msg);
+
+  int current_coroutine_id_;
 
   Timer timer_;
 };

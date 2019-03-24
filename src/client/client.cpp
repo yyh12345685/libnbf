@@ -6,6 +6,7 @@
 #include "net/sync_client_connect.h"
 #include "coroutine/coroutine_actor.h"
 #include "coroutine/coroutine_context.h"
+#include "service/coroutine_service_handle.h"
 #include "client/client_mgr.h"
 
 namespace bdf{
@@ -80,7 +81,7 @@ int Client::Stop() {
   int ret = connect_->Stop();
   //may be a bug
   //connect_->Destroy();
-  connect_ = NULL;
+  connect_ = nullptr;
   return ret;
 }
 
@@ -113,7 +114,7 @@ bool Client::Send(EventMessage* message) {
   //message->sequence_id = GetSequenceId();
   message->descriptor_id = (int64_t)((void*)connect_);
   message->direction = MessageBase::kOneway;
-  IoService::GetInstance().SendToIoHandle(message);
+  DoSend(message);
   return true;
 }
 
@@ -128,16 +129,24 @@ EventMessage* Client::DoSendRecieve(EventMessage* message, uint32_t timeout_ms) 
   message->descriptor_id = (int64_t)((void*)connect_);
   message->direction = MessageBase::kOutgoingRequest;
   if (ForTest::Inst().GetForTest()){
+    TRACE(logger_, "for test_client_server,only send.");
     DoSend(message);
     return nullptr;
   }
   CoroutineContext::Instance().GetCoroutine()->SetWaitingId(message->sequence_id);
   DoSend(message);
+  TRACE(logger_, "send msg handle_id:" << message->handle_id);
   EventMessage* response = DoRecieve(timeout_ms);
+  if (response && response->status != EventMessage::kStatusOK) {
+    TRACE(logger_, "may be time out,status:" << response->status << ",msg:" << *response);
+    MessageFactory::Destroy(response);
+    return nullptr;
+  }
   return response;
 }
 
 void Client::DoSend(EventMessage* message){
+  message->handle_id = CoroutineContext::Instance().GetServiceHandler()->GetHandlerId();
   IoService::GetInstance().SendToIoHandle(message);
 }
 

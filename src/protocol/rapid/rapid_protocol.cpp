@@ -32,15 +32,15 @@ void Int32To64(uint32_t high, uint32_t low, uint64_t& value){
 EventMessage* RapidProtocol::Decode(Buffer &input, bool& failed){
   size_t total = input.GetReadingSize();
   if (total < sizeof(RapidHead)){
-    return NULL;
+    return nullptr;
   }
 
   char *data = input.GetReading();
   RapidHead *header = (RapidHead *)data;
-  if (NULL == header){
+  if (nullptr == header){
     input.ResetAll();
     failed = true;
-    return NULL;
+    return nullptr;
   }
 
   uint16_t magic_tmp = ntohs(header->magic);
@@ -53,7 +53,7 @@ EventMessage* RapidProtocol::Decode(Buffer &input, bool& failed){
       << ",input size:" << total << ",input data:" << data);
     input.ResetAll();
     failed = true;
-    return NULL;
+    return nullptr;
   }
 
   uint32_t size = ntohl(header->size);
@@ -66,7 +66,7 @@ EventMessage* RapidProtocol::Decode(Buffer &input, bool& failed){
       WARN(logger_, "CustomProtocol DrainReading invalid data,total:" << total);
     }
 
-    return NULL;
+    return nullptr;
   }
 
   RapidMessage *msg = MessageFactory::Allocate<RapidMessage>() ;
@@ -79,7 +79,7 @@ EventMessage* RapidProtocol::Decode(Buffer &input, bool& failed){
 }
 
 bool RapidProtocol::Encode(EventMessage *pv, Buffer *output){
-  RapidMessage *msg = NULL;
+  RapidMessage *msg = nullptr;
   switch (pv->type_id) {
   case MessageType::kRapidMessage:
     msg = dynamic_cast<RapidMessage *>(pv);
@@ -89,7 +89,7 @@ bool RapidProtocol::Encode(EventMessage *pv, Buffer *output){
     return false;
   }
 
-  if (msg == NULL){
+  if (msg == nullptr){
     WARN(logger_, "msg is NULL.");
     return false;
   }

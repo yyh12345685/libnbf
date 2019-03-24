@@ -14,7 +14,7 @@ namespace bdf {
 LOGGER_CLASS_IMPL(logger_, AgentMaster);
 
 AgentMaster::AgentMaster() :
-  conf_(NULL){
+  conf_(nullptr){
 }
 
 AgentMaster::~AgentMaster() {

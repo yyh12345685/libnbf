@@ -27,7 +27,7 @@ void SyncClientConnect::OnDecodeMessage(EventMessage* message) {
 
   if (keeper_message->type_id == MessageType::kHeartBeatMessage
     || keeper_message->direction == EventMessage::kOneway) {
-    TRACE(logger, "SyncClientChannel::OnDecodeMessage heartbeat or oneway:" << *message);
+    TRACE(logger, "OnDecodeMessage heartbeat or oneway:" << *message);
     MessageFactory::Destroy(message);
     MessageFactory::Destroy(keeper_message);
     sync_sequence_.Fire();
@@ -38,6 +38,7 @@ void SyncClientConnect::OnDecodeMessage(EventMessage* message) {
   message->status = EventMessage::kStatusOK;
   message->direction = EventMessage::kIncomingResponse;
   message->sequence_id = keeper_message->sequence_id;
+  message->handle_id = keeper_message->handle_id;
   message->descriptor_id = (int64_t)((void*)(this));
 
   TRACE(logger, "SyncClientChannel::OnDecodeMessage " << *message);

@@ -11,7 +11,7 @@ LOGGER_CLASS_IMPL(logger, ServiceHandler);
 void ServiceHandler::Run( HandleData* data){
   while (data->is_run) {
     if (data->data_.empty()){
-      usleep(10);
+      usleep(1);
       continue;
     }
 

@@ -6,7 +6,7 @@ namespace bdf{
 
 LOGGER_CLASS_IMPL(logger, AppBase);
 
-AppBase* AppBase::application_ = NULL;
+AppBase* AppBase::application_ = nullptr;
 
 AppBase::AppBase():
   config_info_(nullptr),

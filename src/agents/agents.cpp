@@ -11,8 +11,8 @@ LOGGER_CLASS_IMPL(logger_, Agents)
 
 Agents::Agents(const IoServiceConfig* conf) :
   conf_(conf),
-  agent_master_(NULL),
-  agent_slaves_(NULL)
+  agent_master_(nullptr),
+  agent_slaves_(nullptr)
 	{}
 
 bool Agents::Init(){
@@ -39,9 +39,9 @@ bool Agents::Start() {
 }
 
 void Agents::Stop(){
-	if(NULL != agent_master_)
+	if(nullptr != agent_master_)
     agent_master_->Stop();
-	if(NULL != agent_slaves_)
+	if(nullptr != agent_slaves_)
     agent_slaves_->Stop();
 }
 
@@ -60,9 +60,9 @@ int Agents::Del(EventFunctionBase* ezfd, int fd){
 Agents::~Agents() {
   Stop();
 	
-	if(NULL != agent_master_)
+	if(nullptr != agent_master_)
     BDF_DELETE(agent_master_);
-	if(NULL != agent_slaves_)
+	if(nullptr != agent_slaves_)
     BDF_DELETE(agent_slaves_);
 }
 

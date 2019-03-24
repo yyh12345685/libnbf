@@ -17,14 +17,14 @@ EventMessage* RedisProtocol::Decode(Buffer &input, bool& failed){
   size_t size = input.GetReadingSize();
   if (0 == size){
     TRACE(logger_, "RedisProtocol::Decode input is empty!");
-    return NULL;
+    return nullptr;
   }
 
   if (size > MaxSize_Allowed){
     TRACE(logger_, "RedisProtocol::Decode input is too large!");
     input.ResetAll();
     failed = false;
-    return NULL;
+    return nullptr;
   }
 
   std::string reply(input.GetReading(), size);
@@ -38,12 +38,12 @@ EventMessage* RedisProtocol::Decode(Buffer &input, bool& failed){
     int ret = RedisParser::ParseReply(reply, &is_pong, &one_cmd_size, &result);
     if (0 != ret){
       if (ret > 0){
-        return NULL;
+        return nullptr;
       }else{
         input.ResetAll();
         failed = false;
         WARN(logger_, "CodecRedis::Decode(): fail parse " << reply);
-        return NULL;
+        return nullptr;
       }
     }
     size_reply += one_cmd_size;
@@ -57,14 +57,14 @@ EventMessage* RedisProtocol::Decode(Buffer &input, bool& failed){
     RedisMessage *msg = MessageFactory::Allocate<RedisMessage>();
     if (!msg){
       failed = true;
-      return NULL;
+      return nullptr;
     }
     msg->bodys.swap(tmp_body);
     TRACE(logger_, "CodecRedis::Decode(): parse " << msg->bodys.size() 
       << ",seqid:" << msg->sequence_id);
     return msg;
   }
-  return NULL;
+  return nullptr;
 }
 
 bool RedisProtocol::Encode(EventMessage *msg, Buffer *output){

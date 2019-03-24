@@ -63,9 +63,12 @@ public:
 
 private:
   void SendToIoHandleInner(EventMessage* msg);
+
+  uint32_t GetServiceHandleId(EventMessage* msg);
+
   int ThreadWait();
   int ThreadStop();
-  LOGGER_CLASS_DECL(logger);
+  LOGGER_CLASS_DECL(logger_);
 
   IoServiceConfig io_service_config_;
 

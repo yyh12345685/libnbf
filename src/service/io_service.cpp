@@ -12,7 +12,7 @@
 
 namespace bdf{
 
-LOGGER_CLASS_IMPL(logger, IoService);
+LOGGER_CLASS_IMPL(logger_, IoService);
 
 int IoService::Init(const IoServiceConfig& config){
   agents_ = new Agents(&config);
@@ -40,6 +40,7 @@ int IoService::Start(ServiceHandler* handle){
     HandleData* hd = new HandleData;
     hd->handle_ = handle->Clone();
     hd->is_run = true;
+    hd->handle_->SetHandlerId(cn);
     handle_thread_.service_handle_data_.push_back(hd);
     std::thread* thread = new std::thread(std::bind(&Handler::Run, hd->handle_, hd));
     handle_thread_.service_handle_thread_.push_back(thread);
@@ -49,6 +50,7 @@ int IoService::Start(ServiceHandler* handle){
     HandleData* hd_io = new HandleData;
     hd_io->handle_ = new IoHandler();
     hd_io->is_run = true;
+    hd_io->handle_->SetHandlerId(cn);
     handle_thread_.io_handle_data_.push_back(hd_io);
     std::thread* thread_io = new std::thread(std::bind(&Handler::Run, hd_io->handle_, hd_io));
     handle_thread_.io_handle_thread_.push_back(thread_io);
@@ -58,7 +60,7 @@ int IoService::Start(ServiceHandler* handle){
 }
 
 int IoService::ThreadWait(){
-  TRACE(logger, "IoService::ThreadWait start.");
+  TRACE(logger_, "IoService::ThreadWait start.");
   for (int cn = 0; cn < io_service_config_.service_handle_thread_count; cn++){
     handle_thread_.service_handle_thread_[cn]->join();
   }
@@ -66,12 +68,12 @@ int IoService::ThreadWait(){
   for (int cn = 0; cn < io_service_config_.io_handle_thread_count; cn++) {
     handle_thread_.io_handle_thread_[cn]->join();
   }
-  TRACE(logger, "IoService::ThreadWait end.");
+  TRACE(logger_, "IoService::ThreadWait end.");
   return 0;
 }
 
 int IoService::ThreadStop(){
-  TRACE(logger, "IoService::ThreadStop.");
+  TRACE(logger_, "IoService::ThreadStop.");
   for (int cn = 0; cn < io_service_config_.service_handle_thread_count; cn++){
     handle_thread_.service_handle_data_[cn]->is_run = false;
   }
@@ -105,7 +107,7 @@ void IoService::SendCloseToIoHandle(EventMessage* msg){
 
 void IoService::Reply(EventMessage* message){
   message->direction = EventMessage::kOutgoingResponse;
-  SendToIoHandleInner(message);
+  SendToIoHandle(message);
 }
 
 void IoService::SendToIoHandle(EventMessage* msg){
@@ -113,10 +115,19 @@ void IoService::SendToIoHandle(EventMessage* msg){
   SendToIoHandleInner(msg);
 }
 
-void IoService::SendToServiceHandle(EventMessage* msg){
+uint32_t IoService::GetServiceHandleId(EventMessage* msg){
   static thread_local std::atomic<uint32_t> id_hs(0);
-  HandleData* hd = handle_thread_.service_handle_data_.at(
-    (id_hs++)%handle_thread_.service_handle_data_.size());
+  if (msg->handle_id >=0 && 
+    msg->handle_id < (int32_t)(handle_thread_.service_handle_thread_.size())){
+    return msg->handle_id;
+  }
+  return (id_hs++) % handle_thread_.service_handle_data_.size();
+}
+
+void IoService::SendToServiceHandle(EventMessage* msg){
+  uint32_t id = GetServiceHandleId(msg);
+  TRACE(logger_, "handle id:" << msg->handle_id << ",Get id:" << id);
+  HandleData* hd = handle_thread_.service_handle_data_.at(id);
   hd->lock_.lock();
   hd->data_.emplace(msg);
   hd->lock_.unlock();
@@ -175,7 +186,7 @@ void IoService::HandleSignal(){
 }
 
 void IoService::StopIoService(int signal){
-  TRACE(logger, "service will be stop,signal:" << signal);
+  TRACE(logger_, "service will be stop,signal:" << signal);
   GetInstance().Stop();
 }
 

@@ -12,8 +12,7 @@ struct HandleData;
 
 class ServiceHandler:public Handler {
 public:
-  ServiceHandler():
-    Handler(){
+  ServiceHandler(){
   }
   virtual ~ServiceHandler(){
   }

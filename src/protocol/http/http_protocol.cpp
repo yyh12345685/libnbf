@@ -66,7 +66,7 @@ EventMessage* HttpProtocol::Decode(Buffer &input, bool& failed){
     if (0 == size || failed) {
       //if paser failed
 			TRACE(logger_,"not need parsed,size:"<<size<<",failed:"<<failed);
-		  return NULL;
+		  return nullptr;
 	  }
 
     //handle size not bigger to 512k
@@ -168,7 +168,7 @@ bool HttpProtocol::Encode(EventMessage *pv, Buffer *output){
     msg = &one;
     msg->direction = hmsg->direction;
     if (msg->direction == MessageBase::kIncomingResponse) {
-      msg->InitReply(NULL, 200, false, true);
+      msg->InitReply(nullptr, 200, false, true);
       msg->http_info.body.assign((const char *)g_favicon_ico, c_favicon_ico);
       msg->http_info.headers.insert(std::pair <std::string, std::string>("Content-Type", "image/x-icon"));
     }else {
@@ -184,7 +184,7 @@ bool HttpProtocol::Encode(EventMessage *pv, Buffer *output){
     return false;
   }
 
-  if (msg == NULL){
+  if (msg == nullptr){
     ERROR(logger_, "error ev == NULL.");
     return false;
   }
@@ -196,7 +196,7 @@ bool HttpProtocol::Encode(EventMessage *pv, Buffer *output){
 }
 
 bool HttpProtocol::WirteToBuf(HttpMessage *msg, Buffer *output){
-  const char *http_version = NULL;
+  const char *http_version = nullptr;
   switch (msg->http_minor) {
   case 0:
     http_version = "HTTP/1.0";

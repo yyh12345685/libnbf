@@ -19,6 +19,8 @@ public:
   int Put(EventMessage* message);
   EventMessage* Get(uint64_t sequence_id);
 
+  int GetSequenceSize() { return registery_.size(); }
+
   virtual void OnTimer(void* function_data);
 
   std::list<EventMessage*> Clear();

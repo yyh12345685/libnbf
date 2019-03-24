@@ -44,7 +44,7 @@ EventMessage* AsyncSequence::Get(uint64_t sequence_id){
   auto it = registery_.find(sequence_id);
   if (it == registery_.end()) {
     registery_lock_.unlock();
-    return NULL;
+    return nullptr;
   }
 
   EventMessage* message = it->second;

@@ -85,8 +85,12 @@ static void MainFunc(uint32_t low32, uint32_t hi32) {
 }
 
 void CoroutineSchedule::CoroutineResume(CoroutineActor* corotine, int id) {
-  if (corotine->running != -1 || id < 0 || id >= corotine->cap){
-    WARN(logger_, "error running:" << corotine->running << ",id" << id);
+  if (corotine->running != -1){
+    WARN(logger_, "error running:" << corotine->running);
+    return;
+  }
+  if (id < 0 || id >= corotine->cap){
+    WARN(logger_, "error id" << id<<",cap:"<< corotine->cap);
     return;
   }
 
@@ -94,6 +98,7 @@ void CoroutineSchedule::CoroutineResume(CoroutineActor* corotine, int id) {
   if (coctx == NULL)
     return;
   int status = coctx->status;
+  TRACE(logger_, "status:" << status << ",running id:" << corotine->running);
   switch (status) {
   case kCoroutineReady: {
     getcontext(&coctx->ctx);

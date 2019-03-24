@@ -22,12 +22,12 @@ ProtocolFactory::~ProtocolFactory() {
 
 ProtocolBase* ProtocolFactory::Create(int type) {
   if (type <= 0 || type >= (int)protocol_.size()) {
-    return NULL;
+    return nullptr;
   }
 
   ProtocolBase* protocol = protocol_.at(type);
   if (!protocol) {
-    return NULL;
+    return nullptr;
   }
 
   return protocol->Clone();

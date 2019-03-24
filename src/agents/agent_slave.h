@@ -11,8 +11,6 @@ class Agents;
 class EventFunctionBase;
 
 class AgentSlave {
- public: 
-  typedef AgentSlave Self;
 
 public:
   AgentSlave();

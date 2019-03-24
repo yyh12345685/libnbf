@@ -23,6 +23,7 @@ void MessageBase::Dump(std::ostream& os) const {
 void EventMessage::Dump(std::ostream& os) const {
   os << "{\"type\": \"EventMessage\""
     << ", \"descriptor_id\": " << descriptor_id
+    << ", \"handle_id\": " << handle_id
     << ", \"messagebase\": " << ToString();
   os << "}";
 }

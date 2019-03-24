@@ -12,6 +12,7 @@ namespace bdf{
 LOGGER_CLASS_IMPL(logger_, CoroutineActor);
 
 EventMessage* CoroutineActor::RecieveMessage(uint32_t timeout_ms){
+  TRACE(logger_, "CoroutineActor::RecieveMessage...");
   uint64_t time_id = 0;
   if (msg_list_.empty()){
     if (timeout_ms) {
@@ -23,6 +24,7 @@ EventMessage* CoroutineActor::RecieveMessage(uint32_t timeout_ms){
       time_id = CoroutineContext::Instance().GetTimer()->AddTimer(timeout_ms, data);
     }
     CoroutineSchedule* scheduler = CoroutineContext::Instance().GetScheduler();
+    TRACE(logger_, "RecieveMessage CoroutineYield:" << this);
     scheduler->CoroutineYield(this);
   }
   is_waiting_ = false;
@@ -46,7 +48,7 @@ bool CoroutineActor::SendMessage(EventMessage* message){
     return false;
   }
 
-  msg_list_.push_back(message);
+  msg_list_.emplace_back(message);
   return true;
 }
 

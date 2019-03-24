@@ -1,5 +1,6 @@
 
 #include <unistd.h>
+#include <sys/prctl.h>
 #include "net/io_handle.h"
 #include "message_base.h"
 #include "handle_data.h"
@@ -13,12 +14,13 @@ LOGGER_CLASS_IMPL(logger, IoHandler);
 thread_local IoHandler* IoHandler::io_handler_ = NULL;
 
 void IoHandler::Run(HandleData* data){
+  prctl(PR_SET_NAME, "IoHandler");
   TRACE(logger, "IoHandler::Run start.");
   io_handler_ = this;
   while (data->is_run) {
     GetTimer().ProcessTimer();
     if (data->data_.empty()) {
-      usleep(10);
+      usleep(1);
       continue;
     }
 
@@ -37,7 +39,7 @@ void IoHandler::Run(HandleData* data){
 }
 
 void IoHandler::Handle(EventMessage* message){
-  //TRACE(logger, "IoHandler::Handle " << *message);
+  TRACE(logger, "IoHandler::Handle msg:" << *message);
 
   switch (message->type_io_event) {
     case MessageType::kIoMessageEvent:
@@ -47,16 +49,16 @@ void IoHandler::Handle(EventMessage* message){
     HandleIoActiveCloseEvent(message);
     break;
   default:
-    WARN(logger, "IOHanlder unknown message:" << message->type_id);
+    WARN(logger, "IoHandler unknown message:" << message->type_id);
     break;
   }
 }
 
 void IoHandler::HandleIoMessageEvent(EventMessage* message){
-  TRACE(logger, "HandleIOMessageEvent");
+  TRACE(logger, "HandleIoMessageEvent");
   Connecting* con = (Connecting*)((void*)(message->descriptor_id));
   if (!con) {
-    WARN(logger, "IoHandler::HandleIoMessageEventt descriptor is not Connecting");
+    WARN(logger, "HandleIoMessageEventt descriptor is not Connecting");
     HandleIoMessageFailed(message);
     return;
   }
@@ -85,10 +87,10 @@ void IoHandler::HandleIoMessageFailed(EventMessage* message) {
 }
 
 void IoHandler::HandleIoActiveCloseEvent(EventMessage* message){
-  TRACE(logger, "HandleIOMessageEvent");
+  TRACE(logger, "HandleIoActiveCloseEvent");
   Connecting* con = (Connecting*)((void*)(message->descriptor_id));
   if (!con) {
-    WARN(logger, "IoHandler::HandleIoMessageEventt descriptor is not Connecting");
+    WARN(logger, "HandleIoActiveCloseEvent descriptor is not Connecting");
     return;
   }
 

@@ -18,9 +18,11 @@ AsyncClientConnect::~AsyncClientConnect(){
 //由slave线程触发
 void AsyncClientConnect::OnDecodeMessage(EventMessage* message){
   EventMessage* keeper_message = async_sequence_.Get(message->sequence_id);
-  if (!keeper_message) {
-    DEBUG(logger, "OnDecodeMessage sequence not found or oneway msg"
-      << ", sequence_id:" << message->sequence_id);
+  TRACE(logger_, "OnDecodeMessage get sequence_id:" << message->sequence_id);
+  if (nullptr == keeper_message) {
+    DEBUG(logger, "OnDecodeMessage sequence not found or oneway msg:"
+      <<*message << ", sequence_id:" << message->sequence_id
+      <<",Sequence size:"<< async_sequence_.GetSequenceSize());
     MessageFactory::Destroy(message);
     return;
   }
@@ -36,6 +38,7 @@ void AsyncClientConnect::OnDecodeMessage(EventMessage* message){
   message->status = MessageBase::kStatusOK;
   message->direction = MessageBase::kIncomingResponse;
   message->sequence_id = keeper_message->sequence_id;
+  message->handle_id = keeper_message->handle_id;
   message->descriptor_id = (int64_t)((void*)(this));
 
   TRACE(logger, "AsyncClientConnect::OnDecodeMessage " << *message);
@@ -57,6 +60,7 @@ int AsyncClientConnect::EncodeMsg(EventMessage* message){
   }
 
   if (message->direction != EventMessage::kOneway) {
+    TRACE(logger, "put sequence id:" << message->sequence_id);
     if (0 != async_sequence_.Put(message)) {
       WARN(logger, "AsyncClientConnect::EncodeMsg Put fail");
       return -3;

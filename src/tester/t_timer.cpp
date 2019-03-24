@@ -94,7 +94,7 @@ void* ClientMainThread1(TimerData* td){
   td->function_data = (void*)(&id);;
   std::cout << "t1 thread id:" << id << std::endl;
   TimerTestFun(*td);
-	return NULL;
+	return nullptr;
 }
 
 void* ClientMainThread2(TimerData* td){
@@ -102,7 +102,7 @@ void* ClientMainThread2(TimerData* td){
   td->function_data = (void*)(&id);
   std::cout << "t2 thread id:" << id << std::endl;
   TimerTestFun(*td);
-	return NULL;
+	return nullptr;
 }
 
 TEST(timer_test,test2){

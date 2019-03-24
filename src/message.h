@@ -30,9 +30,25 @@ struct RapidMessage : public EventMessage {
   virtual ~RapidMessage() {
   }
   bool IsSynchronous() { return false; }
+
+  void Dump(std::ostream& os) const{
+    os << "{\"type\": \"RapidMessage\""
+      << ", \"EventMessage\": ";
+    EventMessage::Dump(os);
+    os << ", \"command\": " << command
+      << ", \"body\": \"" << body << "\""
+      << "}";
+  }
+
   std::string body;
   int command;
 };
+
+template<class Stream>
+Stream& operator << (Stream& os, const RapidMessage& message){
+  message.Dump(os);
+  return os;
+}
 
 struct RedisMessage : public EventMessage {
   RedisMessage() :
@@ -40,9 +56,22 @@ struct RedisMessage : public EventMessage {
   }
   virtual ~RedisMessage() {
   }
+  void Dump(std::ostream& os) const {
+    os << "{\"type\": \"RapidMessage\""
+      << ", \"EventMessage\": ";
+    EventMessage::Dump(os);
+    os << ", \"bodys\": " << bodys.size()<< "\""
+      << "}";
+  }
   bool IsSynchronous() { return true; }
   std::vector<std::string> bodys;
 };
+
+template<class Stream>
+Stream& operator << (Stream& os, const RedisMessage& message) {
+  message.Dump(os);
+  return os;
+}
 
 struct HttpMessage : public EventMessage {
   HttpMessage() :
