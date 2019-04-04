@@ -12,7 +12,7 @@ namespace monitor {
 LOGGER_CLASS_IMPL(logger, GlobalMatrix);
 LOGGER_CLASS_IMPL(logger, Matrix);
 
-Matrix* GlobalMatrix::global_matrix_ = NULL;
+Matrix* GlobalMatrix::global_matrix_ = nullptr;
 
 int GlobalMatrix::Init(
   const std::string& monitor_file_pre,
@@ -52,7 +52,7 @@ int GlobalMatrix::Init(
 int GlobalMatrix::Destroy() {
   if (global_matrix_) {
     delete global_matrix_;
-    global_matrix_ = NULL;
+    global_matrix_ = nullptr;
   }
   return 0;
 }

@@ -31,9 +31,9 @@ int Timer::DelTimer(uint64_t id){
 int Timer::ProcessTimer(){
   uint64_t cur_time_ms = Time::GetMillisecond();
   TimerData* event_timeo = heap_timer_.Top();
-  while (NULL != event_timeo
+  while (nullptr != event_timeo
     && cur_time_ms > event_timeo->time_out_ms 
-    && NULL != event_timeo->time_proc) {
+    && nullptr != event_timeo->time_proc) {
     event_timeo->time_proc->OnTimer(event_timeo->function_data);
     heap_timer_.Pop();
     event_timeo = heap_timer_.Top();

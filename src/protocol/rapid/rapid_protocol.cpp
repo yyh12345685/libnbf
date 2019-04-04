@@ -90,7 +90,7 @@ bool RapidProtocol::Encode(EventMessage *pv, Buffer *output){
   }
 
   if (msg == nullptr){
-    WARN(logger_, "msg is NULL.");
+    WARN(logger_, "msg is nullptr.");
     return false;
   }
 

@@ -18,7 +18,7 @@ class Socket{
   static int CreateSocket(bool is_non_block=true); 
   static int Listen(const sockaddr_in& addr, size_t backlog = 2048);
   static int Listen(const char *addr, int port, size_t backlog = 2048);
-  static int Accept(int listen_fd, char* ipbuf=NULL, int* port=NULL);
+  static int Accept(int listen_fd, char* ipbuf= nullptr, int* port= nullptr);
 
   /*
    * @return: <fd, whether need event>
@@ -56,7 +56,7 @@ class Socket{
 
   inline static void Close(int fd);
 
-  inline static bool isIpAddr(const char* ip);
+  inline static bool IsIpAddr(const char* ip);
 
   static sockaddr_in GenerateAddr(const char *ip, const unsigned short port);
 
@@ -87,7 +87,7 @@ bool Socket::IpToInt(const char* ipstr, uint32_t& ipint) {
   return true;
 }
 
-bool Socket::isIpAddr(const char* ip){
+bool Socket::IsIpAddr(const char* ip){
   for (const char* ch = ip; *ch != '\0';++ch){
     if ((*ch <'0' || *ch >'9') && *ch != '.'){
       return false;

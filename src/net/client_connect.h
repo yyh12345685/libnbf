@@ -33,6 +33,11 @@ public:
 
   virtual void OnClose();
 
+  //这几个timer相关的线程，只有iohandle回调的时候才能调用
+  int StartReconnectTimer();
+  int StartHeartBeatTimer();
+  void CancelTimer();
+
 protected:
   enum {
     kUnKown = 0,
@@ -41,11 +46,6 @@ protected:
   };
   uint8_t client_timer_type_reconnect_ = kClientTimerTypeReconnect;
   uint8_t client_timer_type_heartbeat_ = kClientTimerTypeHeartBeat;
-
-  //这几个timer相关的线程，只有iohandle回调的时候才能调用
-  int StartReconnectTimer();
-  int StartHeartBeatTimer();
-  void CancelTimer();
 
   void OnWrite();
   void OnConnectWrite();

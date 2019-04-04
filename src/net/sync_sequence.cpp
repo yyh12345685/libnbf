@@ -12,7 +12,7 @@ SyncSequence::SyncSequence(
   SyncClientConnect* sync_client_con,uint32_t timeout_in_ms):
   sync_client_con_(sync_client_con),
   timeout_ms_(timeout_in_ms),
-  fired_(NULL){
+  fired_(nullptr){
 }
 
 SyncSequence::~SyncSequence(){
@@ -32,11 +32,11 @@ int SyncSequence::Put(EventMessage* message) {
 
 EventMessage* SyncSequence::Get() {
   if (!fired_) {
-    return NULL;
+    return nullptr;
   } else {
     EventMessage* fired = fired_;
     list_.pop_front();
-    fired_ = NULL;
+    fired_ = nullptr;
     return fired;
   };
 }
@@ -47,7 +47,7 @@ EventMessage* SyncSequence::Fired(){
 
 EventMessage* SyncSequence::Fire(){
   if (fired_) {
-    return NULL;
+    return nullptr;
   } else {
     return fired_ = list_.front();
   }
@@ -59,12 +59,13 @@ void SyncSequence::OnTimer(void* function_data){
   sync_client_con_->CleanSyncClient();
   //sync_client_con_->OnTimeout(Fired());
   sync_client_con_->CleanSequenceQueue();
+  sync_client_con_->StartReconnectTimer();
 }
 
 std::list<EventMessage*> SyncSequence::Clear(){
   std::list<EventMessage*> tmp(list_);
   list_.clear();
-  fired_ = NULL;
+  fired_ = nullptr;
   return tmp;
 }
 

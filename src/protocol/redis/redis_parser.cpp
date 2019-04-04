@@ -15,7 +15,7 @@ namespace bdf {
 
 int RedisParser::ParseReply(
   const std::string& reply, bool* is_pong, size_t* size_reply, std::string* out) {
-  if (0 == reply.length() || NULL == is_pong || NULL == size_reply || NULL == out) 
+  if (0 == reply.length() || nullptr == is_pong || nullptr == size_reply || nullptr == out)
     return -1;
 
   size_t first_CRLF = reply.find("\r\n");
@@ -72,7 +72,7 @@ int RedisParser::ParseReply(
   case '*'://REDIS_REPLY_ARRAY
   {
     *size_reply = first_CRLF + 2;
-    char* end_ptr = NULL;
+    char* end_ptr = nullptr;
     int64_t array_num = strtoll(++p, &end_ptr, 10);
     if (array_num > 0){
       *out = reply.substr(1,first_CRLF-1);
@@ -151,7 +151,7 @@ int RedisParser::ParseSingleStr(const char* line_data, const size_t& line_len, s
       return -1;
     }
     has_read_len += length_line_len;
-    char* read_pos = NULL;
+    char* read_pos = nullptr;
     int64_t str_len = strtoll(&line_data[1], &read_pos, 10);
     if (str_len > 0){
       read_pos += 2;//jump \r\n

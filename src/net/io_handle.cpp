@@ -11,7 +11,7 @@ namespace bdf{
 
 LOGGER_CLASS_IMPL(logger, IoHandler);
 
-thread_local IoHandler* IoHandler::io_handler_ = NULL;
+thread_local IoHandler* IoHandler::io_handler_ = nullptr;
 
 void IoHandler::Run(HandleData* data){
   prctl(PR_SET_NAME, "IoHandler");

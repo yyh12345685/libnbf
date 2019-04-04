@@ -21,7 +21,7 @@ EventDriver::EventDriver() :
   sigset_t set;
   sigemptyset(&set);
   sigaddset(&set, SIGPIPE);
-  sigprocmask(SIG_BLOCK, &set, NULL);
+  sigprocmask(SIG_BLOCK, &set, nullptr);
   
 	event_in_ |= EPOLLET;
 	event_out_ |= EPOLLET;
@@ -73,7 +73,7 @@ int EventDriver::ShutDown()
 
 int EventDriver::Add(int fd, EventFunctionBase *ezfd,bool lock){
   if (fd > 0 && fd < event_data_.fd2data_size_ 
-    && NULL != event_data_.fd2data_[fd]){
+    && nullptr != event_data_.fd2data_[fd]){
     WARN(logger_, "repeated add fd:" << fd);
     return -1;
   }
@@ -100,17 +100,17 @@ int EventDriver::Add(int fd, EventFunctionBase *ezfd,bool lock){
   if (epoll_ctl(epfd_, EPOLL_CTL_ADD, fd, &event) == -1){
     WARN(logger_, "EventDriver::Add epoll_ctl error.");
     delete data;
-    event_data_.fd2data_[fd] = NULL;
+    event_data_.fd2data_[fd] = nullptr;
     return -3;
   }
   return 0;
 }
 
 int EventDriver::Del(int fd){
-  if(NULL == event_data_.fd2data_
+  if(nullptr == event_data_.fd2data_
       || fd < 0
       || fd > maxfd_
-      || NULL == event_data_.fd2data_[fd]){
+      || nullptr == event_data_.fd2data_[fd]){
     WARN(logger_, "EventDriver::Del fd:"<<fd<<",maxfd:"<<maxfd_);
     return -2;
   }
@@ -120,15 +120,15 @@ int EventDriver::Del(int fd){
   }else{
     delete event_data_.fd2data_[fd];
   }
-  event_data_.fd2data_[fd] = NULL;
+  event_data_.fd2data_[fd] = nullptr;
 
-  epoll_ctl(epfd_, EPOLL_CTL_DEL, fd, NULL); 
+  epoll_ctl(epfd_, EPOLL_CTL_DEL, fd, nullptr);
   return 0;
 }
 
 int EventDriver::Modr(int fd, bool set){
-  if (fd < 0 || fd > maxfd_ || NULL == event_data_.fd2data_[fd]){
-    TRACE(logger_, "fd is invalid or fd2data_ is NULL, fd" << fd << ",maxfd" << maxfd_);
+  if (fd < 0 || fd > maxfd_ || nullptr == event_data_.fd2data_[fd]){
+    TRACE(logger_, "fd is invalid or fd2data_ is nullptr, fd" << fd << ",maxfd" << maxfd_);
 	  return -1;
 	}
 
@@ -142,8 +142,8 @@ int EventDriver::Modr(int fd, bool set){
 }
 
 int EventDriver::Modw(int fd, bool set){
-  if (fd < 0 || fd > maxfd_ || NULL == event_data_.fd2data_[fd]){
-		TRACE(logger_,"fd2data_ is NULL, fd"<<fd<<",maxfd"<<maxfd_);
+  if (fd < 0 || fd > maxfd_ || nullptr == event_data_.fd2data_[fd]){
+		TRACE(logger_,"fd2data_ is nullptr, fd"<<fd<<",maxfd"<<maxfd_);
 	  return -1;
 	}
 
@@ -157,8 +157,8 @@ int EventDriver::Modw(int fd, bool set){
 }
 
 int EventDriver::Modrw(int fd, bool set){
-  if (fd < 0 || fd > maxfd_ || NULL == event_data_.fd2data_[fd]) {
-    TRACE(logger_, "fd2data_ is NULL, fd" << fd << ",maxfd" << maxfd_);
+  if (fd < 0 || fd > maxfd_ || nullptr == event_data_.fd2data_[fd]) {
+    TRACE(logger_, "fd2data_ is nullptr, fd" << fd << ",maxfd" << maxfd_);
     return -1;
   }
 

@@ -22,7 +22,7 @@ ClientConnect::~ClientConnect(){
 }
 
 void ClientConnect::OnTimer(void* function_data) {
-  uint8_t client_timer_type = *((int*)(function_data));
+  uint8_t client_timer_type = *((uint8_t*)(function_data));
   switch (client_timer_type){
   case kClientTimerTypeReconnect:
     TryConnect();
@@ -80,12 +80,13 @@ int ClientConnect::TryConnect(){
 }
 
 int ClientConnect::StartReconnectTimer() {
+  TRACE(logger_, "ClientConnect::StartReconnectTimer...");
   if (0 != reconnect_timer_) {
     WARN(logger, "ClientChannel::StartReconnectTimer duplicate!");
     return -1;
   }
   TimerData td;
-  td.time_out_ms = 1000;
+  td.time_out_ms = 300;
   td.time_proc = this;
   td.function_data = &client_timer_type_reconnect_;
   reconnect_timer_ = IoHandler::GetIoHandler()->StartTimer(td);
@@ -93,6 +94,7 @@ int ClientConnect::StartReconnectTimer() {
 }
 
 int ClientConnect::StartHeartBeatTimer() {
+  TRACE(logger_, "ClientConnect::StartReconnectTimer...");
   if (0 == heartbeat_ms_) {
     return 0;
   }
@@ -128,6 +130,7 @@ void ClientConnect::OnClose() {
   CleanSequenceQueue();
   CancelTimer();
   CleanClient();
+  StartReconnectTimer();
 }
 
 void ClientConnect::OnWrite() {

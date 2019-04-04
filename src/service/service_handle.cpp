@@ -51,16 +51,20 @@ void ServiceHandler::OnHttpRequestMessage(HttpMessage* message){
   WARN(logger, "not should here,not implement:" << message->type_id);
 }
 
+//if use coroutine,should not handle
 void ServiceHandler::OnHttpResponseMessage(HttpMessage* message){
-  WARN(logger, "not should here,not implement:" << message->type_id);
+  return;
+  //WARN(logger, "not should here,not implement:" << message->type_id);
 }
 
 void ServiceHandler::OnRapidRequestMessage(RapidMessage* message){
   WARN(logger, "not should here,not implement:" << message->type_id);
 }
 
+//if use coroutine,should not handle
 void ServiceHandler::OnRapidResponseMessage(RapidMessage* message){
-  WARN(logger, "not should here,not implement:" << message->type_id);
+  return;
+  //WARN(logger, "not should here,not implement:" << message->type_id);
 }
 
 }

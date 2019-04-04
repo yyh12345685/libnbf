@@ -27,21 +27,21 @@ TEST(MemProfile, memProfile){
   for (int idx = 0; idx < 1000; idx++) {
     std::string * str = BDF_NEW(std::string);
     tv.tv_usec = 20 * 1000;//1000us = 1ms
-    select(0, NULL, NULL, NULL, &tv);
+    select(0, nullptr, nullptr, nullptr, &tv);
     BDF_DELETE(str);
   }
 
   for (int idx = 0; idx < 1000; idx++) {
     MyTestSt1 * st1 = BDF_NEW(MyTestSt1, std::string("testst1"), 10);
     tv.tv_usec = 20 * 1000;//1000us = 1ms
-    select(0, NULL, NULL, NULL, &tv);
+    select(0, nullptr, nullptr, nullptr, &tv);
     BDF_DELETE(st1);
   }
 
   for (int idx = 0; idx < 1000; idx++) {
     MyTestSt2<std::string> * st2 = BDF_NEW(MyTestSt2<std::string>, std::string("testst2"));
     tv.tv_usec = 20 * 1000;//1000us = 1ms
-    select(0, NULL, NULL, NULL, &tv);
+    select(0, nullptr, nullptr, nullptr, &tv);
     BDF_DELETE(st2);
   }
   /*
@@ -50,7 +50,7 @@ TEST(MemProfile, memProfile){
     int bb = 10;
     MyTestSt3<std::string, int> * st3 =
       BDF_NEW( ( MyTestSt3 <std::string, int > ), (aa),(bb));
-    select(0, NULL, NULL, NULL, &tv);
+    select(0, nullptr, nullptr, nullptr, &tv);
     BDF_DELETE(st3);
   }
 
@@ -58,7 +58,7 @@ TEST(MemProfile, memProfile){
     std::string aa("testst");
     MyTestSt<std::string, 10> * st =
       BDF_NEW(  ( MyTestSt <std::string, 10 > ) , (aa));
-    select(0, NULL, NULL, NULL, &tv);
+    select(0, nullptr, nullptr, nullptr, &tv);
     BDF_DELETE(st);
   }
   */

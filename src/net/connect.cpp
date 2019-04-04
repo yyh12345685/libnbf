@@ -97,14 +97,14 @@ int Connecting::DecodeMsg(){
     EventMessage* msg = protocol_->Decode(inbuf_, failed);
     if (failed){
       TRACE(logger_, "Connecting::Decode,base->Decode failed.");
-      if (msg != NULL){
+      if (msg != nullptr){
         MessageFactory::Destroy(msg);
       }
       break;
     }
 
-    if (NULL == msg){
-      TRACE(logger_, "event is NULL.");
+    if (nullptr == msg){
+      TRACE(logger_, "event is nullptr.");
       break;
     }
 

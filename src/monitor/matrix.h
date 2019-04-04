@@ -23,7 +23,7 @@ class GlobalMatrix {
   }
 
   inline static bool Ready() {
-    return global_matrix_ != NULL;
+    return global_matrix_ != nullptr;
   }
 
   static int Init(

@@ -67,7 +67,7 @@ class MatrixStat {
   inline bool HasTimeDistribute() const {return distribution_.size() != 0;}
   inline bool HasResult() const {return child_.size() != 0;}
   inline double GetQps() const {
-    int32_t elapse = time(NULL) - start_time_sec_;
+    int32_t elapse = time(nullptr) - start_time_sec_;
     elapse = elapse <= 0 ? 0 : elapse; 
     return elapse ? (double)count_ / elapse : (double)0;
   }

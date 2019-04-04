@@ -24,8 +24,14 @@ void CoroutineServiceHandler::Run(HandleData* data){
   CoroutineActor* coroutine = CoroutineContext::Instance().GetCoroutine();
   CoroutineFunc func = &CoroutineServiceHandler::ProcessCoroutine;
   current_coroutine_id_ = scheduler->CoroutineNew(coroutine, func, data);
-  if(scheduler->CoroutineStatus(coroutine, current_coroutine_id_)){
+  //current_timer_coroutine_id_ = scheduler->CoroutineNew(coroutine, func, data);
+  //current_task_coroutine_id_ = scheduler->CoroutineNew(coroutine, func, data);
+  if(scheduler->CoroutineStatus(coroutine, current_coroutine_id_)/*&&
+    scheduler->CoroutineStatus(coroutine, current_timer_coroutine_id_) &&
+    scheduler->CoroutineStatus(coroutine, current_task_coroutine_id_)*/){
     scheduler->CoroutineResume(coroutine, current_coroutine_id_);
+    //scheduler->CoroutineResume(coroutine, current_timer_coroutine_id_);
+    //scheduler->CoroutineResume(coroutine, current_task_coroutine_id_);
   }
 
   while (data->is_run){
@@ -52,7 +58,7 @@ void CoroutineServiceHandler::ProcessCoroutine(CoroutineActor* coroutine, void* 
     ERROR(logger_, "handle is null prt...");
     return;
   }
-  //CoroutineSchedule* scheduler = CoroutineContext::Instance().GetScheduler();
+
   while (handle_data->is_run) {
     handle->ProcessTimer();
     handle->ProcessTask(handle_data);
@@ -61,18 +67,31 @@ void CoroutineServiceHandler::ProcessCoroutine(CoroutineActor* coroutine, void* 
   TRACE(logger_, "CoroutineServiceHandler thread will be exit.");
 }
 
-void CoroutineServiceHandler::ProcessTimer() {
-  timer_.ProcessTimer();
-}
-
-void CoroutineServiceHandler::OnTimer(void* function_data){
-  TRACE(logger_, "CoroutineServiceHandler::OnTimer.");
-
+void CoroutineServiceHandler::Resume(int coroutine_id){
+  if (coroutine_id < 0){
+    TRACE(logger_, "Coroutine not created...");
+    return;
+  }
   CoroutineSchedule* scheduler = CoroutineContext::Instance().GetScheduler();
   CoroutineActor* coroutine = CoroutineContext::Instance().GetCoroutine();
-  if (scheduler->CoroutineStatus(coroutine, current_coroutine_id_)) {
-    scheduler->CoroutineResume(coroutine, current_coroutine_id_);
+  if (scheduler->CoroutineStatus(coroutine, coroutine_id)) {
+    TRACE(logger_, "CoroutineResume coroutine:" << coroutine << ",id:" << coroutine_id);
+    scheduler->CoroutineResume(coroutine, coroutine_id);
   }
+}
+
+void CoroutineServiceHandler::ProcessTimer() {
+  timer_.ProcessTimer();
+
+  //if (0 == process_times){
+  //  Resume(current_timer_coroutine_id_);
+  //}
+}
+
+//when send receive timeout
+void CoroutineServiceHandler::OnTimer(void* function_data){
+  TRACE(logger_, "CoroutineServiceHandler::OnTimer.");
+  Resume(current_coroutine_id_);
 }
 
 void CoroutineServiceHandler::ProcessTask(HandleData* data){
@@ -80,6 +99,7 @@ void CoroutineServiceHandler::ProcessTask(HandleData* data){
     return;
   }
 
+  TRACE(logger_, "CoroutineServiceHandler::ProcessTask.");
   std::queue<Task*> temp;
   temp.swap(data->task_);
 
@@ -89,6 +109,7 @@ void CoroutineServiceHandler::ProcessTask(HandleData* data){
     task->OnTask(nullptr);
   }
 
+  //Resume(current_task_coroutine_id_);
 }
 
 void CoroutineServiceHandler::Process(HandleData* data){
@@ -111,13 +132,10 @@ void CoroutineServiceHandler::ProcessItem(EventMessage* msg){
     //处理服务端接收的消息
   } else {
     //处理客户端接收的消息
-    CoroutineSchedule* scheduler = CoroutineContext::Instance().GetScheduler();
     CoroutineActor* coroutine = CoroutineContext::Instance().GetCoroutine();
     coroutine->SendMessage(msg);
-    if (scheduler->CoroutineStatus(coroutine, current_coroutine_id_)) {
-      TRACE(logger_, "CoroutineResume coroutine:" << coroutine);
-      scheduler->CoroutineResume(coroutine, current_coroutine_id_);
-    }
+
+    Resume(current_coroutine_id_);
   }
 }
 

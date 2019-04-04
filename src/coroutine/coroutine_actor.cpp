@@ -38,7 +38,7 @@ EventMessage* CoroutineActor::RecieveMessage(uint32_t timeout_ms){
     msg_list_.pop_front();
     return message;
   } else {
-    return NULL;
+    return nullptr;
   }
 }
 

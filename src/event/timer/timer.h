@@ -10,7 +10,7 @@ namespace bdf {
 
 template <typename T>
 struct GetTimeOut {
-  int64_t operator()(const T& t) const { return t.time_out_ms; }
+  int64_t operator()(const T& tm) const { return tm.time_out_ms; }
 };
 
 class Timer {

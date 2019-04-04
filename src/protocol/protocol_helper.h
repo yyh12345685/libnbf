@@ -63,14 +63,14 @@ public:
 
   static void GetIpByDomain(const std::string& domain, std::vector<std::string>& ips){
     struct hostent *phost = gethostbyname(domain.c_str());
-    if (NULL == phost){
+    if (nullptr == phost){
       return;
     }
 
     ips.clear();
     std::string ip;
     struct in_addr **addr_list = (struct in_addr **)phost->h_addr_list;
-    for (int ix = 0; addr_list[ix] != NULL; ix++){
+    for (int ix = 0; addr_list[ix] != nullptr; ix++){
       ip = inet_ntoa(*addr_list[ix]);
       ips.push_back(ip);
     }

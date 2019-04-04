@@ -22,7 +22,7 @@ Client::Client(
   address_(address),
   timeout_ms_(timeout_ms), 
   heartbeat_ms_(heartbeat_ms), 
-  connect_(NULL){
+  connect_(nullptr){
 }
 
 Client::~Client(){
@@ -59,7 +59,7 @@ ClientConnect* Client::CreateClient(
   ProtocolFactory protocol_factory;
   ProtocolBase* protocol = protocol_factory.Create(protocol_type);
 
-  ClientConnect* client_connect = NULL;
+  ClientConnect* client_connect = nullptr;
 
   if (protocol->IsSynchronous()) {
     client_connect = BDF_NEW (SyncClientConnect,timeout_ms, heartbeat_ms);

@@ -11,28 +11,67 @@ LOGGER_STATIC_DECL_IMPL(logger_, "root");
 
 class TaskTest:public bdf::Task{
 public:
+
+  void RapidTest(){
+    bdf::monitor::MatrixScope matrix_scope(
+      "RapidClient", bdf::monitor::MatrixScope::kModeAutoSuccess);
+    bdf::RapidMessage* rapid_message = bdf::MessageFactory::Allocate<bdf::RapidMessage>();
+    rapid_message->body = "test rapid_test_client only send:hello world.";
+    bdf::AppBase::Get()->GetClientMgr()->Send("rapid_test_client", rapid_message);
+
+    bdf::RapidMessage* rapid_message_2 = bdf::MessageFactory::Allocate<bdf::RapidMessage>();
+    rapid_message_2->body = "aaa";
+    bdf::EventMessage* msg2_resp =
+      bdf::AppBase::Get()->GetClientMgr()->SendRecieve("rapid_test_client", rapid_message_2, 20);
+    if (nullptr == msg2_resp) {
+      matrix_scope.SetOkay(false);
+      TRACE(logger_, "msg2_resp is null.");
+      return;
+    }
+    bdf::RapidMessage* real_msg = dynamic_cast<bdf::RapidMessage*>(msg2_resp);
+    TRACE(logger_, "receive msg:" << *real_msg);
+    bdf::MessageFactory::Destroy(real_msg);
+  }
+
+  void HttpTest() {
+    bdf::monitor::MatrixScope matrix_scope(
+      "HttpClient", bdf::monitor::MatrixScope::kModeAutoSuccess);
+    bdf::HttpMessage* hmsg = bdf::MessageFactory::Allocate<bdf::HttpMessage>();
+    hmsg->InitRequest("POST", true);
+    hmsg->http_info.headers.insert(
+      std::pair<std::string, std::string>("Content-Type", "text/html"));
+    hmsg->http_info.url = "/a=x&b=y";
+    hmsg->http_info.body = "test http_test_client only send:hello world.";
+    bdf::AppBase::Get()->GetClientMgr()->Send("http_test_client", hmsg);
+
+    bdf::HttpMessage* hmsg2 = bdf::MessageFactory::Allocate<bdf::HttpMessage>();
+    hmsg2->InitRequest("POST", true);
+    hmsg2->http_info.headers.insert(
+      std::pair<std::string, std::string>("Content-Type", "text/html"));
+    hmsg2->http_info.url = "/a=xx&b=yy";
+    hmsg2->http_info.body = "test http_test_client send receive:hello world.";
+    bdf::EventMessage* hmsg2_resp =
+      bdf::AppBase::Get()->GetClientMgr()->SendRecieve("http_test_client", hmsg2, 20);
+    if (nullptr == hmsg2_resp) {
+      TRACE(logger_, "hmsg2_resp is null.");
+      matrix_scope.SetOkay(false);
+      return;
+    }
+    TRACE(logger_, "receive msg:" << *hmsg2_resp);
+    bdf::MessageFactory::Destroy(hmsg2_resp);
+  }
+
   virtual void OnTask(void* function_data) {
     TRACE(logger_, "on task...");
     int times = 1000000;
     while (times-- > 0) {
-      bdf::monitor::MatrixScope matrix_scope(
-        "RapidClient", bdf::monitor::MatrixScope::kModeAutoSuccess);
-      bdf::RapidMessage* rapid_message = bdf::MessageFactory::Allocate<bdf::RapidMessage>();
-      rapid_message->body = "test rapid_test_client:hello world.";
-      bdf::AppBase::Get()->GetClientMgr()->Send("rapid_test_client", rapid_message);
-
-      bdf::RapidMessage* rapid_message_2 = bdf::MessageFactory::Allocate<bdf::RapidMessage>();
-      rapid_message_2->body = "aaa";
-      bdf::EventMessage* msg2_resp =
-        bdf::AppBase::Get()->GetClientMgr()->SendRecieve("rapid_test_client", rapid_message_2, 10);
-      if (nullptr == msg2_resp) {
-        TRACE(logger_, "msg2_resp is null.");
-        continue;
+      if (times % 2 == 0){
+        HttpTest();
+      }else{
+        RapidTest();
       }
-      bdf::RapidMessage* real_msg = dynamic_cast<bdf::RapidMessage*>(msg2_resp);
-      TRACE(logger_, "receive msg:" << *real_msg);
-      bdf::MessageFactory::Destroy(real_msg);
-      sleep(5);
+      
+      sleep(3);
       //break;
     }
   }

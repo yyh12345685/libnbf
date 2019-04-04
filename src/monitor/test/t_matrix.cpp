@@ -11,7 +11,7 @@ LOGGER_EXTERN_DECL(logger)
 LOGGER_IMPL(logger, "root");
 
 int main(int argc, char** argv){
-  srand(time(NULL));
+  srand(time(nullptr));
   LOGGER_SYS_INIT("conf/test.conf")
   
   testing::InitGoogleTest(&argc, argv);
@@ -50,7 +50,7 @@ TEST(TestMatrix, testBeginEnd1) {
 
     tv.tv_sec = 0;
     tv.tv_usec = 50 * (rand() % 1000);//1000us = 1ms
-    select(0, NULL, NULL, NULL, &tv);
+    select(0, nullptr, nullptr, nullptr, &tv);
 
     if (idx%3==1){
       //TRACE(logger,"-----------OK");
@@ -75,7 +75,7 @@ TEST(TestMatrix, testBeginEnd2) {
 
     tv.tv_sec = 0;
     tv.tv_usec = 50 * (rand() % 1000);//1000us = 1ms
-    select(0, NULL, NULL, NULL, &tv);
+    select(0, nullptr, nullptr, nullptr, &tv);
 
     if (idx % 2 == 1) {
       GlobalMatrix::Instance().MarkEnd(tok, true);
@@ -94,7 +94,7 @@ TEST(TestMatrix, testScope){
 
     tv.tv_sec = 0;
     tv.tv_usec = 50 * (rand() % 1000);//1000us = 1ms
-    select(0, NULL, NULL, NULL, &tv);
+    select(0, nullptr, nullptr, nullptr, &tv);
   }
 }
 

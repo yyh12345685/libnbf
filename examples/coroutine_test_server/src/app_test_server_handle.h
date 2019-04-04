@@ -21,8 +21,7 @@ public:
 protected:
 
   virtual void OnRapidRequestMessage(RapidMessage* message);
-  virtual void OnRapidResponseMessage(RapidMessage* message);
-
+  virtual void OnHttpRequestMessage(HttpMessage* message);
 private:
   LOGGER_CLASS_DECL(logger_);
 

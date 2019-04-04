@@ -20,10 +20,17 @@ void AppTestServerHandler::OnRapidRequestMessage(RapidMessage* message){
   MessageFactory::Destroy(message);
 }
 
-//client receive request
-void AppTestServerHandler::OnRapidResponseMessage(RapidMessage* message){
-  TRACE(logger_, "OnRapidResponseMessage:" << *message);
-
+//server receive request
+void AppTestServerHandler::OnHttpRequestMessage(HttpMessage* message) {
+  TRACE(logger_, "OnHttpRequestMessage:" << *message);
+  HttpMessage* msg = MessageFactory::Allocate<HttpMessage>();
+  msg->SetDescriptorId(message->GetDescriptorId());
+  msg->InitReply(message, 200, false);
+  msg->http_info.headers.insert(
+    std::pair<std::string, std::string>("Content-Type", "text/html"));
+  msg->http_info.body = "http protocol,response hello world---------";
+  service::GetIoService().Reply(msg);
+  MessageFactory::Destroy(message);
 }
 
 }

@@ -61,7 +61,7 @@ EventMessage* AsyncSequence::Get(uint64_t sequence_id){
 void AsyncSequence::OnTimer(void* function_data){
   int64_t sequence_id = *((int*)(function_data));
   EventMessage* msg = Get(sequence_id);
-  if (NULL!= msg){
+  if (nullptr != msg){
     async_client_con_->OnTimeout(msg);
   }
 }

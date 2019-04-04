@@ -104,11 +104,11 @@ int Socket::Accept(int listen_fd, char* ipbuf, int* port){
 		WARN(logger_, "set nodelay error %s" << strerror(errno));
 	}
 
-  if (NULL!=ipbuf){
+  if (nullptr !=ipbuf){
     inet_ntop(AF_INET, &addr.sin_addr, ipbuf, INET_ADDRSTRLEN);
   }
 
-  if (NULL!=port){
+  if (nullptr !=port){
     *port = ntohs(addr.sin_port);
   }
   return new_fd;
@@ -198,7 +198,7 @@ int Socket::WriteVecNonBlock(int fd, iovec* iov, size_t& num_iov){
 
 std::pair<int, bool> Socket::Connect(const char* ip, int port, bool is_non_block){
   std::string final_ip;
-  if (!isIpAddr(ip)){
+  if (!IsIpAddr(ip)){
     //here is bug,TODO
     std::vector<std::string> ip_list;
     ProtocolHelper::GetIpByDomain(ip, ip_list);

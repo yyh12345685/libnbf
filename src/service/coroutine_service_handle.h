@@ -15,7 +15,9 @@ class CoroutineServiceHandler :
   public ServiceHandler, public OnTimerBase {
 public:
   CoroutineServiceHandler():
-    current_coroutine_id_(-1){
+    current_coroutine_id_(-1)/*,
+    current_timer_coroutine_id_(-1),
+    current_task_coroutine_id_(-1)*/{
   }
   virtual ~CoroutineServiceHandler(){
   }
@@ -42,7 +44,11 @@ private:
 
   void ProcessItem(EventMessage* msg);
 
+  void Resume(int coroutine_id);
+
   int current_coroutine_id_;
+  //int current_timer_coroutine_id_;
+  //int current_task_coroutine_id_;
 
   Timer timer_;
 };

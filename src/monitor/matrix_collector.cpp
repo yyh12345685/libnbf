@@ -21,10 +21,10 @@ MatrixCollector::MatrixCollector(
   uint32_t queue_size)
   : bucket_count_(bucket_count)
   , queue_size_(queue_size)
-  , thread_(NULL) 
+  , thread_(nullptr)
   , running_(false) 
   , monitor_file_name_pre_(monitor_file)
-  , stat_map_(new MatrixStatMap(time(NULL))) {
+  , stat_map_(new MatrixStatMap(time(nullptr))) {
 
   queue_.resize(bucket_count_);
   for (auto& queue : queue_) {
@@ -70,12 +70,12 @@ int MatrixCollector::Stop() {
   running_ = false;
   thread_->join();
   delete thread_;
-  thread_ = NULL;
+  thread_ = nullptr;
   return 0;
 }
 
 std::string MatrixCollector::AppendData(std::string monitor_file_pre){
-  time_t now = time(NULL);
+  time_t now = time(nullptr);
   struct tm *tm_now;
   tm_now = localtime(&now);
   tm_now->tm_year += 1900;
@@ -100,31 +100,31 @@ void MatrixCollector::Run() {
 
   INFO(logger, "MatrixCollector Running");
   FILE* fp = fopen(monitor_file_name_.c_str(), "a");
-  if (fp == NULL){
+  if (fp == nullptr){
     WARN(logger, "open monitor file failed. file:" << monitor_file_name_);
     return;
   }
 
-  MatrixStatMapPtr stat_map(new MatrixStatMap(time(NULL)));
+  MatrixStatMapPtr stat_map(new MatrixStatMap(time(nullptr)));
   while (running_) {
     std::string new_name;
     if (GetFileName(new_name)){
       fclose(fp);
       monitor_file_name_ = new_name;
       FILE* fp = fopen(monitor_file_name_.c_str(), "a");
-      if (fp == NULL) {
+      if (fp == nullptr) {
         ERROR(logger, "open monitor file failed. file:" << monitor_file_name_);
         return;
       }
     }
-    if (time(NULL) - stat_map->GetStartTime() > 30) {
+    if (time(nullptr) - stat_map->GetStartTime() > 30) {
       stat_map->Freeze();
       INFO(collector_logger, "MatrixCollector:\n" << *stat_map);
       const std::string& dump = stat_map->ToStringSimple();
       fwrite(dump.c_str(), dump.size(), 1, fp);
 
       std::atomic_store(&stat_map_, stat_map);
-      stat_map = MatrixStatMapPtr(new MatrixStatMap(time(NULL)));
+      stat_map = MatrixStatMapPtr(new MatrixStatMap(time(nullptr)));
       stat_map->Inherit(*stat_map_);
     }
     ProcessQueueList(stat_map);

@@ -57,7 +57,7 @@ bool EventData::ReInitClosed(int& fd){
     closed_ = tmp;
     closed_size_++;
   }
-  if (NULL != fd2data_[fd]){
+  if (nullptr != fd2data_[fd]){
     closed_[closed_count_++] = fd2data_[fd];
     fd2data_[fd]->closed_ = true;
   }
@@ -70,7 +70,7 @@ void EventData::RemoveClosed(){
   for (int i = 0; i < closed_count_; ++i){
     if (closed_[i]->closed_){
       delete closed_[i];
-      closed_[i] = NULL;
+      closed_[i] = nullptr;
     }
   }
   closed_count_ = 0;
@@ -79,25 +79,25 @@ void EventData::RemoveClosed(){
 
 EventData::~EventData(){
   lock_.Lock();
-  if (NULL != fd2data_){
+  if (nullptr != fd2data_){
     for (int fd = 0; fd <= fd2data_size_; ++fd){
-      if (NULL != fd2data_[fd]){
+      if (nullptr != fd2data_[fd]){
         delete fd2data_[fd];
-        fd2data_[fd] = NULL;
+        fd2data_[fd] = nullptr;
       }
     }
     free(fd2data_);
-    fd2data_ = NULL;
+    fd2data_ = nullptr;
   }
 
   for (int i = 0; i < closed_count_; ++i){
-    if (NULL != closed_[i]){
+    if (nullptr != closed_[i]){
       delete closed_[i];
-      closed_[i] = NULL;
+      closed_[i] = nullptr;
     }
   }
   free(closed_);
-  closed_ = NULL;
+  closed_ = nullptr;
   closed_count_ = closed_size_ = 0;
 
   lock_.UnLock();

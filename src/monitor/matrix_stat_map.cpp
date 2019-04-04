@@ -16,7 +16,7 @@ MatrixStatMap::MatrixStatMap(uint32_t start_time_sec)
 
 void MatrixStatMap::Freeze() {
   freeze_ = true;
-  freeze_time_ = time(NULL);
+  freeze_time_ = time(nullptr);
   std::ostringstream oss;
   Dump(oss);
   dump_string_ = oss.str();

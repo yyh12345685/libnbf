@@ -94,7 +94,7 @@ void MatrixStat::Dump(std::ostream& os) const {
 
 void MatrixStat::DumpSimple(const std::string& parent, std::ostream& os) const {
 
-  time_t now = time(NULL);
+  time_t now = time(nullptr);
   struct tm *tm_now;
   tm_now = localtime(&now);
 

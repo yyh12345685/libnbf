@@ -15,7 +15,7 @@ int main(int argc, char** argv){
 }
 
 TEST(TestMatrixStat, testAvg){
-  MatrixStat stat(time(NULL), false);
+  MatrixStat stat(time(nullptr), false);
   ASSERT_EQ(0, stat.GetAvg());
 
   stat.TimeDistribute(1000);
@@ -30,7 +30,7 @@ TEST(TestMatrixStat, testAvg){
 }
 
 TEST(TestMatrixStat, testQps) {
-  MatrixStat stat(time(NULL) - 5, false);
+  MatrixStat stat(time(nullptr) - 5, false);
   ASSERT_EQ(0, stat.GetQps());
 
   stat.TimeDistribute(1000);
@@ -43,7 +43,7 @@ TEST(TestMatrixStat, testQps) {
 }
 
 TEST(TestMatrixStat, testTimeDistribute) {
-  MatrixStat stat(time(NULL), false);
+  MatrixStat stat(time(nullptr), false);
 
   for (int i = 0; i != 50; ++i) {
     stat.TimeDistribute(100);

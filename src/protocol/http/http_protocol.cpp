@@ -185,7 +185,7 @@ bool HttpProtocol::Encode(EventMessage *pv, Buffer *output){
   }
 
   if (msg == nullptr){
-    ERROR(logger_, "error ev == NULL.");
+    ERROR(logger_, "error ev == nullptr.");
     return false;
   }
 
@@ -234,7 +234,7 @@ bool HttpProtocol::WirteToBuf(HttpMessage *msg, Buffer *output){
   }
 
   size_t size = msg->http_info.body.size();
-  if (!msg->GetHeader(("Content-Length"), NULL) && size > 0) {
+  if (!msg->GetHeader(("Content-Length"), nullptr) && size > 0) {
     if (!output->Write("Content-Length", strlen("Content-Length"))) return false;
     if (!output->Write(": ", 2)) return false;
     tmp = common::ToString<uint64_t>(size);
@@ -242,7 +242,7 @@ bool HttpProtocol::WirteToBuf(HttpMessage *msg, Buffer *output){
     if (!output->Write("\r\n", 2)) return false;
   }
 
-  if (!msg->GetHeader(("Connection"), NULL)) {
+  if (!msg->GetHeader(("Connection"), nullptr)) {
     if (msg->keep_alive/* && msg->http_minor > 0*/) {
       if (!output->Write(
         "Connection: keep-alive\r\n", strlen("Connection: keep-alive\r\n"))) return false;

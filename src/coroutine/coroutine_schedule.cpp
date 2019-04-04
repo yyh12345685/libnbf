@@ -16,7 +16,7 @@ CoroContext* CoNew(
   coctx->cap = 0;
   coctx->size = 0;
   coctx->status = CoroutineSchedule::kCoroutineReady;
-  coctx->stack = NULL;
+  coctx->stack = nullptr;
   return coctx;
 }
 
@@ -44,7 +44,7 @@ void CoroutineSchedule::CoroutineClose(CoroutineActor *corotine) {
     }
   }
   free(corotine->coctx);
-  corotine->coctx = NULL;
+  corotine->coctx = nullptr;
   delete(corotine);
 }
 
@@ -62,7 +62,7 @@ int CoroutineSchedule::CoroutineNew(CoroutineActor *corotine, CoroutineFunc func
     int i;
     for (i = 0; i < corotine->cap; i++) {
       int id = (i + corotine->nco) % corotine->cap;
-      if (corotine->coctx[id] == NULL) {
+      if (corotine->coctx[id] == nullptr) {
         corotine->coctx[id] = coctx;
         ++corotine->nco;
         return id;
@@ -79,7 +79,7 @@ static void MainFunc(uint32_t low32, uint32_t hi32) {
   CoroContext *coctx = corotine->coctx[id];
   coctx->func(corotine, coctx->ud);
   CoDelete(coctx);
-  corotine->coctx[id] = NULL;
+  corotine->coctx[id] = nullptr;
   --corotine->nco;
   corotine->running = -1;
 }
@@ -95,7 +95,7 @@ void CoroutineSchedule::CoroutineResume(CoroutineActor* corotine, int id) {
   }
 
   CoroContext *coctx = corotine->coctx[id];
-  if (coctx == NULL)
+  if (coctx == nullptr)
     return;
   int status = coctx->status;
   TRACE(logger_, "status:" << status << ",running id:" << corotine->running);
@@ -161,7 +161,7 @@ int CoroutineSchedule::CoroutineStatus(CoroutineActor* corotine, int id) {
     return kCoroutineInvalid;
   }
 
-  if (corotine->coctx[id] == NULL) {
+  if (corotine->coctx[id] == nullptr) {
     return kCoroutineInvalid;
   }
   return corotine->coctx[id]->status;

@@ -100,7 +100,7 @@ struct HttpMessage : public EventMessage {
   inline bool GetHeader(const std::string& field, std::string *value){
     const auto& it = http_info.headers.find(field);
     if (it != http_info.headers.end()){
-      if (value != NULL){
+      if (value != nullptr){
         *value = it->second;
       }
       return true;
