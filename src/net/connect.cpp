@@ -204,14 +204,7 @@ void Connecting::OnActiveClose(){
 //when read write
 void Connecting::OnReadWriteClose(){
   //events is delete in (event & EVENT_CONNECT_CLOSED) || (event & EVENT_ERROR)
-  Clean();
   OnClose();
-}
-
-void Connecting::OnClose(){
-  //as server,if connect is closed,can delete Connecting
-  //as client,if connect is closed,only closed fd
-  Destroy();
 }
 
 void Connecting::Clean(){

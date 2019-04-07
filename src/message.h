@@ -11,7 +11,7 @@ struct HeartBeatMessage : public EventMessage {
   }
   virtual ~HeartBeatMessage() {
   }
-  bool IsSynchronous() { return true; }
+  virtual bool IsSynchronous() { return true; }
   uint64_t load_avg;
   int heart_type;
 };
@@ -29,7 +29,7 @@ struct RapidMessage : public EventMessage {
   }
   virtual ~RapidMessage() {
   }
-  bool IsSynchronous() { return false; }
+  virtual bool IsSynchronous() { return false; }
 
   void Dump(std::ostream& os) const{
     os << "{\"type\": \"RapidMessage\""
@@ -63,7 +63,7 @@ struct RedisMessage : public EventMessage {
     os << ", \"bodys\": " << bodys.size()<< "\""
       << "}";
   }
-  bool IsSynchronous() { return true; }
+  virtual bool IsSynchronous() { return true; }
   std::vector<std::string> bodys;
 };
 
@@ -87,7 +87,7 @@ struct HttpMessage : public EventMessage {
 
   HttpRequestInfo http_info;
 
-  bool IsSynchronous() { return true; }
+  virtual bool IsSynchronous() { return true; }
 
   inline size_t GetHeaderCount() const{
     return http_info.headers.size();

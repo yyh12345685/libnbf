@@ -3,6 +3,7 @@
 #include "service/io_service.h"
 #include "net/socket.h"
 #include "net/io_handle.h"
+#include "net/client_reconnect_thread.h"
 
 namespace bdf{
 
@@ -14,7 +15,6 @@ ClientConnect::ClientConnect(
   timeout_ms_(timeout_ms),
   heartbeat_ms_(heartbeat_ms),
   reconnect_timer_(0),
-  timeout_timer_(0),
   heartbeat_timer_(0){
 }
 
@@ -22,7 +22,7 @@ ClientConnect::~ClientConnect(){
 }
 
 void ClientConnect::OnTimer(void* function_data) {
-  uint8_t client_timer_type = *((uint8_t*)(function_data));
+  uint32_t client_timer_type = *((uint32_t*)(function_data));
   switch (client_timer_type){
   case kClientTimerTypeReconnect:
     TryConnect();
@@ -70,7 +70,6 @@ int ClientConnect::TryConnect(){
     if (IsConnected(20, 3)) {
       TRACE(logger_, "has connected...");
       SetStatus(kConnected);
-      if (is_reconnect) StartHeartBeatTimer();
     } else {
       INFO(logger_, "wait 60 ms,but not conected,ip:" << GetIp() << ",port:" << GetPort());
     }
@@ -88,13 +87,13 @@ int ClientConnect::StartReconnectTimer() {
   TimerData td;
   td.time_out_ms = 300;
   td.time_proc = this;
-  td.function_data = &client_timer_type_reconnect_;
-  reconnect_timer_ = IoHandler::GetIoHandler()->StartTimer(td);
+  td.function_data = (void*)(&client_timer_type_reconnect_);
+  reconnect_timer_ = ClientReconnect::GetInstance().StartTimer(td);
   return 0;
 }
 
 int ClientConnect::StartHeartBeatTimer() {
-  TRACE(logger_, "ClientConnect::StartReconnectTimer...");
+  TRACE(logger_, "ClientConnect::StartHeartBeatTimer...");
   if (0 == heartbeat_ms_) {
     return 0;
   }
@@ -102,7 +101,7 @@ int ClientConnect::StartHeartBeatTimer() {
   TimerData td;
   td.time_out_ms = heartbeat_ms_;
   td.time_proc = this;
-  td.function_data = &client_timer_type_heartbeat_;
+  td.function_data = (void*)(&client_timer_type_heartbeat_);
 
   heartbeat_timer_ = IoHandler::GetIoHandler()->StartTimer(td);
   return 0;
@@ -110,13 +109,8 @@ int ClientConnect::StartHeartBeatTimer() {
 
 void ClientConnect::CancelTimer() {
   if (reconnect_timer_ != 0) {
-    IoHandler::GetIoHandler()->CancelTimer(reconnect_timer_);
+    ClientReconnect::GetInstance().CancelTimer(reconnect_timer_);
     reconnect_timer_ = 0;
-  }
-
-  if (timeout_timer_ != 0) {
-    IoHandler::GetIoHandler()->CancelTimer(timeout_timer_);
-    timeout_timer_ = 0;
   }
 
   if (heartbeat_timer_ != 0) {
@@ -127,9 +121,11 @@ void ClientConnect::CancelTimer() {
 
 void ClientConnect::OnClose() {
   //as client,if connect is closed,only closed fd,do not delete ClientConnect
+  TRACE(logger_, "ClientConnect::OnClose(),fd:" << GetFd());
   CleanSequenceQueue();
   CancelTimer();
   CleanClient();
+  RegisterDel(GetFd());
   StartReconnectTimer();
 }
 
@@ -142,6 +138,7 @@ void ClientConnect::OnWrite() {
 }
 
 void ClientConnect::OnConnectWrite(){
+  TRACE(logger_, "ClientConnect::OnConnectWrite,status:" << GetStatus());
   if (IsConnected(10, 3)) {
     SetStatus(kConnected);
   } else {
@@ -215,7 +212,8 @@ void ClientConnect::OnHeartBeat(){
 
 void ClientConnect::DoSendBack(EventMessage* message, int status) {
   if (message->type_id == MessageType::kHeartBeatMessage
-    || message->direction == EventMessage::kOneway) {
+    || message->direction == EventMessage::kOnlySend
+    || message->direction == EventMessage::kSendNoCareResponse) {
     MessageFactory::Destroy(message);
     return;
   }

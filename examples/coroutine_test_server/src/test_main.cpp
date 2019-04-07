@@ -41,7 +41,7 @@ public:
     hmsg->http_info.headers.insert(
       std::pair<std::string, std::string>("Content-Type", "text/html"));
     hmsg->http_info.url = "/a=x&b=y";
-    hmsg->http_info.body = "test http_test_client only send:hello world.";
+    hmsg->http_info.body = "HttpTest only send:hello world.";
     bdf::AppBase::Get()->GetClientMgr()->Send("http_test_client", hmsg);
 
     bdf::HttpMessage* hmsg2 = bdf::MessageFactory::Allocate<bdf::HttpMessage>();
@@ -49,9 +49,9 @@ public:
     hmsg2->http_info.headers.insert(
       std::pair<std::string, std::string>("Content-Type", "text/html"));
     hmsg2->http_info.url = "/a=xx&b=yy";
-    hmsg2->http_info.body = "test http_test_client send receive:hello world.";
+    hmsg2->http_info.body = "HttpTest send receive:hello world.";
     bdf::EventMessage* hmsg2_resp =
-      bdf::AppBase::Get()->GetClientMgr()->SendRecieve("http_test_client", hmsg2, 20);
+      bdf::AppBase::Get()->GetClientMgr()->SendRecieve("http_test_client", hmsg2, 30);
     if (nullptr == hmsg2_resp) {
       TRACE(logger_, "hmsg2_resp is null.");
       matrix_scope.SetOkay(false);
@@ -68,7 +68,7 @@ public:
       if (times % 2 == 0){
         HttpTest();
       }else{
-        RapidTest();
+        //RapidTest();
       }
       
       sleep(3);

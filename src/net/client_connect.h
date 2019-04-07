@@ -42,10 +42,10 @@ protected:
   enum {
     kUnKown = 0,
     kClientTimerTypeReconnect = 1,
-    kClientTimerTypeHeartBeat,
+    kClientTimerTypeHeartBeat = 2,
   };
-  uint8_t client_timer_type_reconnect_ = kClientTimerTypeReconnect;
-  uint8_t client_timer_type_heartbeat_ = kClientTimerTypeHeartBeat;
+  uint32_t client_timer_type_reconnect_ = kClientTimerTypeReconnect;
+  uint32_t client_timer_type_heartbeat_ = kClientTimerTypeHeartBeat;
 
   void OnWrite();
   void OnConnectWrite();
@@ -65,7 +65,6 @@ private:
   uint32_t heartbeat_ms_;
 
   uint64_t reconnect_timer_ = 0;
-  uint64_t timeout_timer_ = 0;
   uint64_t heartbeat_timer_= 0;
 };
 

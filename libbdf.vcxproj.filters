@@ -220,6 +220,9 @@
     <ClCompile Include="examples\coroutine_test_server\src\app_test_server_handle.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\net\client_reconnect_thread.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\monitor\matrix.h">
@@ -427,6 +430,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="src\task.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\net\client_reconnect_thread.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

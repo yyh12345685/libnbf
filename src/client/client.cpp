@@ -113,7 +113,12 @@ bool Client::Send(EventMessage* message) {
 
   //message->sequence_id = GetSequenceId();
   message->descriptor_id = (int64_t)((void*)connect_);
-  message->direction = MessageBase::kOneway;
+  if (message->IsSynchronous()){
+    message->direction = MessageBase::kSendNoCareResponse;
+  }else{
+    message->direction = MessageBase::kOnlySend;
+  }
+  
   DoSend(message);
   return true;
 }
@@ -147,6 +152,7 @@ EventMessage* Client::DoSendRecieve(EventMessage* message, uint32_t timeout_ms) 
 
 void Client::DoSend(EventMessage* message){
   message->handle_id = CoroutineContext::Instance().GetServiceHandler()->GetHandlerId();
+  //TRACE(logger_, "SendToIoHandle,handle_id:" << message->handle_id);
   IoService::GetInstance().SendToIoHandle(message);
 }
 

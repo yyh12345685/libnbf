@@ -69,7 +69,7 @@ void IoHandler::HandleIoMessageEvent(EventMessage* message){
   }
   //单向消息encode之后即可释放，双向消息会在返回或者超时的时候释放
   //server答复的消息需要在这里释放掉
-  if (message->direction == EventMessage::kOneway
+  if (message->direction == EventMessage::kOnlySend
     || message->direction == EventMessage::kOutgoingResponse) {
     MessageFactory::Destroy(message);
   }

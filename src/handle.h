@@ -14,6 +14,7 @@ public:
 
   virtual void Run(HandleData* data) =0;
 private:
+  //处理的线程的序号，发送和接收需一致
   int32_t handler_id_ = -1;
 };
 

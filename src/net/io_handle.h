@@ -42,7 +42,6 @@ private:
   static thread_local IoHandler* io_handler_;
 
   Timer timer_;
-
   LOGGER_CLASS_DECL(logger);
 };
 

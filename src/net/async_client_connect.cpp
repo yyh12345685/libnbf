@@ -59,7 +59,8 @@ int AsyncClientConnect::EncodeMsg(EventMessage* message){
     return -2;
   }
 
-  if (message->direction != EventMessage::kOneway) {
+  //如果有应答需要将消息保存起来，kOnlySend属于无应答
+  if (message->direction != EventMessage::kOnlySend) {
     TRACE(logger, "put sequence id:" << message->sequence_id);
     if (0 != async_sequence_.Put(message)) {
       WARN(logger, "AsyncClientConnect::EncodeMsg Put fail");

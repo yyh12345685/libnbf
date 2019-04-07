@@ -26,7 +26,7 @@ void SyncClientConnect::OnDecodeMessage(EventMessage* message) {
   }
 
   if (keeper_message->type_id == MessageType::kHeartBeatMessage
-    || keeper_message->direction == EventMessage::kOneway) {
+    || keeper_message->direction == EventMessage::kSendNoCareResponse) {
     TRACE(logger, "OnDecodeMessage heartbeat or oneway:" << *message);
     MessageFactory::Destroy(message);
     MessageFactory::Destroy(keeper_message);
@@ -55,12 +55,14 @@ int SyncClientConnect::EncodeMsg(EventMessage* message){
     return -1;
   }
 
-  if (message->direction != EventMessage::kOneway){
+  //同步请求不存真正only send的情况，一定回有应答，比如http协议和redis协议
+  //有应答的情况需要将消息保存起来，这里属于有应答的情况
+  //if (message->direction != EventMessage::kSendNoCareResponse){
     if (0 != sync_sequence_.Put(message)) {
       WARN(logger, "SyncClientConnect::EncodeMsg put fail");
       return -2;
     }
-  }
+  //}
 
   FireMessage();
   return 0;

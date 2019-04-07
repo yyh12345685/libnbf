@@ -7,8 +7,6 @@
 
 namespace bdf {
 
-class ProtocolMessage;
-
 class MessageType {
  public:
   enum {
@@ -64,7 +62,11 @@ public:
     kOutgoingRequest,//client send msg
     kIncomingResponse,//client response msg
     kOutgoingResponse,//server response msg
-    kOneway,
+    //1：只是客户端单项发送，服务端不应答
+    kOnlySend,//client only send，no response
+    //2:客户端发送，不关心是否有返回，服务端可能返回也可能不返回(一般有返回)
+    //目前的代码来看，同步客户端会出现2的情况(AsyncClientConnect)，异步客户端会出现1的情况(SyncClientConnect)
+    kSendNoCareResponse
   };
   enum{
     kStatusOK = 0,
@@ -106,6 +108,8 @@ class EventMessage : public MessageBase {
   }
 
   virtual ~EventMessage() {}
+
+  virtual bool IsSynchronous() { return false; }
 
   void Dump(std::ostream& os) const;
 

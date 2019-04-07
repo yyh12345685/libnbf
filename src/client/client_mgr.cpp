@@ -1,6 +1,7 @@
 #include "client/client_mgr.h"
 #include "app/config_info.h"
 #include "client/client_routers.h"
+#include "net/client_reconnect_thread.h"
 #include "message.h"
 
 namespace bdf {
@@ -34,10 +35,14 @@ int ClientMgr::Start(const ClientRoutersConfig& routers_config){
     }
     router_maps_[rt_cfg.name] = routers;
   }
+
+  ClientReconnect::GetInstance().StartThread();
   return 0;
 }
 
 int ClientMgr::Stop(){
+  ClientReconnect::GetInstance().StopThread();
+
   for (auto& router : router_maps_) {
     router.second->Stop();
   }

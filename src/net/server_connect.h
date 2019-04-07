@@ -13,6 +13,8 @@ public:
   ServerConnect();
   virtual ~ServerConnect();
 
+  virtual void OnClose();
+
   virtual void OnDecodeMessage(EventMessage* message);
 
   virtual int RegisterDel(int fd);

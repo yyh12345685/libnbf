@@ -48,7 +48,8 @@ bool AgentMaster::Init(const IoServiceConfig* confs,const Agents* agents){
       continue;
     }
     
-    listened_fd_list_.insert(std::pair<int,int>(fd,cate));
+    std::pair<int, int> cate_port(cate, port);
+    listened_fd_list_.insert(std::pair<int, std::pair<int, int>>(fd, cate_port));
   }
 
   if (listened_fd_list_.size() == 0){
@@ -67,7 +68,8 @@ void AgentMaster::OnEvent(EventDriver *poll, int fd, short event){
     return;
   }
 
-  int cate = listen_it->second;
+  int cate = listen_it->second.first;
+  int listen_port = listen_it->second.second;
   int sock = 0;
   char ip[256];
   int port;
@@ -86,8 +88,8 @@ void AgentMaster::OnEvent(EventDriver *poll, int fd, short event){
       break;
     }
 
-    TRACE(logger_, "accept client ip:" << ip_str << ",port:" << port 
-      << ",sock:" << sock << ",con's addr:" << svr_con);
+    TRACE(logger_, "listen port:"<< listen_port <<",accept client ip:" << ip_str 
+      << ",port:" << port << ",sock:" << sock << ",con's addr:" << svr_con);
   }
 }
 

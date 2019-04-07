@@ -11,7 +11,11 @@ LOGGER_CLASS_IMPL(logger_, AppTestServerHandler);
 //server receive request
 void AppTestServerHandler::OnRapidRequestMessage(RapidMessage* message){
   TRACE(logger_, "OnRapidRequestMessage,body:" << message->body);
-
+  if (0xffffffffffffffff == message->sequence_id){
+    //rapid protocol no need response
+    MessageFactory::Destroy(message);
+    return;
+  }
   RapidMessage* msg = MessageFactory::Allocate<RapidMessage>();
   msg->SetDescriptorId(message->GetDescriptorId());
   msg->sequence_id = message->sequence_id;

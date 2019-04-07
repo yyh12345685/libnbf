@@ -13,6 +13,14 @@ ServerConnect::ServerConnect(){
 ServerConnect::~ServerConnect(){
 }
 
+void ServerConnect::OnClose() {
+  //as server,if connect is closed,can delete Connecting
+  //as client,if connect is closed,only closed fd
+  RegisterDel(GetFd());
+  Clean();
+  Destroy();
+}
+
 void ServerConnect::OnDecodeMessage(EventMessage* message) {
 
   message->birthtime = Time::GetMillisecond();

@@ -56,7 +56,7 @@ protected:
   void OnReadWriteClose();
   void Clean();
 
-  virtual void OnClose();
+  virtual void OnClose() = 0;
 
 protected:
   int fd_;

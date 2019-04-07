@@ -56,9 +56,11 @@ EventMessage* SyncSequence::Fire(){
 void SyncSequence::OnTimer(void* function_data){
   //超时先关闭连接
   INFO(logger_, "SyncSequence::OnTimer.");
-  sync_client_con_->CleanSyncClient();
   //sync_client_con_->OnTimeout(Fired());
   sync_client_con_->CleanSequenceQueue();
+  sync_client_con_->CancelTimer();
+  sync_client_con_->CleanSyncClient();
+  sync_client_con_->RegisterDel(sync_client_con_->GetFd());
   sync_client_con_->StartReconnectTimer();
 }
 
