@@ -167,7 +167,8 @@ bool HttpProtocol::Encode(EventMessage *pv, Buffer *output){
     HeartBeatMessage *hmsg = static_cast<HeartBeatMessage *>(pv);
     msg = &one;
     msg->direction = hmsg->direction;
-    if (msg->direction == MessageBase::kIncomingResponse) {
+    if (msg->direction == MessageBase::kOutgoingResponse
+      || msg->direction == MessageBase::kIncomingResponse) {
       msg->InitReply(nullptr, 200, false, true);
       msg->http_info.body.assign((const char *)g_favicon_ico, c_favicon_ico);
       msg->http_info.headers.insert(std::pair <std::string, std::string>("Content-Type", "image/x-icon"));
@@ -209,7 +210,8 @@ bool HttpProtocol::WirteToBuf(HttpMessage *msg, Buffer *output){
     return false;
   }
   std::string tmp;
-  if (msg->direction == MessageBase::kIncomingResponse) {
+  if (msg->direction == MessageBase::kOutgoingResponse
+    || msg->direction == MessageBase::kIncomingResponse) {
     //as http server response 
     if (!output->Write(http_version, strlen(http_version))) return false;
     if (!output->Write(" ", 1)) return false;
@@ -260,11 +262,17 @@ bool HttpProtocol::WirteToBuf(HttpMessage *msg, Buffer *output){
 EventMessage* HttpProtocol::HeartBeatRequest() {
   HttpMessage* http_message = MessageFactory::Allocate<HttpMessage>();
   http_message->type_id = MessageType::kHeartBeatMessage;
+  http_message->direction = EventMessage::kOutgoingRequest;
+  http_message->keep_alive = true;
   return http_message;
 }
 
 EventMessage* HttpProtocol::HeartBeatResponse(EventMessage* request) {
-  return request;
+  HttpMessage* response = (HttpMessage*)request;
+  response->direction = EventMessage::kOutgoingResponse;
+  response->status_code = 200;
+
+  return response;
 }
 
 }

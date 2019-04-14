@@ -51,9 +51,9 @@ public:
     hmsg2->http_info.url = "/a=xx&b=yy";
     hmsg2->http_info.body = "HttpTest send receive:hello world.";
     bdf::EventMessage* hmsg2_resp =
-      bdf::AppBase::Get()->GetClientMgr()->SendRecieve("http_test_client", hmsg2, 30);
+      bdf::AppBase::Get()->GetClientMgr()->SendRecieve("http_test_client", hmsg2, 100);
     if (nullptr == hmsg2_resp) {
-      TRACE(logger_, "hmsg2_resp is null.");
+      TRACE(logger_, "hmsg2_resp is nullptr.");
       matrix_scope.SetOkay(false);
       return;
     }

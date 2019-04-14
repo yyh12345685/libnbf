@@ -13,9 +13,10 @@ static void UsageInner(const char *exe, bool help){
   std::cerr << "Copyright 2019 by yyh,"
     << " Basic Development Framework Model" << std::endl;
   std::cerr << "libbdf: " << __APP_VERSION__ << std::endl;
-  if (help)
+  if (help) {
     std::cerr << "Usage: "
-    << " --c config_file --l log_file [--d:daemon]" << std::endl;
+      << " --c/-c config_file --l/-l log_file [--d/-d:daemon]" << std::endl;
+  }
 }
 
 int AppCmdParser::Usage(int argc, char* argv[]){

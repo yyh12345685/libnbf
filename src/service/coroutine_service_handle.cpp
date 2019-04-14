@@ -128,6 +128,7 @@ void CoroutineServiceHandler::Process(HandleData* data){
 
 void CoroutineServiceHandler::ProcessItem(EventMessage* msg){
   Connecting* con = (Connecting*)((void*)(msg->descriptor_id));
+  TRACE(logger_, "ProcessItem is server:" << con->GetIsServer());
   if (con->GetIsServer()) {
     //处理服务端接收的消息
   } else {

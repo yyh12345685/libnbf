@@ -123,6 +123,8 @@ class EventMessage : public MessageBase {
 
   int64_t descriptor_id;//convert object
   int32_t handle_id;
+
+  uint64_t timer_out_id = 0;//for sync message
 };
 
 class MessageFactory {

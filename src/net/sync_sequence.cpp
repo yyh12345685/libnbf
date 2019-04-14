@@ -26,7 +26,7 @@ int SyncSequence::Put(EventMessage* message) {
   td.time_out_ms = timeout_ms_;
   td.time_proc = this;
   td.function_data = nullptr;
-  IoHandler::GetIoHandler()->StartTimer(td);
+  message->timer_out_id = IoHandler::GetIoHandler()->StartTimer(td);
   return 0;
 }
 
@@ -42,6 +42,9 @@ EventMessage* SyncSequence::Get() {
 }
 
 EventMessage* SyncSequence::Fired(){
+  if (nullptr != fired_){
+    IoHandler::GetIoHandler()->CancelTimer(fired_->timer_out_id);
+  }
   return fired_;
 }
 
@@ -57,10 +60,10 @@ void SyncSequence::OnTimer(void* function_data){
   //超时先关闭连接
   INFO(logger_, "SyncSequence::OnTimer.");
   //sync_client_con_->OnTimeout(Fired());
+  sync_client_con_->RegisterDel(sync_client_con_->GetFd());
   sync_client_con_->CleanSequenceQueue();
   sync_client_con_->CancelTimer();
   sync_client_con_->CleanSyncClient();
-  sync_client_con_->RegisterDel(sync_client_con_->GetFd());
   sync_client_con_->StartReconnectTimer();
 }
 

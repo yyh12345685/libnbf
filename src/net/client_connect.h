@@ -6,9 +6,14 @@
 
 namespace bdf{
 
+//class  HeartBeatTimer:public OnTimerBase{
+//public:
+//  virtual void OnTimer(void* function_data);
+//};
+
 class ClientConnect:public Connecting,public OnTimerBase {
 public:
-
+  //friend class HeartBeatTimer;
   enum {
     kConnecting = 0,
     kConnected,
@@ -66,6 +71,8 @@ private:
 
   uint64_t reconnect_timer_ = 0;
   uint64_t heartbeat_timer_= 0;
+
+  //HeartBeatTimer heart_beat_timer_;
 };
 
 

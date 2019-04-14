@@ -22,6 +22,13 @@ void ServerConnect::OnClose() {
 }
 
 void ServerConnect::OnDecodeMessage(EventMessage* message) {
+  if (message->type_id == MessageType::kHeartBeatMessage) {
+    EventMessage* heartbeat_response = GetProtocol()->HeartBeatResponse(message);
+    if (0 != EncodeMsg(heartbeat_response)) {
+      MessageFactory::Destroy(heartbeat_response);
+    }
+    return;
+  }
 
   message->birthtime = Time::GetMillisecond();
   message->status = MessageBase::kStatusOK;

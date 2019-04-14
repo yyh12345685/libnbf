@@ -77,7 +77,7 @@ int AgentSlave::AddModr(EventFunctionBase* ezfd,int fd,  bool set, bool lock){
 int AgentSlave::Del(EventFunctionBase* ezfd, int fd){
   uint64_t idx = (uint64_t)((void*)ezfd) % slave_event_threads_.size();
   if (0 != slave_event_threads_[idx]->Del(fd)) {
-    WARN(logger_, "slave_event_threads_[idx].Modr failed.");
+    TRACE(logger_, "slave_event_threads_[idx].Modr failed or fd:"<<fd<<" Already del.");
     return -1;
   }
   return 0;

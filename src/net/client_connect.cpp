@@ -7,6 +7,11 @@
 
 namespace bdf{
 
+//void HeartBeatTimer::OnTimer(void* function_data){
+//  ClientConnect* cli_con = (ClientConnect *)(function_data);
+//  cli_con->OnHeartBeat();
+//}
+
 LOGGER_CLASS_IMPL(logger, ClientConnect);
 
 ClientConnect::ClientConnect(
@@ -23,11 +28,14 @@ ClientConnect::~ClientConnect(){
 
 void ClientConnect::OnTimer(void* function_data) {
   uint32_t client_timer_type = *((uint32_t*)(function_data));
+  TRACE(logger_, "client_timer_type:"<< client_timer_type);
   switch (client_timer_type){
   case kClientTimerTypeReconnect:
     TryConnect();
+    break;
   case kClientTimerTypeHeartBeat:
     OnHeartBeat();
+    break;
   default:
     WARN(logger, "unkown type:" << client_timer_type);
     break;
@@ -122,10 +130,10 @@ void ClientConnect::CancelTimer() {
 void ClientConnect::OnClose() {
   //as client,if connect is closed,only closed fd,do not delete ClientConnect
   TRACE(logger_, "ClientConnect::OnClose(),fd:" << GetFd());
+  RegisterDel(GetFd());
   CleanSequenceQueue();
   CancelTimer();
   CleanClient();
-  RegisterDel(GetFd());
   StartReconnectTimer();
 }
 

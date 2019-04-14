@@ -110,12 +110,10 @@ int HttpParser::OnMessageComplete(http_parser *parser){
   HttpRequestInfo& request_info = agent->http_request_;
   request_info.is_parsed_complete = true;
 
-  TRACE(logger_, "adx http event,body:" << request_info.body 
+  TRACE(logger_, "http event,body:" << request_info.body 
     << ",body size:" << request_info.body.size());
-
   
   HttpMessage *msg = MessageFactory::Allocate<HttpMessage>();
-
   msg->http_major = parser->http_major;
   msg->http_minor = parser->http_minor;
   msg->status_code = parser->status_code;

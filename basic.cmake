@@ -20,7 +20,7 @@ message(STATUS "log4cplus library: " ${LOG4CPLUS_LIBRARIES})
 #3:mkdir build && cd build
 #4:cmake ../
 #5:make
-#6:make install
+#6:sudo make install
 find_path(GTEST_INCLUDE_DIRS gtest/gtest.h)
 find_library(GTEST_LIBRARIES libgtest.a /usr/local/lib NO_DEFAULT_PATH)
 

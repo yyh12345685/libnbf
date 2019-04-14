@@ -13,9 +13,11 @@ bool ClientReconnect::StartThread(){
 
 void ClientReconnect::StopThread(){
   is_running_ = false;
-  client_thread_->join();
-  delete client_thread_;
-  client_thread_ = nullptr;
+  if (nullptr != client_thread_){
+    client_thread_->join();
+    delete client_thread_;
+    client_thread_ = nullptr;
+  }
 }
 
 void ClientReconnect::Run(){
