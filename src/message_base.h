@@ -74,6 +74,39 @@ public:
     kStatusEncodeFail,
     kInternalFailure,
   };
+
+  static const char* ToDirectionString(int type) {
+    static const char* str[] = {
+      "direction unknown",
+      "incoming request",
+      "outgoing request",
+      "incoming response",
+      "outgoing response",
+      "only send",
+      "send no care response",
+    };
+
+    if (type < 0 || type >= (int)(sizeof(str) / sizeof(const char*))) {
+      return "direction unknown";
+    }
+
+    return str[type];
+  }
+
+  static const char* ToStatusString(int type) {
+    static const char* str[] = {
+      "status ok",
+      "status time out",
+      "status encode fail",
+      "status internal failure",
+    };
+
+    if (type < 0 || type >= (int)(sizeof(str) / sizeof(const char*))) {
+      return "status unknown";
+    }
+
+    return str[type];
+  }
 public:
 
   MessageBase(uint8_t type_id) :

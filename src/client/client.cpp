@@ -140,7 +140,7 @@ EventMessage* Client::DoSendRecieve(EventMessage* message, uint32_t timeout_ms) 
   }
   CoroutineContext::Instance().GetCoroutine()->SetWaitingId(message->sequence_id);
   DoSend(message);
-  TRACE(logger_, "send msg handle_id:" << message->handle_id);
+  //TRACE(logger_, "send msg handle_id:" << message->handle_id);
   EventMessage* response = DoRecieve(timeout_ms);
   if (response && response->status != EventMessage::kStatusOK) {
     TRACE(logger_, "may be time out,status:" << response->status << ",msg:" << *response);
@@ -152,7 +152,7 @@ EventMessage* Client::DoSendRecieve(EventMessage* message, uint32_t timeout_ms) 
 
 void Client::DoSend(EventMessage* message){
   message->handle_id = CoroutineContext::Instance().GetServiceHandler()->GetHandlerId();
-  //TRACE(logger_, "SendToIoHandle,handle_id:" << message->handle_id);
+  TRACE(logger_, "SendToIoHandle,handle_id:" << message->handle_id);
   IoService::GetInstance().SendToIoHandle(message);
 }
 

@@ -1,5 +1,6 @@
 
 #include <functional>
+#include <sys/prctl.h>
 #include "event/event_loop_thread.h"
 
 namespace bdf {
@@ -36,6 +37,7 @@ int EventLoopThread::Stop(){
 }
 
 void* EventLoopThread::Run(void *arg){
+  prctl(PR_SET_NAME, "EventLoopThread");
   EventLoopThread *t = (EventLoopThread *)arg;
   t->Main();
   return nullptr;

@@ -26,6 +26,8 @@ void CoroutineServiceHandler::Run(HandleData* data){
   current_coroutine_id_ = scheduler->CoroutineNew(coroutine, func, data);
   //current_timer_coroutine_id_ = scheduler->CoroutineNew(coroutine, func, data);
   //current_task_coroutine_id_ = scheduler->CoroutineNew(coroutine, func, data);
+  //不能用while(会导致切换协程等待之后马上切换回来)，先用if
+  //必须要需要切换的时候才切换协程，后续优化为协程池
   if(scheduler->CoroutineStatus(coroutine, current_coroutine_id_)/*&&
     scheduler->CoroutineStatus(coroutine, current_timer_coroutine_id_) &&
     scheduler->CoroutineStatus(coroutine, current_task_coroutine_id_)*/){
@@ -34,7 +36,7 @@ void CoroutineServiceHandler::Run(HandleData* data){
     //scheduler->CoroutineResume(coroutine, current_task_coroutine_id_);
   }
 
-  while (data->is_run){
+  while (data->is_run) {
     if (data->data_.empty()) {
       usleep(1);
       continue;
@@ -44,7 +46,7 @@ void CoroutineServiceHandler::Run(HandleData* data){
     data->lock_.lock();
     temp.swap(data->data_);
     data->lock_.unlock();
-    ProcessMessage(temp);
+    ProcessMessageHandle(temp);
   }
   TRACE(logger_, "CoroutineServiceHandler::Run will be exit.");
 }
@@ -137,17 +139,6 @@ void CoroutineServiceHandler::ProcessItem(EventMessage* msg){
     coroutine->SendMessage(msg);
 
     Resume(current_coroutine_id_);
-  }
-}
-
-void CoroutineServiceHandler::ProcessMessage(std::queue<EventMessage*>& msg_list){
-  TRACE(logger_, "handle id:"<<GetHandlerId()
-    <<",ProcessMessage size:"<< msg_list.size());
-  while (!msg_list.empty()) {
-    EventMessage *msg = msg_list.front();
-    msg_list.pop();
-    
-    ProcessItem(msg);
   }
 }
 

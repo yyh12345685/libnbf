@@ -1,6 +1,7 @@
 
 #include <unistd.h>
 #include <functional>
+#include <sys/prctl.h>
 #include "net/client_reconnect_thread.h"
 
 namespace bdf{
@@ -21,6 +22,7 @@ void ClientReconnect::StopThread(){
 }
 
 void ClientReconnect::Run(){
+  prctl(PR_SET_NAME, "ClientReconnectThread");
   while (is_running_){
     timer_.ProcessTimer();
     usleep(1000);

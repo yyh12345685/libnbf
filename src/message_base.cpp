@@ -13,8 +13,8 @@ void MessageBase::Dump(std::ostream& os) const {
   os << "{\"type\": \"MessageBase\""
     << ", \"type_id\": " << MessageType::ToString(type_id)
     << ", \"type_io_event\": " << MessageType::ToIoEventString(type_io_event)
-    << ", \"direction\": " << direction
-    << ", \"status\": " << status
+    << ", \"direction\": " << ToDirectionString(direction)
+    << ", \"status\": " << ToStatusString(status)
     << ", \"sequence_id\": " << sequence_id
     << ", \"birthtime\": " << birthtime
     << "}";

@@ -26,8 +26,9 @@ void SyncClientConnect::OnDecodeMessage(EventMessage* message) {
   }
 
   if (keeper_message->type_id == MessageType::kHeartBeatMessage
-    || keeper_message->direction == EventMessage::kSendNoCareResponse) {
-    TRACE(logger, "OnDecodeMessage heartbeat or oneway:" << *message);
+    || keeper_message->direction == EventMessage::kSendNoCareResponse
+    || keeper_message->direction == EventMessage::kOnlySend) {
+    TRACE(logger, "OnDecodeMessage heartbeat or no care response:" << *keeper_message);
     MessageFactory::Destroy(message);
     MessageFactory::Destroy(keeper_message);
     sync_sequence_.Fire();

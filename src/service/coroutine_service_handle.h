@@ -39,7 +39,6 @@ private:
 
   void ProcessTask(HandleData* data);
 
-  void ProcessMessage(std::queue<EventMessage*>& msg_list);
   void ProcessMessageHandle(std::queue<EventMessage*>& msg_list);
 
   void ProcessItem(EventMessage* msg);

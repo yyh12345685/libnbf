@@ -40,7 +40,7 @@ public:
     hmsg->InitRequest("POST", true);
     hmsg->http_info.headers.insert(
       std::pair<std::string, std::string>("Content-Type", "text/html"));
-    hmsg->http_info.url = "/a=x&b=y";
+    hmsg->http_info.url = "/oo?a=x&b=y";
     hmsg->http_info.body = "HttpTest only send:hello world.";
     bdf::AppBase::Get()->GetClientMgr()->Send("http_test_client", hmsg);
 
@@ -48,15 +48,16 @@ public:
     hmsg2->InitRequest("POST", true);
     hmsg2->http_info.headers.insert(
       std::pair<std::string, std::string>("Content-Type", "text/html"));
-    hmsg2->http_info.url = "/a=xx&b=yy";
+    hmsg2->http_info.url = "/mm?a=xx&b=yy";
     hmsg2->http_info.body = "HttpTest send receive:hello world.";
-    bdf::EventMessage* hmsg2_resp =
+    bdf::EventMessage* msg2_resp =
       bdf::AppBase::Get()->GetClientMgr()->SendRecieve("http_test_client", hmsg2, 100);
-    if (nullptr == hmsg2_resp) {
-      TRACE(logger_, "hmsg2_resp is nullptr.");
+    if (nullptr == msg2_resp) {
+      TRACE(logger_, "msg2_resp is nullptr.");
       matrix_scope.SetOkay(false);
       return;
     }
+    bdf::HttpMessage* hmsg2_resp = dynamic_cast<bdf::HttpMessage*>(msg2_resp);
     TRACE(logger_, "receive msg:" << *hmsg2_resp);
     bdf::MessageFactory::Destroy(hmsg2_resp);
   }
@@ -68,7 +69,7 @@ public:
       if (times % 2 == 0){
         HttpTest();
       }else{
-        //RapidTest();
+        RapidTest();
       }
       
       sleep(3);

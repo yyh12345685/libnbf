@@ -12,7 +12,8 @@ namespace bdf{
 LOGGER_CLASS_IMPL(logger_, CoroutineActor);
 
 EventMessage* CoroutineActor::RecieveMessage(uint32_t timeout_ms){
-  TRACE(logger_, "CoroutineActor::RecieveMessage...");
+  TRACE(logger_, "CoroutineActor::RecieveMessage,timeout_ms:"
+    << timeout_ms<<",msg_list_:"<<msg_list_.size());
   uint64_t time_id = 0;
   if (msg_list_.empty()){
     if (timeout_ms) {
@@ -43,11 +44,14 @@ EventMessage* CoroutineActor::RecieveMessage(uint32_t timeout_ms){
 }
 
 bool CoroutineActor::SendMessage(EventMessage* message){
+  TRACE(logger_, "SendMessage,is_waiting_" << is_waiting_
+    << ",sequence id:" << message->sequence_id << ",waiting_id_" << waiting_id_
+    << ",msg_list_size:" << msg_list_.size());
   if (is_waiting_ && message->sequence_id != waiting_id_) {
     WARN(logger_, "sequence_id mismatch:" << waiting_id_ << ",msg:" << *message);
     return false;
   }
-
+  
   msg_list_.emplace_back(message);
   return true;
 }

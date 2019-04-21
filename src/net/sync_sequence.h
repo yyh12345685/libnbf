@@ -2,7 +2,7 @@
 
 #include <list>
 #include "common/logger.h"
-#include "event/timer/timer_base.h"
+#include "event/timer/timer.h"
 
 namespace bdf {
 
@@ -28,6 +28,11 @@ private:
   std::list<EventMessage*> list_;
 
   EventMessage* fired_;
+
+  Timer timer_;
+  bool time_check_started_;
+
+  void StartTimeCheck();
 
   LOGGER_CLASS_DECL(logger_);
 

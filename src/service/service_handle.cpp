@@ -1,5 +1,6 @@
 
 #include <unistd.h>
+#include <sys/prctl.h>
 #include "service/service_handle.h"
 #include "message.h"
 #include "handle_data.h"
@@ -9,6 +10,7 @@ namespace bdf {
 LOGGER_CLASS_IMPL(logger, ServiceHandler);
 
 void ServiceHandler::Run( HandleData* data){
+  prctl(PR_SET_NAME, "ServiceHandlerThread");
   while (data->is_run) {
     if (data->data_.empty()){
       usleep(1);
