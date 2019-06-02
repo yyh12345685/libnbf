@@ -41,6 +41,7 @@ set(BDF_SRC
 
   net/socket.cpp
   net/connect.cpp
+  net/connect_manager.cpp
   net/client_connect.cpp
   net/async_client_connect.cpp
   net/async_sequence.cpp

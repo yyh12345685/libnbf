@@ -22,6 +22,11 @@ public:
 
   virtual void OnTimer(void* function_data);
   std::list<EventMessage*> Clear();
+
+  void ClearTimer(){
+    timer_.Clear();
+  }
+
 private:
   SyncClientConnect* sync_client_con_;
   uint32_t timeout_ms_;

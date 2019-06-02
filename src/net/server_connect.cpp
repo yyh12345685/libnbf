@@ -2,6 +2,7 @@
 #include "net/server_connect.h"
 #include "common/time.h"
 #include "service/io_service.h"
+#include "net/connect_manager.h"
 
 namespace bdf {
 
@@ -14,11 +15,16 @@ ServerConnect::~ServerConnect(){
 }
 
 void ServerConnect::OnClose() {
+  ConnectManager::Instance().UnRegisterConnect((uint64_t)this);
+
   //as server,if connect is closed,can delete Connecting
   //as client,if connect is closed,only closed fd
   RegisterDel(GetFd());
   Clean();
-  Destroy();
+  if (ConnectManager::Instance().GetConnect((uint64_t)this)){
+    //∑¿÷π÷ÿ∏¥Œˆππ
+    Destroy();
+  }
 }
 
 void ServerConnect::OnDecodeMessage(EventMessage* message) {

@@ -85,7 +85,7 @@ int ConfigInfo::LoadConfig(const std::string& config_path){
     return -5;
   }
   
-  TRACE(logger_, "config info" << *this);
+  INFO(logger_, "config info" << *this);
   return 0;
 }
 

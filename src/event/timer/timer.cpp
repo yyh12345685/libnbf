@@ -41,4 +41,8 @@ int Timer::ProcessTimer(){
   return 0;
 }
 
+void Timer::Clear(){
+  heap_timer_.Clear();
+}
+
 }

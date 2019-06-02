@@ -223,6 +223,9 @@
     <ClCompile Include="src\net\client_reconnect_thread.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\net\connect_manager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\monitor\matrix.h">
@@ -354,9 +357,6 @@
     <ClInclude Include="src\app\config_info.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="src\net\connect.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="src\net\client_connect.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -433,6 +433,15 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="src\net\client_reconnect_thread.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\lockfree_ringbuffer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\net\connect.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\net\connect_manager.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

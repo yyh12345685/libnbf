@@ -109,6 +109,8 @@ void SyncClientConnect::CleanSequenceQueue(){
     DoSendBack(message, EventMessage::kInternalFailure);
     message = clear_list.front();
   }
+
+  sync_sequence_.ClearTimer();
 }
 
 int SyncClientConnect::DecodeMsg(){

@@ -6,6 +6,7 @@
 #include "handle_data.h"
 #include "net/connect.h"
 #include "service/io_service.h"
+#include "net/connect_manager.h"
 
 namespace bdf{
 
@@ -56,9 +57,16 @@ void IoHandler::Handle(EventMessage* message){
 
 void IoHandler::HandleIoMessageEvent(EventMessage* message){
   TRACE(logger, "HandleIoMessageEvent");
+  Connecting* reg_con = ConnectManager::Instance().GetConnect(message->descriptor_id);
+  if (!reg_con){
+    INFO(logger, "HandleIoMessageEventt reg_con is closed.");
+    HandleIoMessageFailed(message);
+    return;
+  }
+
   Connecting* con = (Connecting*)((void*)(message->descriptor_id));
-  if (!con) {
-    WARN(logger, "HandleIoMessageEventt descriptor is not Connecting");
+  if (!con || reg_con != con) {
+    ERROR(logger, "error,con:"<< con <<",reg_con:"<< con);
     HandleIoMessageFailed(message);
     return;
   }

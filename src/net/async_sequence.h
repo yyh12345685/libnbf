@@ -25,6 +25,9 @@ public:
 
   std::list<EventMessage*> Clear();
 
+  uint64_t StartTimer(void* data);
+  void CancelTimer(uint64_t timer_id);
+
 private:
   AsyncClientConnect* async_client_con_;
   uint32_t timeout_ms_;

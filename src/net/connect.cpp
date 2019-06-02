@@ -21,6 +21,10 @@ Connecting::~Connecting(){
   if (protocol_){
     protocol_->Release();
   }
+
+  if (fd_ > 0){
+    Clean();
+  }
 }
 
 void Connecting::OnEvent(EventDriver *poll, int fd, short event){
@@ -78,7 +82,8 @@ void Connecting::OnRead(EventDriver *poll){
     }
 
     if (!inbuf_.EnsureSize(nread)){
-      WARN(logger_, "Malloc failed, new more=" << nread << ", old capacity=" << inbuf_.GetCapacity());
+      WARN(logger_, "Malloc failed, new more=" << nread 
+        << ", old capacity=" << inbuf_.GetCapacity());
       return;
     }
 
@@ -139,20 +144,25 @@ void Connecting::OnWrite(){
       if (errno == EINTR || errno == EAGAIN){
 
       }else{
-        INFO(logger_, "errno:" << errno << ",TCP write failed:" << ",send:" << send<< ",ret" << ret 
-          << ",ip:" << GetIp() << ",port:" << GetPort() << ",send capacity" << outbuf_.GetCapacity());
+        INFO(logger_, "errno:" << errno << ",TCP write failed:" << ",send:" << send
+          << ",ret" << ret << ",ip:" << GetIp() << ",port:" << GetPort()
+          <<",is_server_:"<<is_server_<< ",send capacity:" << 
+          outbuf_.GetCapacity()<<",fd:"<<fd_);
+        //发现偶尔会触发两次，一次errno104，一次errno32
         OnReadWriteClose();
         break;
       }
 
       if (send > 0){
         INFO(logger_, "send size:" << send << ",not send size:" << (should_send_size - send)
-          << ",send capacity:" << outbuf_.GetCapacity() << ",not send completed,errno:" << errno);
+          << ",send capacity:" << outbuf_.GetCapacity() << ",not send completed,errno:" << errno
+          <<",ip:"<<ip_<<",port:"<<port_<<",is_server_:"<<is_server_);
         if (outbuf_.GetReadingSize() > max_send_buf_failed_size){
           outbuf_.DrainReading(outbuf_.GetReadingSize());
           TRACE(logger_, "will be lose size:" << (should_send_size - send));
         } else{
-          // this operation will let the event poll to call the function habdleWrite when the write-cache enable to write 
+          // this operation RegisterModw will let the event poll to call the function handleWrite 
+          // when the write-cache enable to write 
           //RegisterModw(fd_, true);
         }
       } else{

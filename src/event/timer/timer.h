@@ -24,6 +24,8 @@ public:
 
   int ProcessTimer();
 
+  void Clear();
+
 private:
 	LOGGER_CLASS_DECL(logger_);
 

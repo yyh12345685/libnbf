@@ -36,7 +36,8 @@ int GlobalMatrix::Init(
   }
 
   MatrixItemMap* item_map = new MatrixItemMap(item_map_bucket);
-  MatrixCollector* collector = new MatrixCollector(monitor_file_pre,queue_bucket, queue_size);
+  MatrixCollector* collector = new MatrixCollector(
+    monitor_file_pre,queue_bucket, queue_size);
   Matrix* global_matrix = new Matrix(item_map, collector);
 
   if (0 != collector->Start()) {

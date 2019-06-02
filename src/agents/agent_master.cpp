@@ -8,6 +8,7 @@
 #include "app/config_info.h"
 #include "event/event_driver.h"
 #include "net/server_connect.h"
+#include "net/connect_manager.h"
 
 namespace bdf {
 
@@ -87,7 +88,7 @@ void AgentMaster::OnEvent(EventDriver *poll, int fd, short event){
       BDF_DELETE(svr_con);
       break;
     }
-
+    ConnectManager::Instance().RegisterConnect((uint64_t)svr_con, svr_con);
     TRACE(logger_, "listen port:"<< listen_port <<",accept client ip:" << ip_str 
       << ",port:" << port << ",sock:" << sock << ",con's addr:" << svr_con);
   }

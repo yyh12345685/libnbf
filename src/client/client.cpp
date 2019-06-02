@@ -8,6 +8,7 @@
 #include "coroutine/coroutine_context.h"
 #include "service/coroutine_service_handle.h"
 #include "client/client_mgr.h"
+#include "net/connect_manager.h"
 
 namespace bdf{
 
@@ -43,6 +44,7 @@ int Client::Start() {
   }
 
   connect_ = con;
+  ConnectManager::Instance().RegisterConnect((uint64_t)con, con);
   return 0;
 }
 
@@ -78,6 +80,7 @@ int Client::Stop() {
     return 0;
   }
 
+  ConnectManager::Instance().UnRegisterConnect((uint64_t)connect_);
   int ret = connect_->Stop();
   //may be a bug
   //connect_->Destroy();
@@ -138,7 +141,10 @@ EventMessage* Client::DoSendRecieve(EventMessage* message, uint32_t timeout_ms) 
     DoSend(message);
     return nullptr;
   }
-  CoroutineContext::Instance().GetCoroutine()->SetWaitingId(message->sequence_id);
+  if (nullptr != CoroutineContext::Instance().GetCoroutine()){
+    CoroutineContext::Instance().GetCoroutine()->SetWaitingId(message->sequence_id);
+  }
+  
   DoSend(message);
   //TRACE(logger_, "send msg handle_id:" << message->handle_id);
   EventMessage* response = DoRecieve(timeout_ms);
@@ -151,13 +157,23 @@ EventMessage* Client::DoSendRecieve(EventMessage* message, uint32_t timeout_ms) 
 }
 
 void Client::DoSend(EventMessage* message){
-  message->handle_id = CoroutineContext::Instance().GetServiceHandler()->GetHandlerId();
+  if (nullptr != CoroutineContext::Instance().GetServiceHandler()){
+    //使用协程handle的时候不为空，非协程框架暂未完整实现
+    message->handle_id = CoroutineContext::Instance().GetServiceHandler()->GetHandlerId();
+  }
+  
   TRACE(logger_, "SendToIoHandle,handle_id:" << message->handle_id);
   IoService::GetInstance().SendToIoHandle(message);
 }
 
 EventMessage* Client::DoRecieve(uint32_t timeout_ms){
-  return CoroutineContext::Instance().GetCoroutine()->RecieveMessage(timeout_ms);
+  if (nullptr != CoroutineContext::Instance().GetCoroutine()){
+    return CoroutineContext::Instance().GetCoroutine()->RecieveMessage(timeout_ms);
+  }else{
+    //非协程仅供测试使用，非协程需要实现异步调用，用回调函数处理
+    return nullptr;
+  }
+  
 }
 
 std::ostream& operator << (std::ostream& os, const Client& client) {

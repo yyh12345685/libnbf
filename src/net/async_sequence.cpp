@@ -26,15 +26,11 @@ int AsyncSequence::Put(EventMessage* message){
   }
   registery_lock_.unlock();
 
+  message->timer_out_id = StartTimer(&(message->sequence_id));
+
   list_lock_.lock();
   list_.emplace_back(message);
   list_lock_.unlock();
-
-  TimerData td;
-  td.time_out_ms = timeout_ms_;
-  td.time_proc = this;
-  td.function_data = &(message->sequence_id);
-  IoHandler::GetIoHandler()->StartTimer(td);
 
   return 0;
 }
@@ -50,6 +46,8 @@ EventMessage* AsyncSequence::Get(uint64_t sequence_id){
   EventMessage* message = it->second;
   registery_.erase(it);
   registery_lock_.unlock();
+
+  IoHandler::GetIoHandler()->CancelTimer(message->timer_out_id);
 
   list_lock_.lock();
   list_.remove(message);
@@ -76,6 +74,19 @@ std::list<EventMessage*> AsyncSequence::Clear(){
   registery_.clear();
   registery_lock_.unlock();
   return tmp;
+}
+
+uint64_t AsyncSequence::StartTimer(void* data){
+  TimerData td;
+  td.time_out_ms = timeout_ms_;
+  td.time_proc = this;
+  td.function_data = data ;
+
+  return IoHandler::GetIoHandler()->StartTimer(td);
+}
+
+void AsyncSequence::CancelTimer(uint64_t timer_id){
+  IoHandler::GetIoHandler()->CancelTimer(timer_id);
 }
 
 }

@@ -22,7 +22,7 @@ struct IoServiceConfig {
     stack_size(2048),
     monitor_token_bucket(16), 
     monitor_queue_bucket(16), 
-    monitor_queue_size(1024 * 512) {
+    monitor_queue_size(1024 * 128) {
   }
 
   int slave_thread_count;

@@ -63,14 +63,16 @@ int ClientConnect::TryConnect(){
       Socket::Close(connet_info.first);
     }
     SetStatus(kBroken);
-    if (is_reconnect) StartReconnectTimer();
+    if (is_reconnect) 
+      StartReconnectTimer();
     return -1;
   }
   if (0 != RegisterAddModr(connet_info.first)) {
     WARN(logger_, "RegisterAddModr failed,fd:" << connet_info.first);
     Socket::Close(connet_info.first);
     SetStatus(kBroken);
-    if (is_reconnect) StartReconnectTimer();
+    if (is_reconnect) 
+      StartReconnectTimer();
     return -2;
   }
 
@@ -87,7 +89,7 @@ int ClientConnect::TryConnect(){
 }
 
 int ClientConnect::StartReconnectTimer() {
-  TRACE(logger_, "ClientConnect::StartReconnectTimer...");
+  INFO(logger_, "ClientConnect::StartReconnectTimer:"<<this);
   if (0 != reconnect_timer_) {
     WARN(logger, "ClientChannel::StartReconnectTimer duplicate!");
     return -1;
