@@ -15,10 +15,10 @@ int RapidClientTest(void* data) {
     (bdf::Application<bdf::testserver::TestClientServerHandler>*)data;
   bdf::ForTest::Inst().SetForTest(true);
   INFO(logger, "RapidClientTestFlag start,time:"<<time(NULL));
-  int times = 1500000;
+  int times = 5000000;
   while (times-- > 0){
     //笔记本配置不行，不sleep直接被系统kill
-    if (0 == times%8000){
+    if (0 == times%5000){
       sleep(1);
     }
 
@@ -54,10 +54,10 @@ int HttpClientTest(void* data) {
     (bdf::Application<bdf::testserver::TestClientServerHandler>*)data;
   bdf::ForTest::Inst().SetForTest(true);
   INFO(logger, "HttpClientTestFlag start,time:" << time(NULL));
-  int times = 1000000;
+  int times = 3000000;
   while (times-- > 0) {
     //笔记本配置不行，不sleep直接被系统kill
-    if (0 == times % 5000) {
+    if (0 == times % 3000) {
       sleep(1);
     }
 

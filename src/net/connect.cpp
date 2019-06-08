@@ -105,6 +105,7 @@ int Connecting::DecodeMsg(){
       if (msg != nullptr){
         MessageFactory::Destroy(msg);
       }
+      failed = true;
       break;
     }
 

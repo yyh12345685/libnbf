@@ -115,7 +115,7 @@ struct HttpMessage : public EventMessage {
     this->status_code = status;
     this->keep_alive = (!ev || ev->keep_alive) && keep_alive;
     this->encode_gzip = (!ev || ev->encode_gzip) && encode_gzip;
-    this->direction = MessageBase::kIncomingResponse;
+    //this->direction = MessageBase::kIncomingResponse;
   }
 
   inline void InitRequest(const char *cmd,
@@ -126,7 +126,7 @@ struct HttpMessage : public EventMessage {
     this->keep_alive = keep_alive;
     this->encode_gzip = encode_gzip;
     this->http_info.method = cmd;
-    this->direction = MessageBase::kOutgoingRequest;
+    //this->direction = MessageBase::kOutgoingRequest;
   }
 protected:
   HttpMessage(int type) :EventMessage(type) {}

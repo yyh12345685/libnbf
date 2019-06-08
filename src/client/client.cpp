@@ -138,6 +138,11 @@ EventMessage* Client::DoSendRecieve(EventMessage* message, uint32_t timeout_ms) 
   message->direction = MessageBase::kOutgoingRequest;
   if (ForTest::Inst().GetForTest()){
     TRACE(logger_, "for test_client_server,only send.");
+    if (message->IsSynchronous()) {
+      message->direction = MessageBase::kSendNoCareResponse;
+    } else {
+      message->direction = MessageBase::kOnlySend;
+    }
     DoSend(message);
     return nullptr;
   }

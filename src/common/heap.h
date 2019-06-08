@@ -51,7 +51,7 @@ class HeapBase {
   inline void Refresh(size_t sign);
   inline void RefreshTop();
   Val* Top() const { return 0!=num_items_ ? &(heap_items_[1]->val) : NULL; }
-  inline void Pop();
+  inline size_t Pop();
   inline void Erase(size_t sign);
   inline Val* Item(IN size_t sign) const { return &(reinterpret_cast<Node*>(sign)->val); }
   size_t Size() const { return num_items_; }
@@ -185,9 +185,10 @@ void HeapBase<Val, Order, FeatureF>::RefreshTop() {
 }
 
 template < typename Val, bool Order, typename FeatureF>
-void HeapBase<Val, Order, FeatureF>::Pop() { 
-
-  Erase(reinterpret_cast<size_t>(heap_items_[1]));
+size_t HeapBase<Val, Order, FeatureF>::Pop() {
+  size_t sign = reinterpret_cast<size_t>(heap_items_[1]);
+  Erase(sign);
+  return sign;
 }
 
 template < typename Val, bool Order, typename FeatureF>

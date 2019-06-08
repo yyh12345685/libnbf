@@ -3,6 +3,7 @@
 #include "common/time.h"
 #include "net/sync_client_connect.h"
 #include "net/io_handle.h"
+#include "common/string_util.h"
 
 namespace bdf {
 
@@ -15,7 +16,6 @@ SyncSequence::SyncSequence(
   SyncClientConnect* sync_client_con,uint32_t timeout_in_ms):
   sync_client_con_(sync_client_con),
   timeout_ms_(timeout_in_ms),
-  fired_(nullptr),
   time_check_started_(false){
 }
 
@@ -33,7 +33,9 @@ void SyncSequence::StartTimeCheck(){
 
 int SyncSequence::Put(EventMessage* message) {
   message->birthtime = Time::GetMillisecond();
+  lock_.lock();
   list_.emplace_back(message);
+  lock_.unlock();
 
   if (!time_check_started_){
     StartTimeCheck();
@@ -45,39 +47,33 @@ int SyncSequence::Put(EventMessage* message) {
   real_td.time_proc = this;
   real_td.function_data = (void*)(&real_timer_type);
   //这里才是真正的设置超时的地方
+  time_lock_.lock();
   message->timer_out_id = timer_.AddTimer(timeout_ms_,real_td);
+  time_lock_.unlock();
   TRACE(logger_, "start timer id:" << message->timer_out_id);
   return 0;
 }
 
 EventMessage* SyncSequence::Get() {
-  if (nullptr == fired_) {
+  lock_.lock();
+  if (0 == list_.size()) {
+    lock_.unlock();
     return nullptr;
-  } else {
-    EventMessage* fired = fired_;
-    list_.pop_front();
-    fired_ = nullptr;
-
-    if (nullptr != fired && fired->timer_out_id > 0) {
-      timer_.DelTimer(fired->timer_out_id);
-      TRACE(logger_, "have response cancel timer id:" << fired->timer_out_id);
-    }
-
-    return fired;
-  };
-}
-
-EventMessage* SyncSequence::Fired(){
-  return fired_;
-}
-
-EventMessage* SyncSequence::Fire(){
-  TRACE(logger_, "fired_:" << fired_ << ",sync msg size:" << list_.size());
-  if (fired_) {
-    return nullptr;
-  } else {
-    return fired_ = list_.front();
   }
+  EventMessage* fired = list_.front();
+  list_.pop_front();
+  lock_.unlock();
+
+  if (nullptr != fired && fired->timer_out_id > 0) {
+    time_lock_.lock();
+    timer_.DelTimer(fired->timer_out_id);
+    time_lock_.unlock();
+    TRACE(logger_, "have response cancel timer id:" << fired->timer_out_id);
+  }else{
+    WARN(logger_, "fired:" << fired << ",not cancel timer id:" << fired->timer_out_id);
+  }
+
+  return fired;
 }
 
 void SyncSequence::OnTimer(void* function_data){
@@ -86,9 +82,21 @@ void SyncSequence::OnTimer(void* function_data){
   switch (timer_type)
   {
   case check_timer_type:
-    timer_.ProcessTimer();
+  {
+    std::list<size_t> time_ids;
+    time_lock_.lock();
+    timer_.ProcessTimerTest(time_ids);
+    time_lock_.unlock();
+    std::string ids_str;
+    for (const auto& id : time_ids) {
+      ids_str.append(common::ToString(id)).append("-");
+    }
+    if (!ids_str.empty()){
+      TRACE(logger_, "ProcessTimerTest,ids:" << ids_str);
+    }
     StartTimeCheck();
     break;
+  }
   case real_timer_type:
     //超时先关闭连接
     INFO(logger_, "SyncSequence::OnTimer,fd:"<< sync_client_con_->GetFd());
@@ -105,11 +113,16 @@ void SyncSequence::OnTimer(void* function_data){
   
 }
 
+void SyncSequence::ClearTimer() {
+  timer_.Clear();
+}
+
 std::list<EventMessage*> SyncSequence::Clear(){
-  std::list<EventMessage*> tmp(list_);
-  list_.clear();
-  fired_ = nullptr;
-  return tmp;
+  std::list<EventMessage*> tmp;
+  lock_.lock();
+  tmp.swap(list_);
+  lock_.unlock();
+  return std::move(tmp);
 }
 
 }

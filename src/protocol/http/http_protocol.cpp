@@ -69,9 +69,9 @@ EventMessage* HttpProtocol::Decode(Buffer &input, bool& failed){
 		  return nullptr;
 	  }
 
-    //handle size not bigger to 512k
-    if (size > 512 * 1024)
-      size = 512 * 1024;
+    //handle size not bigger to 1M
+    if (size > 1024 * 1024)
+      size = 1024 * 1024;
 
     TRACE(logger_, "http decode size is: size:"<<size);
     TRACE(logger_, "http decode info is:"<<input.GetReading());
@@ -85,7 +85,7 @@ EventMessage* HttpProtocol::Decode(Buffer &input, bool& failed){
       enum http_errno err = (http_errno)agent_->parser_.GetHttpParser().http_errno;
       failed = true;
       ERROR(logger_, ",Read size is:" << size 
-        << ",parsed is" << parsed << "input:" << input.GetReading());
+        << ",parsed is" << parsed << ",input:" << input.GetReading());
       ERROR(logger_, "[" << http_errno_name(err)<< "]: " << http_errno_description(err)
         << ",msg size is:"<<agent_->msgs_.size());
       input.DrainReading(size);
@@ -103,7 +103,7 @@ EventMessage* HttpProtocol::Decode(Buffer &input, bool& failed){
     }else{
       TRACE(logger_,"partly parsed.");
       //avoid unexcept data
-      if (size > 128 *1024){
+      if (size > 256 *1024){
         input.DrainReading(size);
         WARN(logger_, "http DrainReading invalid data,size:"<<size);
       }else{

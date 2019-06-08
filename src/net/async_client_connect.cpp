@@ -54,6 +54,8 @@ int AsyncClientConnect::EncodeMsg(EventMessage* message){
     return -1;
   }
 
+  TRACE(logger, "EncodeMsg msg type:" << (int)(message->type_id)
+    << ",direction:" << (int)(message->direction));
   if (!GetProtocol()->Encode(message, &outbuf_)) {
     ERROR(logger, "AsyncClientConnect::EncodeMsg fail");
     return -2;

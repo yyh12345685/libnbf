@@ -52,6 +52,7 @@ int ClientMgr::Stop(){
 bool ClientMgr::Send(const std::string& router, EventMessage * message){
   ClientRouters* routers = GetClientRouters(router);
   if (nullptr == routers){
+    MessageFactory::Destroy(message);
     return false;
   }
   return routers->Send(message);
@@ -59,6 +60,7 @@ bool ClientMgr::Send(const std::string& router, EventMessage * message){
 bool ClientMgr::SendHash(const std::string& router, EventMessage* message, uint32_t hash){
   ClientRouters* routers = GetClientRouters(router);
   if (nullptr == routers) {
+    MessageFactory::Destroy(message);
     return false;
   }
   return routers->SendHash(message,hash);
@@ -70,6 +72,7 @@ EventMessage* ClientMgr::SendRecieve(
   uint32_t timeout_ms) {
   ClientRouters* routers = GetClientRouters(router);
   if (nullptr == routers) {
+    MessageFactory::Destroy(message);
     return nullptr;
   }
   return routers->SendRecieve(message, timeout_ms);
@@ -81,6 +84,7 @@ EventMessage* ClientMgr::SendRecieveHash(
   uint32_t timeout_ms) {
   ClientRouters* routers = GetClientRouters(router);
   if (nullptr == routers) {
+    MessageFactory::Destroy(message);
     return nullptr;
   }
   return routers->SendRecieveHash(message, hash, timeout_ms);

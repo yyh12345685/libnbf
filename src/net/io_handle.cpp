@@ -1,4 +1,3 @@
-
 #include <unistd.h>
 #include <sys/prctl.h>
 #include "net/io_handle.h"
@@ -18,6 +17,7 @@ void IoHandler::Run(HandleData* data){
   prctl(PR_SET_NAME, "IoHandler");
   TRACE(logger, "IoHandler::Run start.");
   io_handler_ = this;
+  time_t now = time(NULL);
   while (data->is_run) {
     GetTimer().ProcessTimer();
     if (data->data_.empty()) {
@@ -34,6 +34,13 @@ void IoHandler::Run(HandleData* data){
       EventMessage *msg = temp.front();
       temp.pop();
       Handle(msg);
+      //for debug
+      time_t cur_time = time(NULL);
+      if ((cur_time - now) > 300) {
+        INFO(logger, "msg size:" << data->data_.size()
+          << ",handle size:" << temp.size());
+        now = cur_time;
+      }
     }
   }
   TRACE(logger, "IoHandler::Run exit.");

@@ -1,4 +1,3 @@
-
 #include <unistd.h>
 #include <sys/prctl.h>
 #include "service/service_handle.h"
@@ -11,6 +10,7 @@ LOGGER_CLASS_IMPL(logger, ServiceHandler);
 
 void ServiceHandler::Run( HandleData* data){
   prctl(PR_SET_NAME, "ServiceHandlerThread");
+  time_t now = time(NULL);
   while (data->is_run) {
     if (data->data_.empty()){
       usleep(1);
@@ -21,11 +21,17 @@ void ServiceHandler::Run( HandleData* data){
     data->lock_.lock();
     temp.swap(data->data_);
     data->lock_.unlock();
-
     while (!temp.empty()){
       EventMessage *msg = temp.front();
       temp.pop();
       Handle(msg);
+      //for debug
+      time_t cur_time = time(NULL);
+      if ((cur_time- now)>300){
+        INFO(logger, "msg size:" << data->data_.size()
+          <<",handle size:"<< temp.size());
+        now = cur_time;
+      }
     }
   }
 }
@@ -35,6 +41,8 @@ void ServiceHandler::Handle(EventMessage* message) {
   //  MessageFactory::Destroy(message);
   //  return;
   //}
+  TRACE(logger, "msg type:" << (int)(message->type_id) 
+    << ",direction:" << (int)(message->direction));
   switch (message->type_id) {
   case MessageType::kHttpMessage:
     return message->direction == MessageBase::kIncomingRequest

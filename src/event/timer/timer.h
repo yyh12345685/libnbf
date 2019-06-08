@@ -1,7 +1,7 @@
-
 #pragma once
 
 #include <stdint.h>
+#include <list>
 #include "common/logger.h"
 #include "common/heap.h"
 #include "event/timer/timer_base.h"
@@ -23,6 +23,8 @@ public:
   int DelTimer(uint64_t id);
 
   int ProcessTimer();
+
+  int ProcessTimerTest(std::list<size_t>& ids);
 
   void Clear();
 

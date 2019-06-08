@@ -21,7 +21,6 @@ void SyncClientConnect::OnDecodeMessage(EventMessage* message) {
   if (!keeper_message) {
     WARN(logger, "OnDecodeMessage keeper not found, or oneway message.");
     MessageFactory::Destroy(message);
-    CleanSyncClient();
     return;
   }
 
@@ -31,7 +30,6 @@ void SyncClientConnect::OnDecodeMessage(EventMessage* message) {
     TRACE(logger, "OnDecodeMessage heartbeat or no care response:" << *keeper_message);
     MessageFactory::Destroy(message);
     MessageFactory::Destroy(keeper_message);
-    sync_sequence_.Fire();
     return;
   }
 
@@ -46,8 +44,6 @@ void SyncClientConnect::OnDecodeMessage(EventMessage* message) {
 
   MessageFactory::Destroy(keeper_message);
   IoService::GetInstance().SendToServiceHandle(message);
-
-  sync_sequence_.Fire();
 }
 
 int SyncClientConnect::EncodeMsg(EventMessage* message){
@@ -55,36 +51,26 @@ int SyncClientConnect::EncodeMsg(EventMessage* message){
     DEBUG(logger, "SyncClientConnect::EncodeMsg ChannelBroken:" << GetStatus());
     return -1;
   }
+  TRACE(logger, "EncodeMsg msg type:" << (int)(message->type_id)
+    << ",direction:" << (int)(message->direction));
+
+  if (!GetProtocol()->Encode(message, &outbuf_)) {
+    WARN(logger, "SyncClientConnect::Encode() encode fail");
+    DoSendBack(message, EventMessage::kStatusEncodeFail);
+    return -2;
+  }
 
   //同步请求不存真正only send的情况，一定回有应答，比如http协议和redis协议
   //有应答的情况需要将消息保存起来，这里属于有应答的情况
-  //if (message->direction != EventMessage::kSendNoCareResponse){
+  //if (message->direction != EventMessage::kSendNoCareResponse
+  //  && message->direction != EventMessage::kOnlySend){
     if (0 != sync_sequence_.Put(message)) {
       WARN(logger, "SyncClientConnect::EncodeMsg put fail");
-      return -2;
+      return -3;
     }
   //}
-
-  FireMessage();
+ 
   return 0;
-}
-
-void SyncClientConnect::FireMessage(){
-  while (true) {
-    EventMessage* fire_message = sync_sequence_.Fire();
-    if (!fire_message) {
-      return;
-    }
-
-    if (!GetProtocol()->Encode(fire_message,&outbuf_)) {
-      WARN(logger, "SyncClientConnect::FireMessage() encode fail");
-      DoSendBack(fire_message, EventMessage::kStatusEncodeFail);
-      sync_sequence_.Get();
-      continue;
-    }
-
-    break;
-  }
 }
 
 void SyncClientConnect::CleanSyncClient(){
@@ -115,9 +101,12 @@ void SyncClientConnect::CleanSequenceQueue(){
 
 int SyncClientConnect::DecodeMsg(){
   bool failed = false;
-  while (sync_sequence_.Fired()) {
+  while (sync_sequence_.Size()) {
+    test_lock_.lock();
     EventMessage* msg = protocol_->Decode(inbuf_, failed);
+    test_lock_.unlock();
     if (failed) {
+      failed = true;
       TRACE(logger_, "Connecting::Decode,base->Decode failed.");
       if (msg != nullptr) {
         MessageFactory::Destroy(msg);

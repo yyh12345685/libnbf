@@ -38,7 +38,7 @@ public:
   virtual void OnRead(EventDriver *poll);
   virtual void OnWrite();
 
-  int DecodeMsg();
+  virtual int DecodeMsg();
   virtual int EncodeMsg(EventMessage* message);
 
   void OnActiveClose();

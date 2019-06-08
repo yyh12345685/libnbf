@@ -111,18 +111,19 @@ int HttpParser::OnMessageComplete(http_parser *parser){
   request_info.is_parsed_complete = true;
 
   TRACE(logger_, "http event,body:" << request_info.body 
-    << ",body size:" << request_info.body.size());
+    << ",body size:" << request_info.body.size()<<",type:"<< parser->type);
   
   HttpMessage *msg = MessageFactory::Allocate<HttpMessage>();
   msg->http_major = parser->http_major;
   msg->http_minor = parser->http_minor;
   msg->status_code = parser->status_code;
   msg->keep_alive = http_should_keep_alive(parser);
-	if (parser->type == HTTP_REQUEST){
+
+  if (parser->type == HTTP_REQUEST) {
     msg->direction = MessageBase::kIncomingRequest;
-	}else{
+  } else {
     msg->direction = MessageBase::kIncomingResponse;
-	}
+  }
 
 	request_info.method = http_method_str((http_method)parser->method);
   msg->http_info.Swap(request_info);

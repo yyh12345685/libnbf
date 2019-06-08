@@ -21,10 +21,11 @@ public:
   void CleanSyncClient();
 protected:
   virtual int DecodeMsg();
-  void FireMessage();
   
 private:
   SyncSequence sync_sequence_;
+
+  std::mutex test_lock_;
 
   LOGGER_CLASS_DECL(logger);
 };
