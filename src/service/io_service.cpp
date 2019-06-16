@@ -1,6 +1,5 @@
 
 #include <functional>
-#include <signal.h>
 #include <atomic>
 #include "service/io_service.h"
 #include "agents/agents.h"
@@ -9,15 +8,16 @@
 #include "message_base.h"
 #include "monitor/matrix.h"
 #include "monitor/matrix_stat_map.h"
+#include "monitor/mem_profile.h"
 
 namespace bdf{
 
 LOGGER_CLASS_IMPL(logger_, IoService);
 
 int IoService::Init(const IoServiceConfig& config){
-  agents_ = new Agents(&config);
+  agents_ = BDF_NEW(Agents,&config);
   if (!agents_->Init()){
-    delete agents_;
+    BDF_DELETE (agents_);
     return -1;
   }
 
@@ -87,9 +87,10 @@ int IoService::Stop(){
   agents_->Stop();
 
   ThreadStop();
+  ThreadWait();
 
   if (agents_ != nullptr) {
-    delete agents_;
+    BDF_DELETE(agents_);
   }
 
   monitor::GlobalMatrix::Destroy();
@@ -111,7 +112,12 @@ void IoService::Reply(EventMessage* message){
 }
 
 void IoService::SendToIoHandle(EventMessage* msg){
-  msg->type_io_event = MessageType::kIoMessageEvent;
+  msg->type_io_event = MessageType::kIoHandleEventMsg;
+  SendToIoHandleInner(msg);
+}
+
+void IoService::SendEventToIoHandle(EventMessage* msg){
+  msg->type_io_event = MessageType::kIoEvent;
   SendToIoHandleInner(msg);
 }
 
@@ -178,23 +184,6 @@ int IoService::AgentsAddModr(EventFunctionBase* ezfd, int fd){
 
 int IoService::AgentsDel(EventFunctionBase* ezfd, int fd){
   return agents_->Del(ezfd, fd);
-}
-
-void IoService::HandleSignal(){
-  struct sigaction sa;
-  sa.sa_handler = SIG_IGN;
-  sigemptyset(&sa.sa_mask);
-  sa.sa_flags = 0;
-  sigaction(SIGPIPE, &sa, 0);
-  sigaction(SIGHUP, &sa, 0);
-  sigaction(SIGCHLD, &sa, 0);
-  signal(SIGINT, &IoService::StopIoService);
-  signal(SIGTERM, &IoService::StopIoService);
-}
-
-void IoService::StopIoService(int signal){
-  TRACE(logger_, "service will be stop,signal:" << signal);
-  GetInstance().Stop();
 }
 
 namespace service {

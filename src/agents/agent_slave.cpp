@@ -1,6 +1,7 @@
 
 #include "agents/agent_slave.h"
 #include "agents/agents.h"
+#include "monitor/mem_profile.h"
 
 namespace bdf {
 
@@ -13,13 +14,13 @@ AgentSlave::AgentSlave(){
 AgentSlave::~AgentSlave() {
   Stop();
   for (auto& thread : slave_event_threads_) {
-    delete thread;
+    BDF_DELETE(thread);
   }
 }
 
 bool AgentSlave::Init(int slave_thread_count){
   for (int ix = 0; ix < slave_thread_count;ix++) {
-    EventLoopThread* evt = new EventLoopThread;
+    EventLoopThread* evt = BDF_NEW(EventLoopThread);
     slave_event_threads_.push_back(evt);
   }
   return true;

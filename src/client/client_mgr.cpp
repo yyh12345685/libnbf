@@ -3,6 +3,7 @@
 #include "client/client_routers.h"
 #include "net/client_reconnect_thread.h"
 #include "message.h"
+#include "monitor/mem_profile.h"
 
 namespace bdf {
 
@@ -14,7 +15,7 @@ ClientMgr::ClientMgr(){
 ClientMgr::~ClientMgr() {
   Stop();
   for (const auto& it : router_maps_){
-    delete it.second;
+    BDF_DELETE (it.second);
   }
 }
 
@@ -28,9 +29,9 @@ int ClientMgr::Start(const ClientRoutersConfig& routers_config){
       WARN(logger_, "ClientMgr::Start Dupldate client:" << rt_cfg.name);
       continue;
     }
-    ClientRouters* routers = new ClientRouters(rt_cfg.name, rt_cfg.mapping);
+    ClientRouters* routers = BDF_NEW (ClientRouters,rt_cfg.name, rt_cfg.mapping);
     if (0!= routers->Start(rt_cfg.clients)){
-      delete routers;
+      BDF_DELETE (routers);
       return -1;
     }
     router_maps_[rt_cfg.name] = routers;

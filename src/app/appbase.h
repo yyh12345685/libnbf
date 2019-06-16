@@ -43,7 +43,7 @@ protected:
   virtual ServiceHandler* CreateServiceHandler() = 0;
 
 private:
-  LOGGER_CLASS_DECL(logger);
+  LOGGER_CLASS_DECL(logger_);
 
   int InitApplication();
 
@@ -57,6 +57,9 @@ private:
 
   int StopClientManager();
   int StopIoService();
+
+  void HandleSignal();
+  static void StopApp(int signal);
 
   static AppBase* application_;
 

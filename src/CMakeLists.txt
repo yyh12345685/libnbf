@@ -1,4 +1,3 @@
-INCLUDE (CheckSymbolExists)
 
 include_directories(
   ./
@@ -73,10 +72,10 @@ add_library(bdf
   ${BDF_SRC}
 )
 
-#target_compile_definitions(
-#  bdf
-#  PRIVATE
-#  -DMEM_PROFILE=1 )
+target_compile_definitions(
+  bdf
+  PRIVATE
+  -DMEM_PROFILE=1 )
 
 add_subdirectory(monitor/test)
 add_subdirectory(tester)

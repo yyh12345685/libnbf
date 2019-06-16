@@ -239,6 +239,7 @@ void ClientConnect::CleanClient(){
 
 int ClientConnect::Stop(){
   EventMessage* msg = MessageFactory::Allocate<EventMessage>(0);
+  msg->descriptor_id = (int64_t)((void*)this);
   IoService::GetInstance().SendCloseToIoHandle(msg);
   return 0;
 }

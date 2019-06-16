@@ -101,7 +101,7 @@ void MatrixCollector::Run() {
   INFO(logger, "MatrixCollector Running");
   FILE* fp = fopen(monitor_file_name_.c_str(), "a");
   if (fp == nullptr){
-    WARN(logger, "open monitor file failed. file:" << monitor_file_name_);
+    ERROR(logger, "open monitor file failed. file:" << monitor_file_name_);
     return;
   }
 
@@ -122,6 +122,7 @@ void MatrixCollector::Run() {
       INFO(collector_logger, "MatrixCollector:\n" << *stat_map);
       const std::string& dump = stat_map->ToStringSimple();
       fwrite(dump.c_str(), dump.size(), 1, fp);
+      fflush(fp);
 
       std::atomic_store(&stat_map_, stat_map);
       stat_map = MatrixStatMapPtr(new MatrixStatMap(time(nullptr)));
@@ -153,19 +154,29 @@ void MatrixCollector::ProcessQueue(QueueType* queue, MatrixStatMapPtr stat_map, 
     queue->pop();
     locks_[idx]->UnLock();
     switch (item->operation) {
-      case Matrix::kSet : stat_map->Set(item->name, item->val, item->persistent); break;
-      case Matrix::kAdd : stat_map->Add(item->name, item->val, item->persistent); break;
-      case Matrix::kSub : stat_map->Sub(item->name, item->val, item->persistent); break;
-      case Matrix::kReset : stat_map->Reset(item->name); break;
+      case Matrix::kSet : 
+        stat_map->Set(item->name, item->val, item->persistent);
+        break;
+      case Matrix::kAdd : 
+        stat_map->Add(item->name, item->val, item->persistent); 
+        break;
+      case Matrix::kSub : 
+        stat_map->Sub(item->name, item->val, item->persistent); 
+        break;
+      case Matrix::kReset :
+        stat_map->Reset(item->name); 
+        break;
       case Matrix::kTimeDistribute : {
-          if (item->result.empty()) {
-            stat_map->TimeDistrubute(item->name, item->val, item->persistent);
-          } else {
-            stat_map->TimeDistrubute(item->name, item->result, item->val, item->persistent);
-          }
-          break;
+        if (item->result.empty()) {
+          stat_map->TimeDistrubute(item->name, item->val, item->persistent);
+        } else {
+          stat_map->TimeDistrubute(item->name, item->result, item->val, item->persistent);
+        }
+        break;
       }
-      default: WARN(logger, "MatrixCollector::ProcessEvent unknown operation:" << *item); break;
+      default: 
+        WARN(logger, "MatrixCollector::ProcessEvent unknown operation:" << *item); 
+        break;
     }
     delete item;
   }

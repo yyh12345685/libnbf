@@ -9,13 +9,15 @@
 
 LOGGER_STATIC_DECL_IMPL(logger, "root");
 
+//valgrind --tool=memcheck --leak-check=full --show-reachable=yes --log-file=test.log ./test_client_server -c ../conf/test_client_server.conf -l ../conf/logger.conf
+
 int RapidClientTest(void* data) {
   prctl(PR_SET_NAME, "RapidClientTest111111");
   bdf::Application<bdf::testserver::TestClientServerHandler>* app = 
     (bdf::Application<bdf::testserver::TestClientServerHandler>*)data;
   bdf::ForTest::Inst().SetForTest(true);
   INFO(logger, "RapidClientTestFlag start,time:"<<time(NULL));
-  int times = 5000000;
+  int times = 10000000;
   while (times-- > 0){
     //笔记本配置不行，不sleep直接被系统kill
     if (0 == times%5000){
@@ -54,7 +56,7 @@ int HttpClientTest(void* data) {
     (bdf::Application<bdf::testserver::TestClientServerHandler>*)data;
   bdf::ForTest::Inst().SetForTest(true);
   INFO(logger, "HttpClientTestFlag start,time:" << time(NULL));
-  int times = 3000000;
+  int times = 6000000;
   while (times-- > 0) {
     //笔记本配置不行，不sleep直接被系统kill
     if (0 == times % 3000) {

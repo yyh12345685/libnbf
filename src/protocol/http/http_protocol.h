@@ -6,6 +6,7 @@
 
 #include "protocol/protocol_base.h"
 #include "common/logger.h"
+#include "monitor/mem_profile.h"
 
 namespace bdf {
 
@@ -25,11 +26,11 @@ public:
   }
 
   virtual void Release() { 
-    delete this; 
+    BDF_DELETE(this);
   }
 
   virtual ProtocolBase* Clone() {
-    return new HttpProtocol(); 
+    return BDF_NEW(HttpProtocol); 
   }
 
   virtual EventMessage *Decode(Buffer &input, bool& failed);

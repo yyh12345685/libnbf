@@ -2,6 +2,7 @@
 #include "client/client.h"
 #include "app/config_info.h"
 #include "monitor/matrix_scope.h"
+#include "monitor/mem_profile.h"
 
 namespace bdf{
 
@@ -14,16 +15,16 @@ ClientRouter::ClientRouter(const std::string& name):
 
 ClientRouter::~ClientRouter(){
   for (const auto& cli:clients_){
-    delete cli;
+    BDF_DELETE(cli);
   }
 }
 
 int ClientRouter::Start(const ClientConfig& cli_config){
   for (int idx = 0; idx < cli_config.single_addr_connect_count;idx++) {
-    Client* client = new Client(
+    Client* client = BDF_NEW(Client,
       name_, cli_config.address, cli_config.timeout, cli_config.heartbeat);
     if (0!= client->Start()){
-      delete client;
+      BDF_DELETE (client);
       return -1;
     }
     clients_.push_back(client);

@@ -19,7 +19,8 @@ class MessageType {
 
   enum {
     kIoUnknownEvent = 0,
-    kIoMessageEvent,
+    kIoEvent,
+    kIoHandleEventMsg,
     kIoActiveCloseEvent,
   };
 
@@ -42,7 +43,8 @@ class MessageType {
   static const char* ToIoEventString(int type) {
     static const char* str[] = {
       "unknown io event",
-      "io message event",
+      "io event",
+      "io handle event msg",
       "io active close event",
     };
 
@@ -125,6 +127,7 @@ public:
   uint8_t status = kStatusOK;
   uint64_t sequence_id=0xffffffffffffffff;
   uint64_t birthtime = 0;
+  int event_mask = 0;
 };
 
 class EventMessage : public MessageBase {

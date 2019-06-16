@@ -13,14 +13,17 @@ namespace bdf{
 
 class ProtocolHelper{
 public:
-  static int ParseSpecAddr(const char *spec, char ip[512], int *port){
-    if (spec && strlen(spec) < 512){
-      char proto[512];
+  static int ParseSpecAddr(const char *spec, char ip[256], int *port){
+    if (spec && strlen(spec) < 256){
+      char proto[128];
       int size = sscanf(spec, " %[^:]://%[^:]:%d", proto, ip, port);
       if (size == 3){
-        if (0 == strcasecmp("http", proto)) return MessageType::kHttpMessage;
-        if (0 == strcasecmp("rapid", proto)) return MessageType::kRapidMessage;
-        if (0 == strcasecmp("redis", proto)) return MessageType::kRedisMessage;
+        if (0 == strcasecmp("http", proto)) 
+          return MessageType::kHttpMessage;
+        if (0 == strcasecmp("rapid", proto)) 
+          return MessageType::kRapidMessage;
+        if (0 == strcasecmp("redis", proto)) 
+          return MessageType::kRedisMessage;
       }
     }
     return MessageType::kUnknownEvent;

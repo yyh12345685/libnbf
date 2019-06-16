@@ -31,6 +31,7 @@ void TestClientServerHandler::OnHttpResponseMessage(HttpMessage* message){
     "ServerTestOnHttpResponseMessage", bdf::monitor::MatrixScope::kModeAutoSuccess);
   TRACE(logger_, "OnHttpResponseMessage:" << *message);
 
+  MessageFactory::Destroy(message);
 }
 
 //server receive request
@@ -53,6 +54,7 @@ void TestClientServerHandler::OnRapidResponseMessage(RapidMessage* message){
     "ServerTestOnRapidResponseMessage", bdf::monitor::MatrixScope::kModeAutoSuccess);
   TRACE(logger_, "OnRapidResponseMessage:" << *message);
 
+  MessageFactory::Destroy(message);
 }
 
 }

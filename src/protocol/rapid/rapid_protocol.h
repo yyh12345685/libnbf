@@ -6,6 +6,7 @@
 
 #include "protocol/protocol_base.h"
 #include "common/logger.h"
+#include "monitor/mem_profile.h"
 
 namespace bdf {
 
@@ -16,12 +17,21 @@ class RapidProtocol : public ProtocolBase {
 public:
   RapidProtocol(){}
   virtual ~RapidProtocol(){}
-  virtual bool IsSynchronous() { return false; }
+
+  virtual bool IsSynchronous() {
+    return false; 
+  }
+
   virtual EventMessage* Decode(Buffer &input, bool& failed);
   virtual bool Encode(EventMessage *msg, Buffer *output);
 
-  virtual ProtocolBase* Clone() { return new RapidProtocol(); }
-  virtual void Release() { delete this; }
+  virtual ProtocolBase* Clone() { 
+    return BDF_NEW (RapidProtocol);
+  }
+
+  virtual void Release() {
+    BDF_DELETE(this);
+  }
 
   virtual EventMessage* HeartBeatRequest();
   virtual EventMessage* HeartBeatResponse(EventMessage* request);

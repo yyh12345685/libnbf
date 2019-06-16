@@ -54,11 +54,13 @@ int SyncClientConnect::EncodeMsg(EventMessage* message){
   TRACE(logger, "EncodeMsg msg type:" << (int)(message->type_id)
     << ",direction:" << (int)(message->direction));
 
+  //test_lock1_.lock();
   if (!GetProtocol()->Encode(message, &outbuf_)) {
     WARN(logger, "SyncClientConnect::Encode() encode fail");
-    DoSendBack(message, EventMessage::kStatusEncodeFail);
+    //test_lock1_.unlock();
     return -2;
   }
+  //test_lock1_.unlock();
 
   //同步请求不存真正only send的情况，一定回有应答，比如http协议和redis协议
   //有应答的情况需要将消息保存起来，这里属于有应答的情况
@@ -102,9 +104,9 @@ void SyncClientConnect::CleanSequenceQueue(){
 int SyncClientConnect::DecodeMsg(){
   bool failed = false;
   while (sync_sequence_.Size()) {
-    test_lock_.lock();
+    //test_lock_.lock();
     EventMessage* msg = protocol_->Decode(inbuf_, failed);
-    test_lock_.unlock();
+    //test_lock_.unlock();
     if (failed) {
       failed = true;
       TRACE(logger_, "Connecting::Decode,base->Decode failed.");

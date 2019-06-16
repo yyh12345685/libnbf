@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.4.3)
 
-project(libbdf)
+project(test_server)
 
 include_directories(
   ../../src

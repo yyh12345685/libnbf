@@ -12,6 +12,10 @@ public:
   AsyncClientConnect(uint32_t timeout_ms, uint32_t heartbeat_ms);
   virtual ~AsyncClientConnect();
 
+  virtual void Destroy() {
+    BDF_DELETE(this);
+  }
+
   virtual void OnDecodeMessage(EventMessage* message);
   virtual int EncodeMsg(EventMessage* message);
 

@@ -40,7 +40,10 @@ HttpProtocol::HttpProtocol(){
 }
 
 HttpProtocol::~HttpProtocol() {
-  BDF_DELETE(agent_);
+  if (agent_){
+    BDF_DELETE(agent_);
+    agent_ = nullptr;
+  }
 }
 
 EventMessage* HttpProtocol::Decode(Buffer &input, bool& failed){

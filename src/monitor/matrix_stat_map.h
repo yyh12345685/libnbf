@@ -48,7 +48,8 @@ class MatrixStatMap {
     auto it = stat_map_.find(name);
     if (it == stat_map_.end()) {
       stat_name_set_.insert(name);
-      return stat_map_.insert(std::make_pair(name, MatrixStat(start_time_sec_, persistent))).first->second;
+      return stat_map_.insert(
+        std::make_pair(name, MatrixStat(start_time_sec_, persistent))).first->second;
     }
     return it->second;
   }

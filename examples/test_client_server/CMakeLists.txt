@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.4.3)
 
-project(libbdf)
+project(test_client_server)
 
 include_directories(
   ../../src
@@ -25,6 +25,11 @@ target_link_libraries(test_client_server
   pthread
   rt
 )
+
+target_compile_definitions(
+  test_client_server
+  PRIVATE
+  -DMEM_PROFILE=1 )
 
 add_custom_target(test_client_server_config
 	COMMAND mkdir -p ${CMAKE_CURRENT_BINARY_DIR}/conf

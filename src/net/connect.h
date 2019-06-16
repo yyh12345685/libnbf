@@ -35,16 +35,17 @@ public:
   inline void SetProtocol(ProtocolBase* protocol) { protocol_ = protocol; }
   inline ProtocolBase* GetProtocol() { return protocol_; }
 
-  virtual void OnRead(EventDriver *poll);
+  virtual void OnRead();
   virtual void OnWrite();
 
   virtual int DecodeMsg();
   virtual int EncodeMsg(EventMessage* message);
 
   void OnActiveClose();
-  void Destroy() {
-    BDF_DELETE(this);
-  }
+  virtual void  Destroy() = 0;
+
+  virtual void OnClose() = 0;
+
 protected:
   virtual int RegisterAddModrw(int fd, bool set);
   virtual int RegisterDel(int fd);
@@ -55,8 +56,6 @@ protected:
 
   void OnReadWriteClose();
   void Clean();
-
-  virtual void OnClose() = 0;
 
 protected:
   int fd_;

@@ -81,8 +81,7 @@ void SyncSequence::OnTimer(void* function_data){
   //TRACE(logger_, "timer_type:" << timer_type);
   switch (timer_type)
   {
-  case check_timer_type:
-  {
+  case check_timer_type:{
     std::list<size_t> time_ids;
     time_lock_.lock();
     timer_.ProcessTimerTest(time_ids);

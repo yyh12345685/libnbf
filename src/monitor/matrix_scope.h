@@ -29,8 +29,10 @@ class MatrixScope {
 
     item_->val = Time::GetMicrosecond() - item_->val;
     if (item_->result.empty() && mode_ != kModeLazy) {
-      if (mode_ == kModeAutoFail) item_->result = fail;
-      if (mode_ == kModeAutoSuccess) item_->result = success;
+      if (mode_ == kModeAutoFail) 
+        item_->result = fail;
+      if (mode_ == kModeAutoSuccess) 
+        item_->result = success;
     }
 
     if (GlobalMatrix::Ready()) {

@@ -53,6 +53,7 @@ void ServiceHandler::Handle(EventMessage* message) {
       ? OnRapidRequestMessage(static_cast<RapidMessage*>(message))
       : OnRapidResponseMessage(static_cast<RapidMessage*>(message));
   default:
+    MessageFactory::Destroy(message);
     ERROR(logger,"unkown message,type_id:"<< message->type_id);
   }
 }

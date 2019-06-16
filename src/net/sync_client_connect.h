@@ -12,6 +12,10 @@ public:
   SyncClientConnect(uint32_t timeout_ms, uint32_t heartbeat_ms);
   ~SyncClientConnect();
 
+  virtual void Destroy() {
+    BDF_DELETE(this);
+  }
+
   virtual void OnDecodeMessage(EventMessage* message);
   virtual int EncodeMsg(EventMessage* message);
 
@@ -25,7 +29,8 @@ protected:
 private:
   SyncSequence sync_sequence_;
 
-  std::mutex test_lock_;
+  //std::mutex test_lock_;
+  //std::mutex test_lock1_;
 
   LOGGER_CLASS_DECL(logger);
 };

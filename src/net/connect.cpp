@@ -34,15 +34,13 @@ void Connecting::OnEvent(EventDriver *poll, int fd, short event){
     RegisterDel(poll,fd);
   }
 
-  if (event & EVENT_READ){
-    OnRead(poll);
-  }
-  if (event & EVENT_WRITE){
-    OnWrite();
-  }
+  bdf::EventMessage* message = bdf::MessageFactory::Allocate<bdf::EventMessage>(0);
+  message->descriptor_id = (int64_t)((void*)this);
+  message->event_mask = event;
+  IoService::GetInstance().SendEventToIoHandle(message);
 }
 
-void Connecting::OnRead(EventDriver *poll){
+void Connecting::OnRead(){
   if (fd_ <= 0){
     TRACE(logger_, "invalid sock:" << fd_);
     return;
@@ -58,7 +56,7 @@ void Connecting::OnRead(EventDriver *poll){
     if (nread < 0){
       if (EAGAIN == errno || EWOULDBLOCK == errno){
         //nodata or data has all readed
-        INFO(logger_, "TcpSocketRead errno:" << errno << ",ip:" << GetIp() 
+        DEBUG(logger_, "TcpSocketRead errno:" << errno << ",ip:" << GetIp()
           << ",port:" << GetPort() << ",read size:" << total_read);
         break;
       } else{
@@ -215,6 +213,8 @@ void Connecting::OnActiveClose(){
 //when read write
 void Connecting::OnReadWriteClose(){
   //events is delete in (event & EVENT_CONNECT_CLOSED) || (event & EVENT_ERROR)
+  //Socket::Close(fd_);
+  //fd_ = -1;
   OnClose();
 }
 

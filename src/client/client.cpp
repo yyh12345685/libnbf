@@ -50,7 +50,7 @@ int Client::Start() {
 
 ClientConnect* Client::CreateClient(
   const std::string& address, uint32_t timeout_ms, uint32_t heartbeat_ms){
-  char ip[1024];
+  char ip[256];
   int port;
   int protocol_type = ProtocolHelper::ParseSpecAddr(address.c_str(),ip,&port);
   if (protocol_type == MessageType::kUnknownEvent){

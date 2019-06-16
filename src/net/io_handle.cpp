@@ -9,13 +9,13 @@
 
 namespace bdf{
 
-LOGGER_CLASS_IMPL(logger, IoHandler);
+LOGGER_CLASS_IMPL(logger_, IoHandler);
 
 thread_local IoHandler* IoHandler::io_handler_ = nullptr;
 
 void IoHandler::Run(HandleData* data){
   prctl(PR_SET_NAME, "IoHandler");
-  TRACE(logger, "IoHandler::Run start.");
+  TRACE(logger_, "IoHandler::Run start.");
   io_handler_ = this;
   time_t now = time(NULL);
   while (data->is_run) {
@@ -37,43 +37,58 @@ void IoHandler::Run(HandleData* data){
       //for debug
       time_t cur_time = time(NULL);
       if ((cur_time - now) > 300) {
-        INFO(logger, "msg size:" << data->data_.size()
+        INFO(logger_, "msg size:" << data->data_.size()
           << ",handle size:" << temp.size());
         now = cur_time;
       }
     }
   }
-  TRACE(logger, "IoHandler::Run exit.");
+  TRACE(logger_, "IoHandler::Run exit.");
 }
 
 void IoHandler::Handle(EventMessage* message){
-  TRACE(logger, "IoHandler::Handle msg:" << *message);
-
+  TRACE(logger_, "IoHandler::Handle msg:" << *message);
   switch (message->type_io_event) {
-    case MessageType::kIoMessageEvent:
+  case MessageType::kIoEvent:
+  {
+    if (message->event_mask & EVENT_READ) {
+      HandleReadEvent(message);
+    }
+    if (message->event_mask & EVENT_WRITE) {
+      HandleWriteEvent(message);
+    }
+    if ((message->event_mask & EVENT_CONNECT_CLOSED) 
+      || (message->event_mask & EVENT_ERROR)) {
+      HandleCloseEvent(message);
+    }
+    MessageFactory::Destroy(message);
+    break; 
+  }
+  case MessageType::kIoHandleEventMsg:
     HandleIoMessageEvent(message);
     break;
   case MessageType::kIoActiveCloseEvent:
     HandleIoActiveCloseEvent(message);
     break;
   default:
-    WARN(logger, "IoHandler unknown message:" << message->type_id);
+    MessageFactory::Destroy(message);
+    WARN(logger_, "IoHandler unknown message:" << message->type_id);
     break;
   }
 }
 
 void IoHandler::HandleIoMessageEvent(EventMessage* message){
-  TRACE(logger, "HandleIoMessageEvent");
+  TRACE(logger_, "HandleIoMessageEvent");
   Connecting* reg_con = ConnectManager::Instance().GetConnect(message->descriptor_id);
   if (!reg_con){
-    INFO(logger, "HandleIoMessageEventt reg_con is closed.");
+    DEBUG(logger_, "HandleIoMessageEventt reg_con is closed.");
     HandleIoMessageFailed(message);
     return;
   }
 
   Connecting* con = (Connecting*)((void*)(message->descriptor_id));
   if (!con || reg_con != con) {
-    ERROR(logger, "error,con:"<< con <<",reg_con:"<< con);
+    ERROR(logger_, "error,con:"<< con <<",reg_con:"<< con);
     HandleIoMessageFailed(message);
     return;
   }
@@ -84,7 +99,7 @@ void IoHandler::HandleIoMessageEvent(EventMessage* message){
   }
   //单向消息encode之后即可释放，双向消息会在返回或者超时的时候释放
   //server答复的消息需要在这里释放掉
-  if (message->direction == EventMessage::kOnlySend
+  if ((!message->IsSynchronous() && message->direction == EventMessage::kOnlySend)
     || message->direction == EventMessage::kOutgoingResponse) {
     MessageFactory::Destroy(message);
   }
@@ -101,16 +116,46 @@ void IoHandler::HandleIoMessageFailed(EventMessage* message) {
   }
 }
 
-void IoHandler::HandleIoActiveCloseEvent(EventMessage* message){
-  TRACE(logger, "HandleIoActiveCloseEvent");
+void IoHandler::HandleReadEvent(EventMessage* message){
+  TRACE(logger_, "HandleReadEvent");
   Connecting* con = (Connecting*)((void*)(message->descriptor_id));
   if (!con) {
-    WARN(logger, "HandleIoActiveCloseEvent descriptor is not Connecting");
+    WARN(logger_, "HandleReadEvent descriptor is not Connecting");
+    return;
+  }
+  con->OnRead();
+}
+
+void IoHandler::HandleWriteEvent(EventMessage* message){
+  TRACE(logger_, "HandleWriteEvent");
+  Connecting* con = (Connecting*)((void*)(message->descriptor_id));
+  if (!con) {
+    WARN(logger_, "HandleWriteEvent descriptor is not Connecting");
+    return;
+  }
+  con->OnWrite();
+}
+
+void IoHandler::HandleCloseEvent(EventMessage* message){
+  TRACE(logger_, "HandleCloseEvent");
+  Connecting* con = (Connecting*)((void*)(message->descriptor_id));
+  if (!con) {
+    WARN(logger_, "HandleCloseEvent descriptor is not Connecting");
+    return;
+  }
+  con->OnClose();
+}
+
+void IoHandler::HandleIoActiveCloseEvent(EventMessage* message){
+  TRACE(logger_, "HandleIoActiveCloseEvent");
+  Connecting* con = (Connecting*)((void*)(message->descriptor_id));
+  if (!con) {
+    MessageFactory::Destroy(message);
+    WARN(logger_, "HandleIoActiveCloseEvent descriptor is not Connecting");
     return;
   }
 
   MessageFactory::Destroy(message);
-  con->OnActiveClose();
   con->Destroy();
 }
 

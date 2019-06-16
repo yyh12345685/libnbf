@@ -10,6 +10,10 @@ ConnectManager::ConnectManager(){
 }
 
 bool ConnectManager::RegisterConnect(uint64_t desc_id, Connecting* con){
+  //for debug
+  static time_t now = time(NULL);
+  time_t cur_time = time(NULL);
+
   uint32_t bucket = desc_id % CONNECT_BUCKET;
   locks_[bucket].Lock();
   bool ret = id_connect_map_[bucket].insert(
@@ -19,7 +23,14 @@ bool ConnectManager::RegisterConnect(uint64_t desc_id, Connecting* con){
     locks_[bucket].UnLock();
     return false;
   }
+  if ((cur_time - now) > 180) {
+    //for debug
+    INFO(logger_, "bucket id:" << bucket
+      << ",connect size:" << id_connect_map_[bucket].size());
+    now = cur_time;
+  }
   locks_[bucket].UnLock();
+  
   return true;
 }
 

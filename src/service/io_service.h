@@ -51,11 +51,11 @@ public:
   void Reply(EventMessage* message);
   void SendToIoHandle(EventMessage* msg);
   void SendCloseToIoHandle(EventMessage* msg);
+  void SendEventToIoHandle(EventMessage* msg);
   void SendToServiceHandle(EventMessage* msg);
   void SendTaskToServiceHandle(Task* task);
 
   const std::string& GetMonitorReport();
-  void HandleSignal();
 
   int AgentsAddModrw(EventFunctionBase* ezfd, int fd);
   int AgentsAddModr(EventFunctionBase* ezfd, int fd);
@@ -75,8 +75,6 @@ private:
   HandleThread handle_thread_;
 
   Agents* agents_;
-
-  static void StopIoService(int signal);
 
   DISALLOW_COPY_ASSIGN_CONSTRUCTION(IoService)
 };

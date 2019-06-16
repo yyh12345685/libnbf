@@ -1,10 +1,11 @@
 #include <unistd.h>
+#include <signal.h>
 #include "app/appbase.h"
 #include "client/client_mgr.h"
 
 namespace bdf{
 
-LOGGER_CLASS_IMPL(logger, AppBase);
+LOGGER_CLASS_IMPL(logger_, AppBase);
 
 AppBase* AppBase::application_ = nullptr;
 
@@ -53,6 +54,8 @@ int AppBase::Start(int argc, char* argv[]) {
     return -1;
   }
 
+  HandleSignal();
+
   if (0 != OnStart()) {
     return -1;
   }
@@ -80,13 +83,13 @@ int AppBase::Wait() {
 }
 
 int AppBase::Stop() {
-  INFO(logger, "AppBase::OnStop");
+  INFO(logger_, "AppBase::OnStop");
   OnStop();
 
-  INFO(logger, "AppBase::StopClientManager");
+  INFO(logger_, "AppBase::StopClientManager");
   StopClientManager();
 
-  INFO(logger, "AppBase::StopIoService");
+  INFO(logger_, "AppBase::StopIoService");
   StopIoService();
 
   return 0;
@@ -128,17 +131,15 @@ int AppBase::LoadConfig() {
 }
 
 int AppBase::StartIoService() {
-  TRACE(logger, "AppBase::StartIoService().");
-  IoService::GetInstance().HandleSignal();
-
+  TRACE(logger_, "AppBase::StartIoService().");
   if (0 != IoService::GetInstance().Init(io_service_config_)) {
-    ERROR(logger, "Application::StartIOService Init fail");
+    ERROR(logger_, "Application::StartIOService Init fail");
     return -1;
   }
 
   ServiceHandler* handle_tmp = CreateServiceHandler();
   if (0 != IoService::GetInstance().Start(handle_tmp)) {
-    ERROR(logger, "Application::StartIOService Start fail");
+    ERROR(logger_, "Application::StartIOService Start fail");
     return -1;
   }
 
@@ -147,6 +148,23 @@ int AppBase::StartIoService() {
 
 int AppBase::StartClientManager(){
   return client_mgr_->Start(config_info_->GetClientRoutersConfig());
+}
+
+void AppBase::HandleSignal() {
+  struct sigaction sa;
+  sa.sa_handler = SIG_IGN;
+  sigemptyset(&sa.sa_mask);
+  sa.sa_flags = 0;
+  sigaction(SIGPIPE, &sa, 0);
+  sigaction(SIGHUP, &sa, 0);
+  sigaction(SIGCHLD, &sa, 0);
+  signal(SIGINT, &AppBase::StopApp);
+  signal(SIGTERM, &AppBase::StopApp);
+}
+
+void AppBase::StopApp(int signal) {
+  TRACE(logger_, "service will be stop,signal:" << signal);
+  AppBase::Get()->Stop();
 }
 
 int AppBase::StopClientManager(){

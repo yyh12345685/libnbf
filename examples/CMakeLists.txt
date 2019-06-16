@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.4.3)
 
-project(libbdf)
+project(example)
 
 add_subdirectory(test_server)
 add_subdirectory(test_client_server)

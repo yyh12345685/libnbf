@@ -37,12 +37,16 @@ private:
   void HandleIoMessageEvent(EventMessage* message);
   void HandleIoMessageFailed(EventMessage* message);
 
+  void HandleReadEvent(EventMessage* message);
+  void HandleWriteEvent(EventMessage* message);
+  void HandleCloseEvent(EventMessage* message);
+
   void HandleIoActiveCloseEvent(EventMessage* message);
 
   static thread_local IoHandler* io_handler_;
 
   Timer timer_;
-  LOGGER_CLASS_DECL(logger);
+  LOGGER_CLASS_DECL(logger_);
 };
 
 }

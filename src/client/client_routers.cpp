@@ -2,6 +2,7 @@
 #include "client/client_router.h"
 #include "app/config_info.h"
 #include "message.h"
+#include "monitor/mem_profile.h"
 
 namespace bdf {
 
@@ -17,15 +18,15 @@ ClientRouters::ClientRouters(
 ClientRouters::~ClientRouters() {
   Stop();
   for (const auto& router:client_routers_){
-    delete router;
+    BDF_DELETE(router);
   }
 }
 
 int ClientRouters::Start(const std::vector<ClientConfig>& clients) {
   for (const auto& cli:clients){
-    ClientRouter* router = new ClientRouter(name_);
+    ClientRouter* router = BDF_NEW(ClientRouter,name_);
     if (0!= router->Start(cli)){
-      delete router;
+      BDF_DELETE(router);
       return -1;
     }
     client_routers_.push_back(router);

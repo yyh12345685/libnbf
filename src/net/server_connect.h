@@ -13,6 +13,10 @@ public:
   ServerConnect();
   virtual ~ServerConnect();
 
+  virtual void Destroy() {
+    BDF_DELETE(this);
+  }
+
   virtual void OnClose();
 
   virtual void OnDecodeMessage(EventMessage* message);

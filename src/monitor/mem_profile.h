@@ -5,7 +5,7 @@
 #include <iostream>
 #include "matrix.h"
 
-#define __MATRIX_TRACE(file, line) file":"#line
+#define __MATRIX_TRACE(file, line) "mcheck:"#file":"#line
 #define _MATRIX_TRACE(file, line) __MATRIX_TRACE(file, line)
 #define MATRIX_TRACE() _MATRIX_TRACE(__FILE__, __LINE__)
 
