@@ -30,6 +30,7 @@ private:
   LOGGER_CLASS_DECL(logger_);
 
   std::string name_;
+  //可以根据发送的msg的某个值hash到某个服务器和ip上，暂未实现
   std::string mapping_;
   std::vector<ClientRouter*> client_routers_;
   std::atomic<uint32_t> current_;

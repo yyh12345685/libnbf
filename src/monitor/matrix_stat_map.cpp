@@ -2,16 +2,23 @@
 
 #include "matrix_stat_map.h"
 #include <sstream>
-#include "../common/time.h"
+#include "common/time.h"
 
 namespace bdf {
 
 namespace monitor {
   
-MatrixStatMap::MatrixStatMap(uint32_t start_time_sec) 
-    : start_time_sec_(start_time_sec) 
-    , freeze_(false) 
-    , freeze_time_(0) {
+LOGGER_CLASS_IMPL(logger_, MatrixStatMap);
+
+MatrixStatMap::MatrixStatMap(uint32_t start_time_sec) :
+  start_time_sec_(start_time_sec),
+  freeze_(false),
+  freeze_time_(0) {
+}
+
+MatrixStatMap::~MatrixStatMap(){
+  INFO(logger_, "release MatrixStatMap,stat_map_size:" << stat_map_.size()
+    <<",stat_name_set_size:"<< stat_name_set_.size());
 }
 
 void MatrixStatMap::Freeze() {

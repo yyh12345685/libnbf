@@ -4,6 +4,7 @@
 #include <set>
 #include <unordered_map>
 #include "matrix_stat.h"
+#include "common/logger.h"
 
 namespace bdf {
 
@@ -15,6 +16,7 @@ class MatrixStatMap {
   typedef std::set<std::string> StatNameSet;
 
   MatrixStatMap(uint32_t start_time_sec);
+  ~MatrixStatMap();
 
   inline uint32_t GetStartTime() const {return start_time_sec_;}
 
@@ -73,6 +75,7 @@ class MatrixStatMap {
   uint32_t freeze_time_;
   std::string dump_string_;
   std::string dump_string_simple_;
+  LOGGER_CLASS_DECL(logger_);
 };
 
 std::ostream& operator << (std::ostream& os, const MatrixStatMap& stat_map); 

@@ -37,6 +37,8 @@ class MatrixScope {
 
     if (GlobalMatrix::Ready()) {
       GlobalMatrix::Instance().SendToCollector(item_);
+    }else{
+      delete item_;
     }
   }
 

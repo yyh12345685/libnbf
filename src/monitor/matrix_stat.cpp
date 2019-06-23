@@ -97,9 +97,19 @@ void MatrixStat::DumpSimple(const std::string& parent, std::ostream& os) const {
   time_t now = time(nullptr);
   struct tm *tm_now;
   tm_now = localtime(&now);
+  std::string hour = std::to_string(tm_now->tm_hour);
+  std::string min = std::to_string(tm_now->tm_min);
+  std::string sec = std::to_string(tm_now->tm_sec);
+  if (1 == hour.size()){
+    hour = "0" + hour;
+  }
+  if (1 == min.size()) {
+    min = "0" + min;
+  }
+  if (1 == sec.size()) {
+    sec = "0" + sec;
+  }
 
-  os.setf(std::ios::fixed);
-  os << std::setprecision(2); 
   os << "[matrixstat_"<< tm_now->tm_hour <<':'<<tm_now->tm_min<<':'<<tm_now->tm_sec 
     <<"] {\"name\": \"" << parent << "\""
     << ", \"qps\": " << GetQps()

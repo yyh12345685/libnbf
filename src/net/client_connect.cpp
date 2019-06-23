@@ -89,7 +89,7 @@ int ClientConnect::TryConnect(){
 }
 
 int ClientConnect::StartReconnectTimer() {
-  INFO(logger_, "ClientConnect::StartReconnectTimer:"<<this);
+  TRACE(logger_, "ClientConnect::StartReconnectTimer:"<<this);
   if (0 != reconnect_timer_) {
     WARN(logger, "ClientChannel::StartReconnectTimer duplicate!");
     return -1;

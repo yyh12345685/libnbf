@@ -47,7 +47,9 @@ class MatrixCollector {
   LOGGER_CLASS_DECL(collector_logger_simple);
 
   inline QueueType* GetQueue(int& idx) {
-    idx = ThreadId::Get() & (bucket_count_ - 1);
+    //根据线程id来选，当线程比较少的时候，容易冲突，而且容易集中到某个bucket
+    //idx = ThreadId::Get() & (bucket_count_ - 1);
+    idx = rand() % bucket_count_;
     return queue_.at(idx);
   }
 

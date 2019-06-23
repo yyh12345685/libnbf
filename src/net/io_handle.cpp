@@ -80,13 +80,14 @@ void IoHandler::Handle(EventMessage* message){
 void IoHandler::HandleIoMessageEvent(EventMessage* message){
   TRACE(logger_, "HandleIoMessageEvent");
   Connecting* reg_con = ConnectManager::Instance().GetConnect(message->descriptor_id);
+  Connecting* con = (Connecting*)((void*)(message->descriptor_id));
   if (!reg_con){
-    DEBUG(logger_, "HandleIoMessageEventt reg_con is closed.");
+    //if (1 == rand() % 100)
+      INFO(logger_, "reg_con is closed,ptr:"<< con);
     HandleIoMessageFailed(message);
     return;
   }
-
-  Connecting* con = (Connecting*)((void*)(message->descriptor_id));
+  
   if (!con || reg_con != con) {
     ERROR(logger_, "error,con:"<< con <<",reg_con:"<< con);
     HandleIoMessageFailed(message);
@@ -118,7 +119,13 @@ void IoHandler::HandleIoMessageFailed(EventMessage* message) {
 
 void IoHandler::HandleReadEvent(EventMessage* message){
   TRACE(logger_, "HandleReadEvent");
+  Connecting* reg_con = ConnectManager::Instance().GetConnect(message->descriptor_id);
   Connecting* con = (Connecting*)((void*)(message->descriptor_id));
+  if (!reg_con) {
+    INFO(logger_, "HandleReadEvent reg_con is closed,ptr:" << con);
+    return;
+  }
+
   if (!con) {
     WARN(logger_, "HandleReadEvent descriptor is not Connecting");
     return;
@@ -128,7 +135,13 @@ void IoHandler::HandleReadEvent(EventMessage* message){
 
 void IoHandler::HandleWriteEvent(EventMessage* message){
   TRACE(logger_, "HandleWriteEvent");
+  Connecting* reg_con = ConnectManager::Instance().GetConnect(message->descriptor_id);
   Connecting* con = (Connecting*)((void*)(message->descriptor_id));
+  if (!reg_con) {
+    INFO(logger_, "WriteEvent reg_con is closed,ptr:" << con);
+    return;
+  }
+  
   if (!con) {
     WARN(logger_, "HandleWriteEvent descriptor is not Connecting");
     return;
@@ -138,7 +151,13 @@ void IoHandler::HandleWriteEvent(EventMessage* message){
 
 void IoHandler::HandleCloseEvent(EventMessage* message){
   TRACE(logger_, "HandleCloseEvent");
+  Connecting* reg_con = ConnectManager::Instance().GetConnect(message->descriptor_id);
   Connecting* con = (Connecting*)((void*)(message->descriptor_id));
+  if (!reg_con) {
+    INFO(logger_, "CloseEvent reg_con is closed,ptr:" << con);
+    return;
+  }
+  
   if (!con) {
     WARN(logger_, "HandleCloseEvent descriptor is not Connecting");
     return;
@@ -148,6 +167,13 @@ void IoHandler::HandleCloseEvent(EventMessage* message){
 
 void IoHandler::HandleIoActiveCloseEvent(EventMessage* message){
   TRACE(logger_, "HandleIoActiveCloseEvent");
+  Connecting* reg_con = ConnectManager::Instance().GetConnect(message->descriptor_id);
+  if (!reg_con) {
+    INFO(logger_, "HandleIoActiveCloseEvent reg_con is closed.");
+    HandleIoMessageFailed(message);
+    return;
+  }
+
   Connecting* con = (Connecting*)((void*)(message->descriptor_id));
   if (!con) {
     MessageFactory::Destroy(message);

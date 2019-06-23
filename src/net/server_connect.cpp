@@ -15,13 +15,12 @@ ServerConnect::~ServerConnect(){
 }
 
 void ServerConnect::OnClose() {
-  ConnectManager::Instance().UnRegisterConnect((uint64_t)this);
-
   //as server,if connect is closed,can delete Connecting
   //as client,if connect is closed,only closed fd
   RegisterDel(GetFd());
   Clean();
   if (ConnectManager::Instance().GetConnect((uint64_t)this)){
+    ConnectManager::Instance().UnRegisterConnect((uint64_t)this);
     //∑¿÷π÷ÿ∏¥Œˆππ
     Destroy();
   }

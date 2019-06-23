@@ -117,7 +117,7 @@ void MatrixCollector::Run() {
         return;
       }
     }
-    if (time(nullptr) - stat_map->GetStartTime() > 30) {
+    if (time(nullptr) - stat_map->GetStartTime() >= 30) {
       stat_map->Freeze();
       INFO(collector_logger, "MatrixCollector:\n" << *stat_map);
       const std::string& dump = stat_map->ToStringSimple();
@@ -130,20 +130,29 @@ void MatrixCollector::Run() {
     }
     ProcessQueueList(stat_map);
     
-    sleep(1);
+    usleep(10*1000);
   }
   fclose(fp);
   INFO(logger, "MatrixCollector Exit");
 }
 
 void MatrixCollector::ProcessQueueList(MatrixStatMapPtr stat_map){
-  for (uint32_t i = 0; i != bucket_count_; ++i) {
-    QueueType* queue = queue_[i];
+  static time_t now = time(NULL);
+  for (uint32_t idx = 0; idx != bucket_count_; ++idx) {
+    QueueType* queue = queue_[idx];
+
+    //for debug
+    time_t cur_time = time(NULL);
+    if ((cur_time - now) > 120) {
+      INFO(logger, "idx:" << idx << ",queue size:" << queue->size());
+      now = cur_time;
+    }
+    
     if (queue->size() > queue_size_) {
       WARN(logger, "queue size is bigger than:" << queue_size_
         << ",size is:" << queue->size());
     }
-    ProcessQueue(queue, stat_map, i);
+    ProcessQueue(queue, stat_map, idx);
   }
 }
 

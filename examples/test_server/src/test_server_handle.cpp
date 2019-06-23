@@ -16,7 +16,7 @@ void TestHandler::OnHttpRequestMessage(HttpMessage* message){
   msg->http_info.headers.insert(
     std::pair<std::string, std::string>("Content-Type", "text/html"));
   msg->http_info.body = "http protocol,hello world---------";
-  service::GetIoService().SendToIoHandle(msg);
+  service::GetIoService().Reply(msg);
   MessageFactory::Destroy(message);
 }
 
@@ -27,7 +27,7 @@ void TestHandler::OnRapidRequestMessage(RapidMessage* message){
   msg->SetDescriptorId(message->GetDescriptorId());
   msg->sequence_id = message->sequence_id;
   msg->body = "rapid protocol, hello world...";
-  service::GetIoService().SendToIoHandle(msg);
+  service::GetIoService().Reply(msg);
   MessageFactory::Destroy(message);
 }
 

@@ -88,7 +88,14 @@ void AgentMaster::OnEvent(EventDriver *poll, int fd, short event){
       BDF_DELETE(svr_con);
       break;
     }
-    ConnectManager::Instance().RegisterConnect((uint64_t)svr_con, svr_con);
+    if (ConnectManager::Instance().RegisterConnect((uint64_t)svr_con, svr_con)) {
+      //for debug,难道是connect刚刚被释放了，新的connect来了，但是老的同样的指针地址还没有被移除注册
+      Connecting* temp = ConnectManager::Instance().GetConnect((uint64_t)svr_con);
+      INFO(logger_, "get prt:" << temp << ",set failed ptr:" << svr_con);
+      //BDF_DELETE(svr_con);
+      break;
+    }
+    
     TRACE(logger_, "listen port:"<< listen_port <<",accept client ip:" << ip_str 
       << ",port:" << port << ",sock:" << sock << ",con's addr:" << svr_con);
   }

@@ -28,11 +28,11 @@ Connecting::~Connecting(){
 }
 
 void Connecting::OnEvent(EventDriver *poll, int fd, short event){
-  if ((event & EVENT_CONNECT_CLOSED) || (event & EVENT_ERROR)){
-    TRACE(logger_, "Connecting::OnEvent,OnError event:"<< event);
-    //do not close socket ,error message allways hava read message for close
-    RegisterDel(poll,fd);
-  }
+  //if ((event & EVENT_CONNECT_CLOSED) || (event & EVENT_ERROR)){
+  //  TRACE(logger_, "Connecting::OnEvent,OnError event:"<< event);
+  //  //do not close socket ,error message allways hava read message for close
+  //  RegisterDel(poll,fd);
+  //}
 
   bdf::EventMessage* message = bdf::MessageFactory::Allocate<bdf::EventMessage>(0);
   message->descriptor_id = (int64_t)((void*)this);
@@ -61,7 +61,8 @@ void Connecting::OnRead(){
         break;
       } else{
         INFO(logger_, "TCP read failed, fd is:" << fd_ << ",ip:" << GetIp() << ",port:" 
-          << GetPort()<< ",total_read:" << total_read << ",errno:" << strerror(errno));
+          << GetPort()<< ",total_read:" << total_read << ",errno:" << strerror(errno)
+          <<",is_server_:"<<is_server_);
         OnReadWriteClose();
         return;
       }
@@ -146,7 +147,7 @@ void Connecting::OnWrite(){
         INFO(logger_, "errno:" << errno << ",TCP write failed:" << ",send:" << send
           << ",ret" << ret << ",ip:" << GetIp() << ",port:" << GetPort()
           <<",is_server_:"<<is_server_<< ",send capacity:" << 
-          outbuf_.GetCapacity()<<",fd:"<<fd_);
+          outbuf_.GetCapacity()<<",fd:"<<fd_ << ",errno:" << strerror(errno));
         //发现偶尔会触发两次，一次errno104，一次errno32
         OnReadWriteClose();
         break;
