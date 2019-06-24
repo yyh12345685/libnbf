@@ -17,7 +17,7 @@ ServerConnect::~ServerConnect(){
 void ServerConnect::OnClose() {
   //as server,if connect is closed,can delete Connecting
   //as client,if connect is closed,only closed fd
-  RegisterDel(GetFd());
+  RegisterDel(fd_);
   Clean();
   if (ConnectManager::Instance().GetConnect((uint64_t)this)){
     ConnectManager::Instance().UnRegisterConnect((uint64_t)this);
@@ -44,6 +44,9 @@ void ServerConnect::OnDecodeMessage(EventMessage* message) {
 }
 
 int ServerConnect::RegisterDel(int fd){
+  if (fd <= 0){
+    return -1;
+  }
   return IoService::GetInstance().AgentsDel(this, fd);
 }
 

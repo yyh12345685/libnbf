@@ -84,16 +84,16 @@ void AgentMaster::OnEvent(EventDriver *poll, int fd, short event){
     svr_con->SetProtocol(cate);
     svr_con->SetIsServer();
     if (0!= agents_->GetSlave()->AddModr(svr_con, sock, true)){
-      WARN(logger_, "AddModr faild...");
+      WARN(logger_, "AddModr faild,fd:"<<sock);
       BDF_DELETE(svr_con);
-      break;
+      continue;
     }
-    if (ConnectManager::Instance().RegisterConnect((uint64_t)svr_con, svr_con)) {
-      //for debug,难道是connect刚刚被释放了，新的connect来了，但是老的同样的指针地址还没有被移除注册
+    if (!ConnectManager::Instance().RegisterConnect((uint64_t)svr_con, svr_con)) {
+      //for debug,测试下是否有bug或者真的注册失败
       Connecting* temp = ConnectManager::Instance().GetConnect((uint64_t)svr_con);
       INFO(logger_, "get prt:" << temp << ",set failed ptr:" << svr_con);
       //BDF_DELETE(svr_con);
-      break;
+      //break;
     }
     
     TRACE(logger_, "listen port:"<< listen_port <<",accept client ip:" << ip_str 

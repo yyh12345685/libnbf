@@ -132,7 +132,7 @@ void ClientConnect::CancelTimer() {
 void ClientConnect::OnClose() {
   //as client,if connect is closed,only closed fd,do not delete ClientConnect
   TRACE(logger_, "ClientConnect::OnClose(),fd:" << GetFd());
-  RegisterDel(GetFd());
+  RegisterDel(fd_);
   CleanSequenceQueue();
   CancelTimer();
   CleanClient();
@@ -253,6 +253,9 @@ int ClientConnect::RegisterAddModr(int fd) {
 }
 
 int ClientConnect::RegisterDel(int fd){
+  if (fd <= 0) {
+    return -1;
+  }
   return IoService::GetInstance().AgentsDel(this,fd);
 }
 

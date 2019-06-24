@@ -63,7 +63,7 @@ int AgentSlave::AddModrw(EventFunctionBase *ezfd, int fd, bool set, bool lock){
 int AgentSlave::AddModr(EventFunctionBase* ezfd,int fd,  bool set, bool lock){
   uint64_t idx = (uint64_t)((void*)ezfd) % slave_event_threads_.size();
   if (0!= slave_event_threads_[idx]->Add(fd, ezfd, lock)){
-    WARN(logger_, "slave_event_threads_[idx].Add failed.");
+    WARN(logger_, "slave_event_threads_[idx].Add failed,fd:"<<fd);
     return -1;
   }
 

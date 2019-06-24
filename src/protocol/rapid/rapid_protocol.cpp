@@ -38,6 +38,7 @@ EventMessage* RapidProtocol::Decode(Buffer &input, bool& failed){
   char *data = input.GetReading();
   RapidHead *header = (RapidHead *)data;
   if (nullptr == header){
+    WARN(logger_, "header is nullprt.");
     input.ResetAll();
     failed = true;
     return nullptr;

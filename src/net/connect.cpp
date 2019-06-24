@@ -28,11 +28,13 @@ Connecting::~Connecting(){
 }
 
 void Connecting::OnEvent(EventDriver *poll, int fd, short event){
-  //if ((event & EVENT_CONNECT_CLOSED) || (event & EVENT_ERROR)){
-  //  TRACE(logger_, "Connecting::OnEvent,OnError event:"<< event);
-  //  //do not close socket ,error message allways hava read message for close
-  //  RegisterDel(poll,fd);
-  //}
+  if ((event & EVENT_CONNECT_CLOSED) || (event & EVENT_ERROR)){
+    TRACE(logger_, "Connecting::OnEvent,OnError event:"<< event);
+    //do not close socket ,error message allways hava read message for close
+    if (is_server_){
+      RegisterDel(poll, fd);
+    }
+  }
 
   bdf::EventMessage* message = bdf::MessageFactory::Allocate<bdf::EventMessage>(0);
   message->descriptor_id = (int64_t)((void*)this);
