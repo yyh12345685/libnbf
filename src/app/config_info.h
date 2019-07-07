@@ -57,6 +57,7 @@ struct ClientConfig {
 struct ClientRouterConfig {
   std::string name;
   std::string mapping;
+  bool sigle_send_sigle_recv = false;
   //每个ClientConfig可以有不一样的address
   std::vector<ClientConfig> clients;
 };

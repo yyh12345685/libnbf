@@ -29,7 +29,9 @@ int ClientMgr::Start(const ClientRoutersConfig& routers_config){
       WARN(logger_, "ClientMgr::Start Dupldate client:" << rt_cfg.name);
       continue;
     }
-    ClientRouters* routers = BDF_NEW (ClientRouters,rt_cfg.name, rt_cfg.mapping);
+    ClientRouters* routers = BDF_NEW (
+      ClientRouters,rt_cfg.name, rt_cfg.mapping, rt_cfg.sigle_send_sigle_recv);
+
     if (0!= routers->Start(rt_cfg.clients)){
       BDF_DELETE (routers);
       return -1;

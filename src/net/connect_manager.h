@@ -8,8 +8,8 @@ namespace bdf {
 
 class Connecting;
 
-//为了减少锁的互斥，用10个桶吧，其实更好的办法是实现无锁的map
-#define CONNECT_BUCKET 10
+//为了减少锁的互斥，用13个桶吧，其实更好的办法是实现无锁的map
+#define CONNECT_BUCKET 13
 
 //暂时只用于server端接收到的连接管理
 class ConnectManager{

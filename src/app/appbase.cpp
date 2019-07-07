@@ -163,7 +163,7 @@ void AppBase::HandleSignal() {
 }
 
 void AppBase::StopApp(int signal) {
-  TRACE(logger_, "service will be stop,signal:" << signal);
+  INFO(logger_, "service will be Stop,signal:" << signal);
   AppBase::Get()->Stop();
 }
 

@@ -13,7 +13,6 @@ const static int max_send_buf_failed_size = 10 * 1024 * 1024+1;//10M
 Connecting::Connecting():
   fd_(-1),
   port_(-1),
-  is_server_(false),
   protocol_(nullptr){
 }
 
@@ -31,7 +30,7 @@ void Connecting::OnEvent(EventDriver *poll, int fd, short event){
   if ((event & EVENT_CONNECT_CLOSED) || (event & EVENT_ERROR)){
     TRACE(logger_, "Connecting::OnEvent,OnError event:"<< event);
     //do not close socket ,error message allways hava read message for close
-    if (is_server_){
+    if (IsServer()){
       RegisterDel(poll, fd);
     }
   }
@@ -64,7 +63,7 @@ void Connecting::OnRead(){
       } else{
         INFO(logger_, "TCP read failed, fd is:" << fd_ << ",ip:" << GetIp() << ",port:" 
           << GetPort()<< ",total_read:" << total_read << ",errno:" << strerror(errno)
-          <<",is_server_:"<<is_server_);
+          <<",is_server_:"<<IsServer());
         OnReadWriteClose();
         return;
       }
@@ -147,8 +146,8 @@ void Connecting::OnWrite(){
 
       }else{
         INFO(logger_, "errno:" << errno << ",TCP write failed:" << ",send:" << send
-          << ",ret" << ret << ",ip:" << GetIp() << ",port:" << GetPort()
-          <<",is_server_:"<<is_server_<< ",send capacity:" << 
+          << ",ret:" << ret << ",ip:" << GetIp() << ",port:" << GetPort()
+          <<",is_server_:"<<IsServer()<< ",send capacity:" << 
           outbuf_.GetCapacity()<<",fd:"<<fd_ << ",errno:" << strerror(errno));
         //发现偶尔会触发两次，一次errno104，一次errno32
         OnReadWriteClose();
@@ -158,7 +157,7 @@ void Connecting::OnWrite(){
       if (send > 0){
         INFO(logger_, "send size:" << send << ",not send size:" << (should_send_size - send)
           << ",send capacity:" << outbuf_.GetCapacity() << ",not send completed,errno:" << errno
-          <<",ip:"<<ip_<<",port:"<<port_<<",is_server_:"<<is_server_);
+          <<",ip:"<<ip_<<",port:"<<port_<<",is_server_:"<<IsServer());
         if (outbuf_.GetReadingSize() > max_send_buf_failed_size){
           outbuf_.DrainReading(outbuf_.GetReadingSize());
           TRACE(logger_, "will be lose size:" << (should_send_size - send));

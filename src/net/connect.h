@@ -25,9 +25,6 @@ public:
   void SetFd(const int& fd) { fd_ = fd; }
   int GetFd() { return fd_; }
 
-  void SetIsServer() { is_server_ = true; }
-  bool GetIsServer() { return is_server_; }
-
   void SetPort(const int& port) { port_ = port; }
   int GetPort() { return port_; }
 
@@ -46,6 +43,9 @@ public:
 
   virtual void OnClose() = 0;
 
+  //用于客户端
+  virtual bool IsServer() = 0;
+
 protected:
   virtual int RegisterAddModrw(int fd, bool set);
   virtual int RegisterDel(int fd);
@@ -63,7 +63,6 @@ protected:
   int port_;
   Buffer inbuf_;
   Buffer outbuf_;
-  bool is_server_;
 
   ProtocolBase* protocol_;
   ProtocolFactory protocol_factory_;

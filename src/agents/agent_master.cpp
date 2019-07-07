@@ -82,11 +82,10 @@ void AgentMaster::OnEvent(EventDriver *poll, int fd, short event){
     svr_con->SetFd(sock);
     svr_con->SetPort(port);
     svr_con->SetProtocol(cate);
-    svr_con->SetIsServer();
     if (0!= agents_->GetSlave()->AddModr(svr_con, sock, true)){
       WARN(logger_, "AddModr faild,fd:"<<sock);
       BDF_DELETE(svr_con);
-      continue;
+      break;
     }
     if (!ConnectManager::Instance().RegisterConnect((uint64_t)svr_con, svr_con)) {
       //for debug,测试下是否有bug或者真的注册失败
@@ -110,7 +109,7 @@ bool AgentMaster::Start() {
 }
 
 void AgentMaster::Stop() {
-  TRACE(logger_, "AgentMaster::Stop.");
+  INFO(logger_, "AgentMaster::Stop.");
   master_event_thread_.Stop();
 }
 

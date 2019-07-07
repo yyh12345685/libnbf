@@ -16,14 +16,13 @@ public:
   };
 
   Client(
-    const std::string& name,
     const std::string& address,
     uint32_t timeout_ms,
-    uint32_t heartbeat_ms);
+    uint32_t heartbeat_ms,
+    const bool& sigle_send_sigle_recv);
 
   ~Client();
 
-  inline const std::string& GetName() const { return name_; }
   const std::string& GetAddress() const { return address_; }
   uint32_t GetTimeout() const { return timeout_ms_; }
   uint32_t GetHeartBeat() const { return heartbeat_ms_; }
@@ -42,6 +41,21 @@ public:
       ClientConnect::kConnected ? kWorking : kBroken;
   }
 
+  void SetNoBuzy(){
+    if (!sigle_send_sigle_recv_){
+      return ;
+    }
+    return connect_->SetBuzy(false);
+  }
+
+  bool TrySetBusy() {
+    if (!sigle_send_sigle_recv_) {
+      return  true;
+    }
+
+    return connect_->TrySetBuzy();
+  }
+
   void Dump(std::ostream& os) const;
 
 private:
@@ -56,12 +70,13 @@ private:
 
   static int64_t GetSequenceId();
 
-  std::string name_;
   std::string address_;
   uint32_t timeout_ms_;
   uint32_t heartbeat_ms_;
 
   ClientConnect* connect_;
+
+  bool sigle_send_sigle_recv_;
 };
 
 std::ostream& operator << (std::ostream& os, const Client& client);

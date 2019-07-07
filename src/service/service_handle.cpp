@@ -6,7 +6,7 @@
 
 namespace bdf {
 
-LOGGER_CLASS_IMPL(logger, ServiceHandler);
+LOGGER_CLASS_IMPL(logger_, ServiceHandler);
 
 void ServiceHandler::Run( HandleData* data){
   prctl(PR_SET_NAME, "ServiceHandlerThread");
@@ -28,12 +28,13 @@ void ServiceHandler::Run( HandleData* data){
       //for debug
       time_t cur_time = time(NULL);
       if ((cur_time- now)>300){
-        INFO(logger, "msg size:" << data->data_.size()
+        INFO(logger_, "msg size:" << data->data_.size()
           <<",handle size:"<< temp.size());
         now = cur_time;
       }
     }
   }
+  INFO(logger_, "ServiceHandler::Run exit.");
 }
 
 void ServiceHandler::Handle(EventMessage* message) {
@@ -41,7 +42,7 @@ void ServiceHandler::Handle(EventMessage* message) {
   //  MessageFactory::Destroy(message);
   //  return;
   //}
-  TRACE(logger, "msg type:" << (int)(message->type_id) 
+  TRACE(logger_, "msg type:" << (int)(message->type_id) 
     << ",direction:" << (int)(message->direction));
   switch (message->type_id) {
   case MessageType::kHttpMessage:
@@ -54,28 +55,28 @@ void ServiceHandler::Handle(EventMessage* message) {
       : OnRapidResponseMessage(static_cast<RapidMessage*>(message));
   default:
     MessageFactory::Destroy(message);
-    ERROR(logger,"unkown message,type_id:"<< message->type_id);
+    ERROR(logger_,"unkown message,type_id:"<< message->type_id);
   }
 }
 
 void ServiceHandler::OnHttpRequestMessage(HttpMessage* message){
-  WARN(logger, "not should here,not implement:" << message->type_id);
+  WARN(logger_, "not should here,not implement:" << message->type_id);
 }
 
 //if use coroutine,should not handle
 void ServiceHandler::OnHttpResponseMessage(HttpMessage* message){
   return;
-  //WARN(logger, "not should here,not implement:" << message->type_id);
+  //WARN(logger_, "not should here,not implement:" << message->type_id);
 }
 
 void ServiceHandler::OnRapidRequestMessage(RapidMessage* message){
-  WARN(logger, "not should here,not implement:" << message->type_id);
+  WARN(logger_, "not should here,not implement:" << message->type_id);
 }
 
 //if use coroutine,should not handle
 void ServiceHandler::OnRapidResponseMessage(RapidMessage* message){
   return;
-  //WARN(logger, "not should here,not implement:" << message->type_id);
+  //WARN(logger_, "not should here,not implement:" << message->type_id);
 }
 
 }

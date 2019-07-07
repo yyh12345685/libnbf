@@ -34,7 +34,7 @@ bool AgentSlave::Start() {
 }
 
 void AgentSlave::Stop() {
-  TRACE(logger_, "AgentSlave::Stop.");
+  INFO(logger_, "AgentSlave::Stop.");
   for (auto& thread : slave_event_threads_) {
     thread->Stop();
   }

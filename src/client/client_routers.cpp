@@ -9,10 +9,13 @@ namespace bdf {
 LOGGER_CLASS_IMPL(logger_, ClientRouters)
 
 ClientRouters::ClientRouters(
-  const std::string& name, const std::string& mapping):
+  const std::string& name, 
+  const std::string& mapping,
+  const bool& sigle_send_sigle_recv):
   name_(name),
   mapping_(mapping),
-  current_(0){
+  current_(0),
+  sigle_send_sigle_recv_(sigle_send_sigle_recv){
 }
 
 ClientRouters::~ClientRouters() {
@@ -24,7 +27,7 @@ ClientRouters::~ClientRouters() {
 
 int ClientRouters::Start(const std::vector<ClientConfig>& clients) {
   for (const auto& cli:clients){
-    ClientRouter* router = BDF_NEW(ClientRouter,name_);
+    ClientRouter* router = BDF_NEW(ClientRouter,name_,sigle_send_sigle_recv_);
     if (0!= router->Start(cli)){
       BDF_DELETE(router);
       return -1;

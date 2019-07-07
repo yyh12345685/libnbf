@@ -48,7 +48,7 @@ void CoroutineServiceHandler::Run(HandleData* data){
     data->lock_.unlock();
     ProcessMessageHandle(temp);
   }
-  TRACE(logger_, "CoroutineServiceHandler::Run will be exit.");
+  INFO(logger_, "CoroutineServiceHandler::Run will be exit.");
 }
 
 void CoroutineServiceHandler::ProcessCoroutine(CoroutineActor* coroutine, void* data){
@@ -130,8 +130,8 @@ void CoroutineServiceHandler::Process(HandleData* data){
 
 void CoroutineServiceHandler::ProcessItem(EventMessage* msg){
   Connecting* con = (Connecting*)((void*)(msg->descriptor_id));
-  TRACE(logger_, "ProcessItem is server:" << con->GetIsServer());
-  if (con->GetIsServer()) {
+  TRACE(logger_, "ProcessItem is server:" << con->IsServer());
+  if (con->IsServer()) {
     //处理服务端接收的消息
   } else {
     //处理客户端接收的消息

@@ -17,7 +17,7 @@ ServerConnect::~ServerConnect(){
 void ServerConnect::OnClose() {
   //as server,if connect is closed,can delete Connecting
   //as client,if connect is closed,only closed fd
-  RegisterDel(fd_);
+  //RegisterDel(fd_);
   Clean();
   if (ConnectManager::Instance().GetConnect((uint64_t)this)){
     ConnectManager::Instance().UnRegisterConnect((uint64_t)this);

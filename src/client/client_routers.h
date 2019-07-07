@@ -13,7 +13,10 @@ class ClientConfig;
 
 class ClientRouters {
 public:
-  ClientRouters(const std::string& name, const std::string& mapping);
+  ClientRouters(
+    const std::string& name, 
+    const std::string& mapping,
+    const bool& sigle_send_sigle_recv);
   ~ClientRouters();
 
   int Start(const std::vector<ClientConfig>& clients);
@@ -34,6 +37,8 @@ private:
   std::string mapping_;
   std::vector<ClientRouter*> client_routers_;
   std::atomic<uint32_t> current_;
+  //只有一些同步的客户端和协议才支持
+  bool sigle_send_sigle_recv_;
 };
 
 }

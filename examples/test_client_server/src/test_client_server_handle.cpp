@@ -30,7 +30,9 @@ void TestClientServerHandler::OnHttpResponseMessage(HttpMessage* message){
   bdf::monitor::MatrixScope matrix_scope(
     "ServerTestOnHttpResponseMessage", bdf::monitor::MatrixScope::kModeAutoSuccess);
   TRACE(logger_, "OnHttpResponseMessage:" << *message);
-
+  if (EventMessage::kStatusOK !=message->status){
+    matrix_scope.SetOkay(false);
+  }
   MessageFactory::Destroy(message);
 }
 

@@ -13,7 +13,7 @@ struct ClientConfig;
 
 class ClientRouter{
 public:
-  ClientRouter(const std::string& name);
+  ClientRouter(const std::string& name, const bool& sigle_send_sigle_recv);
   ~ClientRouter();
 
   int Start(const ClientConfig&cli_config);
@@ -25,6 +25,9 @@ public:
     return DoSendRecieve(message, timeout_ms);
   }
 
+protected:
+  Client* GetValidClient();
+
 private:
   LOGGER_CLASS_DECL(logger_);
 
@@ -33,6 +36,8 @@ private:
   std::string name_;
   std::vector<Client*> clients_;
   std::atomic<uint32_t> current_;
+
+  bool sigle_send_sigle_recv_;
 };
 
 }

@@ -43,6 +43,9 @@ public:
   int StartHeartBeatTimer();
   void CancelTimer();
 
+  virtual void SetBuzy(bool is_buzy) = 0;
+  virtual bool TrySetBuzy() = 0;
+
 protected:
   enum {
     kUnKown = 0,
@@ -61,6 +64,8 @@ protected:
 
   void DoSendBack(EventMessage* message, int status);
   void CleanClient();
+
+  bool is_buzy_;
 private:
   LOGGER_CLASS_DECL(logger);
 

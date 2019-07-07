@@ -39,6 +39,7 @@ bool Agents::Start() {
 }
 
 void Agents::Stop(){
+  INFO(logger_, "Agents::Stop.");
 	if(nullptr != agent_master_)
     agent_master_->Stop();
 	if(nullptr != agent_slaves_)

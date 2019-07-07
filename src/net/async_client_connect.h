@@ -20,6 +20,11 @@ public:
   virtual int EncodeMsg(EventMessage* message);
 
   void OnTimeout(EventMessage* msg);
+
+  virtual void SetBuzy(bool is_buzy) {};
+  virtual bool TrySetBuzy() { return true; };
+
+  virtual bool IsServer() { return false; }
 protected:
   virtual void CleanSequenceQueue();
 

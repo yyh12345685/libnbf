@@ -8,9 +8,12 @@ namespace bdf {
 LOGGER_CLASS_IMPL(logger, SyncClientConnect);
 
 SyncClientConnect::SyncClientConnect(
-  uint32_t timeout_ms, uint32_t heartbeat_ms):
+  const uint32_t& timeout_ms,
+  const uint32_t& heartbeat_ms,
+  const bool& sigle_send_sigle_recv) :
   ClientConnect(timeout_ms,heartbeat_ms),
-  sync_sequence_(this,timeout_ms){
+  sync_sequence_(this,timeout_ms),
+  sigle_send_sigle_recv_(sigle_send_sigle_recv){
 }
 
 SyncClientConnect::~SyncClientConnect(){
@@ -33,6 +36,10 @@ void SyncClientConnect::OnDecodeMessage(EventMessage* message) {
     return;
   }
 
+  if (sigle_send_sigle_recv_  && 1 != sync_sequence_.Size()){
+    INFO(logger, "11111111,size:"<< sync_sequence_.Size());
+  }
+
   message->birthtime = Time::GetMillisecond();
   message->status = EventMessage::kStatusOK;
   message->direction = EventMessage::kIncomingResponse;
@@ -47,17 +54,25 @@ void SyncClientConnect::OnDecodeMessage(EventMessage* message) {
 }
 
 int SyncClientConnect::EncodeMsg(EventMessage* message){
+
   if (GetStatus() != kConnected) {
     DEBUG(logger, "SyncClientConnect::EncodeMsg ChannelBroken:" << GetStatus());
+    SetBuzy(false);
     return -1;
   }
   TRACE(logger, "EncodeMsg msg type:" << (int)(message->type_id)
     << ",direction:" << (int)(message->direction));
 
+  if (sigle_send_sigle_recv_ && sync_sequence_.Size()>1) {
+    //可能还有一个心跳包
+    INFO(logger, "22222222,size:"<<sync_sequence_.Size());
+  }
+
   //test_lock1_.lock();
   if (!GetProtocol()->Encode(message, &outbuf_)) {
     WARN(logger, "SyncClientConnect::Encode() encode fail");
     //test_lock1_.unlock();
+    SetBuzy(false);
     return -2;
   }
   //test_lock1_.unlock();
@@ -68,6 +83,7 @@ int SyncClientConnect::EncodeMsg(EventMessage* message){
   //  && message->direction != EventMessage::kOnlySend){
     if (0 != sync_sequence_.Put(message)) {
       WARN(logger, "SyncClientConnect::EncodeMsg put fail");
+      SetBuzy(false);
       return -3;
     }
   //}
@@ -79,14 +95,7 @@ void SyncClientConnect::CleanSyncClient(){
   if (GetStatus() == kConnected) {
     CleanClient();
   }
-}
-
-void SyncClientConnect::OnTimeout(EventMessage* msg){
-  if (nullptr == msg){
-    return;
-  }
-  DEBUG(logger, "SyncClientConnect::OnTimeout, message:" << *msg);
-  DoSendBack(msg, EventMessage::kStatusTimeout);
+  SetBuzy(false);
 }
 
 void SyncClientConnect::CleanSequenceQueue(){
@@ -123,6 +132,7 @@ int SyncClientConnect::DecodeMsg(){
 
     OnDecodeMessage(msg);
   }
+  SetBuzy(false);
   if (failed) {
     return -1;
   }

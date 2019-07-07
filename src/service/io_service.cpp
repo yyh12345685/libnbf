@@ -60,7 +60,7 @@ int IoService::Start(ServiceHandler* handle){
 }
 
 int IoService::ThreadWait(){
-  TRACE(logger_, "IoService::ThreadWait start.");
+  INFO(logger_, "IoService::ThreadWait start.");
   for (int cn = 0; cn < io_service_config_.service_handle_thread_count; cn++){
     handle_thread_.service_handle_thread_[cn]->join();
   }
@@ -68,12 +68,12 @@ int IoService::ThreadWait(){
   for (int cn = 0; cn < io_service_config_.io_handle_thread_count; cn++) {
     handle_thread_.io_handle_thread_[cn]->join();
   }
-  TRACE(logger_, "IoService::ThreadWait end.");
+  INFO(logger_, "IoService::ThreadWait end.");
   return 0;
 }
 
 int IoService::ThreadStop(){
-  TRACE(logger_, "IoService::ThreadStop.");
+  INFO(logger_, "IoService::ThreadStop.");
   for (int cn = 0; cn < io_service_config_.service_handle_thread_count; cn++){
     handle_thread_.service_handle_data_[cn]->is_run = false;
   }

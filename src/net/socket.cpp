@@ -87,7 +87,7 @@ int Socket::Listen(const sockaddr_in& addr, size_t backlog) {
 int Socket::Accept(int listen_fd, char* ipbuf, int* port){
   sockaddr_in addr;
   socklen_t len_addr = sizeof(addr);
-  int new_fd;
+  int new_fd = -1;
   while (true) {
     new_fd = accept(listen_fd, reinterpret_cast<sockaddr*>(&addr), &len_addr);
     if (-1==new_fd) {

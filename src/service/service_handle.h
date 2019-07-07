@@ -32,7 +32,7 @@ protected:
   virtual void OnRapidResponseMessage(RapidMessage* message);
 
 private:
-  LOGGER_CLASS_DECL(logger);
+  LOGGER_CLASS_DECL(logger_);
 
 };
 

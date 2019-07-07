@@ -36,7 +36,8 @@ void ClientRoutersConfig::Dump(std::ostream& os) const {
   for (const auto& router : client_router_config) {
     os << "[\"name\":" << router.name
       << ", \"mapping\": " << router.mapping
-      << "\"clients\":";
+      << ", \"sigle_send_sigle_recv\": " << router.sigle_send_sigle_recv
+      << ",\"clients\":";
       for (const auto& cli: router.clients){
         os << "[\"heartbeat\":" << cli.heartbeat
           << "\"timeout\":" << cli.timeout
@@ -142,6 +143,8 @@ int ConfigInfo::LoadRouterConfig(const std::string& file_path){
     ClientRouterConfig router;
     router.name  = ini_config.GetValue(section.c_str(), "name", "");
     router.mapping = ini_config.GetValue(section.c_str(), "mapping", "");
+    router.sigle_send_sigle_recv = 
+      ini_config.GetValueInt(section.c_str(), "sigle_send_sigle_recv", 0);
     int addr_cnt = ini_config.GetValueInt(section.c_str(), "address_count", 1);
 
     for (int jdx = 0; jdx < addr_cnt; jdx++) {

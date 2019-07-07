@@ -5,7 +5,6 @@
 #include "message.h"
 #include "message_base.h"
 #include "client/client_mgr.h"
-#include "monitor/matrix_scope.h"
 
 LOGGER_STATIC_DECL_IMPL(logger, "root");
 
@@ -17,15 +16,13 @@ int RapidClientTest(void* data) {
     (bdf::Application<bdf::testserver::TestClientServerHandler>*)data;
   bdf::ForTest::Inst().SetForTest(true);
   INFO(logger, "RapidClientTestFlag start,time:"<<time(NULL));
-  int times = 10000000;
+  int times = 10500000;
   while (times-- > 0){
     //笔记本配置不行，不sleep直接被系统kill
-    if (0 == times%5000){
+    if (0 == times%3500){
       sleep(1);
     }
 
-    bdf::monitor::MatrixScope matrix_scope(
-      "RapidClientTest", bdf::monitor::MatrixScope::kModeAutoSuccess);
     bdf::RapidMessage* rapid_message = bdf::MessageFactory::Allocate<bdf::RapidMessage>();
     rapid_message->body = "test only send rapid_test_client:hello world.";
     app->GetClientMgr()->Send("rapid_test_client", rapid_message);
@@ -56,15 +53,13 @@ int HttpClientTest(void* data) {
     (bdf::Application<bdf::testserver::TestClientServerHandler>*)data;
   bdf::ForTest::Inst().SetForTest(true);
   INFO(logger, "HttpClientTestFlag start,time:" << time(NULL));
-  int times = 6000000;
+  int times = 5000000;
   while (times-- > 0) {
     //笔记本配置不行，不sleep直接被系统kill
-    if (0 == times % 3000) {
+    if (0 == times % 1500) {
       sleep(1);
     }
 
-    bdf::monitor::MatrixScope matrix_scope(
-      "HttpClientTest", bdf::monitor::MatrixScope::kModeAutoSuccess);
     bdf::HttpMessage* hmsg = bdf::MessageFactory::Allocate<bdf::HttpMessage>();
     hmsg->InitRequest("POST", true);
     hmsg->http_info.headers.insert(

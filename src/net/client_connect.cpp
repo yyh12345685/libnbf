@@ -16,6 +16,7 @@ LOGGER_CLASS_IMPL(logger, ClientConnect);
 
 ClientConnect::ClientConnect(
   uint32_t timeout_ms, uint32_t heartbeat_ms):
+  is_buzy_(false),
   status_(kBroken),
   timeout_ms_(timeout_ms),
   heartbeat_ms_(heartbeat_ms),
@@ -223,7 +224,7 @@ void ClientConnect::OnHeartBeat(){
 void ClientConnect::DoSendBack(EventMessage* message, int status) {
   if (message->type_id == MessageType::kHeartBeatMessage
     || message->direction == EventMessage::kOnlySend
-    || message->direction == EventMessage::kSendNoCareResponse) {
+    /*|| message->direction == EventMessage::kSendNoCareResponse*/) {
     MessageFactory::Destroy(message);
     return;
   }

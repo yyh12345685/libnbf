@@ -18,10 +18,10 @@ public:
   }
 
   virtual void OnClose();
-
   virtual void OnDecodeMessage(EventMessage* message);
-
   virtual int RegisterDel(int fd);
+
+  virtual bool IsServer() { return true; }
 
 private:
   LOGGER_CLASS_DECL(logger);

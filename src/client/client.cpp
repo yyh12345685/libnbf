@@ -9,21 +9,22 @@
 #include "service/coroutine_service_handle.h"
 #include "client/client_mgr.h"
 #include "net/connect_manager.h"
+#include "monitor/matrix_scope.h"
 
 namespace bdf{
 
 LOGGER_CLASS_IMPL(logger_, Client)
 
 Client::Client(
-  const std::string& name,
   const std::string& address,
   uint32_t timeout_ms,
-  uint32_t heartbeat_ms): 
-  name_(name), 
+  uint32_t heartbeat_ms,
+  const bool& sigle_send_sigle_recv):
   address_(address),
   timeout_ms_(timeout_ms), 
   heartbeat_ms_(heartbeat_ms), 
-  connect_(nullptr){
+  connect_(nullptr),
+  sigle_send_sigle_recv_(sigle_send_sigle_recv){
 }
 
 Client::~Client(){
@@ -64,7 +65,8 @@ ClientConnect* Client::CreateClient(
   ClientConnect* client_connect = nullptr;
 
   if (protocol->IsSynchronous()) {
-    client_connect = BDF_NEW (SyncClientConnect,timeout_ms, heartbeat_ms);
+    client_connect = 
+      BDF_NEW (SyncClientConnect,timeout_ms, heartbeat_ms,sigle_send_sigle_recv_);
   } else {
     client_connect = BDF_NEW (AsyncClientConnect,timeout_ms, heartbeat_ms);
   }
@@ -109,8 +111,9 @@ int64_t Client::GetSequenceId(){
 
 bool Client::Send(EventMessage* message) {
   if (GetClientStatus() != kWorking) {
-    DEBUG(logger_, "Client::Send Channel Broken" << *this);
+    INFO(logger_, "Client::Send Channel Broken" << *this);
     MessageFactory::Destroy(message);
+    SetNoBuzy();
     return false;
   }
 
@@ -128,8 +131,9 @@ bool Client::Send(EventMessage* message) {
 
 EventMessage* Client::DoSendRecieve(EventMessage* message, uint32_t timeout_ms) {
   if (GetClientStatus() != kWorking) {
-    DEBUG(logger_, "Client::DoSendRecieve Channel Broken" << *this);
+    INFO(logger_, "Client::DoSendRecieve Channel Broken" << *this);
     MessageFactory::Destroy(message);
+    SetNoBuzy();
     return nullptr;
   }
 

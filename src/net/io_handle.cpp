@@ -43,7 +43,7 @@ void IoHandler::Run(HandleData* data){
       }
     }
   }
-  TRACE(logger_, "IoHandler::Run exit.");
+  INFO(logger_, "IoHandler::Run exit.");
 }
 
 void IoHandler::Handle(EventMessage* message){
