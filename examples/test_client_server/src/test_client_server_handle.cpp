@@ -15,7 +15,8 @@ void TestClientServerHandler::OnHttpRequestMessage(HttpMessage* message){
     "ServerTestOnHttpRequestMessage", bdf::monitor::MatrixScope::kModeAutoSuccess);
   TRACE(logger_, "OnHttpRequestMessage:"<< *message);
   //测试客户端不带接收功能，所以注释掉发送
-  HttpMessage* msg = MessageFactory::Allocate<HttpMessage>();
+  //HttpMessage* msg = MessageFactory::Allocate<HttpMessage>();
+  HttpMessage* msg = BDF_NEW(HttpMessage);
   msg->SetDescriptorId(message->GetDescriptorId());
   msg->InitReply(message, 200, false);
   msg->http_info.headers.insert(
@@ -55,7 +56,9 @@ void TestClientServerHandler::OnRapidResponseMessage(RapidMessage* message){
   bdf::monitor::MatrixScope matrix_scope(
     "ServerTestOnRapidResponseMessage", bdf::monitor::MatrixScope::kModeAutoSuccess);
   TRACE(logger_, "OnRapidResponseMessage:" << *message);
-
+  if (EventMessage::kStatusOK != message->status) {
+    matrix_scope.SetOkay(false);
+  }
   MessageFactory::Destroy(message);
 }
 

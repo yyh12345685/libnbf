@@ -82,8 +82,8 @@ void IoHandler::HandleIoMessageEvent(EventMessage* message){
   Connecting* reg_con = ConnectManager::Instance().GetConnect(message->descriptor_id);
   Connecting* con = (Connecting*)((void*)(message->descriptor_id));
   if (!reg_con){
-    //if (1 == rand() % 100)
-      INFO(logger_, "reg_con is closed,ptr:"<< con);
+    //if (1 == rand() % 300)
+      INFO(logger_, "con is closed,ptr:"<< con);
     HandleIoMessageFailed(message);
     return;
   }

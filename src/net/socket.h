@@ -56,6 +56,10 @@ class Socket{
 
   inline static void Close(int fd);
 
+  inline static int ShutDownBoth(int fd) {
+    return shutdown(fd, SHUT_RDWR);
+  }
+
   inline static bool IsIpAddr(const char* ip);
 
   static sockaddr_in GenerateAddr(const char *ip, const unsigned short port);

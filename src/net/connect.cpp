@@ -61,15 +61,16 @@ void Connecting::OnRead(){
           << ",port:" << GetPort() << ",read size:" << total_read);
         break;
       } else{
-        INFO(logger_, "TCP read failed, fd is:" << fd_ << ",ip:" << GetIp() << ",port:" 
-          << GetPort()<< ",total_read:" << total_read << ",errno:" << strerror(errno)
-          <<",is_server_:"<<IsServer());
+        //if (1 == rand() % 300)
+          INFO(logger_, "TCP read failed, fd is:" << fd_ << ",ip:" << GetIp() << ",port:" 
+            << GetPort()<< ",total_read:" << total_read << ",errno:" << strerror(errno)
+            <<",is_server_:"<<IsServer()<<",prt:"<<this);
         OnReadWriteClose();
         return;
       }
     } else if (0 == nread){
       DEBUG(logger_, "TCP client is closed: fd=" << fd_ << ",ip:" << ip_ << ",port:" << port_);
-      OnReadWriteClose();;
+      OnReadWriteClose();
       return;
     }
 
@@ -117,6 +118,8 @@ int Connecting::DecodeMsg(){
     OnDecodeMessage(msg);
   }
   if (failed){
+    INFO(logger_, "DecodeMsg failed, fd is:" << fd_ << ",ip:" << GetIp() << ",port:"
+      << GetPort() << ",is_server_:" << IsServer() << ",prt:" << this);
     return -1;
   }
   return 0;
@@ -145,10 +148,11 @@ void Connecting::OnWrite(){
       if (errno == EINTR || errno == EAGAIN){
 
       }else{
-        INFO(logger_, "errno:" << errno << ",TCP write failed:" << ",send:" << send
-          << ",ret:" << ret << ",ip:" << GetIp() << ",port:" << GetPort()
-          <<",is_server_:"<<IsServer()<< ",send capacity:" << 
-          outbuf_.GetCapacity()<<",fd:"<<fd_ << ",errno:" << strerror(errno));
+        //if (1 == rand() % 300)
+          INFO(logger_, "errno:" << errno << ",TCP write failed:" << ",send:" << send
+            << ",ret:" << ret << ",ip:" << GetIp() << ",port:" << GetPort()
+            <<",is_server_:"<<IsServer()<< ",send capacity:" << outbuf_.GetCapacity()
+            <<",fd:"<<fd_ << ",errno:" << strerror(errno)<<",ptr:"<<this);
         //发现偶尔会触发两次，一次errno104，一次errno32
         OnReadWriteClose();
         break;
@@ -173,7 +177,7 @@ void Connecting::OnWrite(){
       break;
     } else{
       INFO(logger_, "send return zero,TCP write failed,fd=:" << fd_ 
-        << ",errno:" << errno << ",ip:" << ip_ << ",port:" << port_);
+        << ",errno:" << errno << ",ip:" << ip_ << ",port:" << port_ << ",ptr:" << this);
       OnReadWriteClose();
       break;
     }
@@ -215,9 +219,8 @@ void Connecting::OnActiveClose(){
 //when read write
 void Connecting::OnReadWriteClose(){
   //events is delete in (event & EVENT_CONNECT_CLOSED) || (event & EVENT_ERROR)
-  //Socket::Close(fd_);
-  //fd_ = -1;
-  OnClose();
+  Socket::ShutDownBoth(fd_);
+  //OnClose();
 }
 
 void Connecting::Clean(){

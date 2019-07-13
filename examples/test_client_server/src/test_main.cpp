@@ -18,16 +18,17 @@ int RapidClientTest(void* data) {
   INFO(logger, "RapidClientTestFlag start,time:"<<time(NULL));
   int times = 10500000;
   while (times-- > 0){
-    //笔记本配置不行，不sleep直接被系统kill
     if (0 == times%3500){
       sleep(1);
     }
 
-    bdf::RapidMessage* rapid_message = bdf::MessageFactory::Allocate<bdf::RapidMessage>();
+    //bdf::RapidMessage* rapid_message = bdf::MessageFactory::Allocate<bdf::RapidMessage>();
+    bdf::RapidMessage* rapid_message = BDF_NEW(bdf::RapidMessage);
     rapid_message->body = "test only send rapid_test_client:hello world.";
     app->GetClientMgr()->Send("rapid_test_client", rapid_message);
 
-    bdf::RapidMessage* rapid_message_2 = bdf::MessageFactory::Allocate<bdf::RapidMessage>();
+    //bdf::RapidMessage* rapid_message_2 = bdf::MessageFactory::Allocate<bdf::RapidMessage>();
+    bdf::RapidMessage* rapid_message_2 = BDF_NEW(bdf::RapidMessage);
     rapid_message_2->body = "aaa";
     bdf::EventMessage* msg2_resp =
       app->GetClientMgr()->SendRecieve("rapid_test_client", rapid_message_2, 10);
@@ -53,14 +54,14 @@ int HttpClientTest(void* data) {
     (bdf::Application<bdf::testserver::TestClientServerHandler>*)data;
   bdf::ForTest::Inst().SetForTest(true);
   INFO(logger, "HttpClientTestFlag start,time:" << time(NULL));
-  int times = 5000000;
+  int times = 5700000;
   while (times-- > 0) {
-    //笔记本配置不行，不sleep直接被系统kill
-    if (0 == times % 1500) {
+    if (0 == times % 1900) {
       sleep(1);
     }
 
-    bdf::HttpMessage* hmsg = bdf::MessageFactory::Allocate<bdf::HttpMessage>();
+    //bdf::HttpMessage* hmsg = bdf::MessageFactory::Allocate<bdf::HttpMessage>();
+    bdf::HttpMessage* hmsg = BDF_NEW(bdf::HttpMessage);
     hmsg->InitRequest("POST", true);
     hmsg->http_info.headers.insert(
       std::pair<std::string, std::string>("Content-Type", "text/html"));
@@ -68,7 +69,8 @@ int HttpClientTest(void* data) {
     hmsg->http_info.body = "test http_test_client only send:hello world.";
     app->GetClientMgr()->Send("http_test_client", hmsg);
 
-    bdf::HttpMessage* hmsg2 = bdf::MessageFactory::Allocate<bdf::HttpMessage>();
+    //bdf::HttpMessage* hmsg2 = bdf::MessageFactory::Allocate<bdf::HttpMessage>();
+    bdf::HttpMessage* hmsg2 = BDF_NEW(bdf::HttpMessage);
     hmsg2->InitRequest("POST", true);
     hmsg2->http_info.headers.insert(
       std::pair<std::string, std::string>("Content-Type", "text/html"));

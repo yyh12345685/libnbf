@@ -60,23 +60,25 @@ void ServiceHandler::Handle(EventMessage* message) {
 }
 
 void ServiceHandler::OnHttpRequestMessage(HttpMessage* message){
+  MessageFactory::Destroy(message);
   WARN(logger_, "not should here,not implement:" << message->type_id);
 }
 
 //if use coroutine,should not handle
 void ServiceHandler::OnHttpResponseMessage(HttpMessage* message){
-  return;
-  //WARN(logger_, "not should here,not implement:" << message->type_id);
+  WARN(logger_, "not should here,not implement:" << message->type_id);
+  MessageFactory::Destroy(message);
 }
 
 void ServiceHandler::OnRapidRequestMessage(RapidMessage* message){
   WARN(logger_, "not should here,not implement:" << message->type_id);
+  MessageFactory::Destroy(message);
 }
 
 //if use coroutine,should not handle
 void ServiceHandler::OnRapidResponseMessage(RapidMessage* message){
-  return;
-  //WARN(logger_, "not should here,not implement:" << message->type_id);
+  WARN(logger_, "not should here,not implement:" << message->type_id);
+  MessageFactory::Destroy(message);
 }
 
 }
