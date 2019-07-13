@@ -32,6 +32,9 @@ public:
   int Stop();
 
   bool Send(EventMessage* message);
+
+  bool Invoke(EventMessage* message, const InvokerCallback& cb,const std::string& name);
+
   EventMessage* SendRecieve(EventMessage* message, uint32_t timeout_ms = 0){
     return DoSendRecieve(message, timeout_ms);
   }

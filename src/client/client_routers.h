@@ -4,6 +4,7 @@
 #include <atomic>
 #include <vector>
 #include "common/logger.h"
+#include "context.h"
 
 namespace bdf {
 
@@ -24,6 +25,9 @@ public:
 
   bool Send(EventMessage * message);
   bool SendHash(EventMessage* message, uint32_t hash);
+
+  bool Invoke(EventMessage * message, const InvokerCallback& cb);
+  bool Invoke(EventMessage* message, const InvokerCallback& cb,uint32_t hash);
 
   EventMessage* SendRecieve(EventMessage* message, uint32_t timeout_ms = 0);
   EventMessage* SendRecieveHash(

@@ -17,6 +17,7 @@ void MessageBase::Dump(std::ostream& os) const {
     << ", \"status\": " << ToStatusString(status)
     << ", \"sequence_id\": " << sequence_id
     << ", \"birthtime\": " << birthtime
+    << ", \"event_mask\": " << event_mask
     << "}";
 };
 

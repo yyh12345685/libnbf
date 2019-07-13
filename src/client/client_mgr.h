@@ -4,6 +4,7 @@
 #include <string>
 #include "common/logger.h"
 #include "common/common.h"
+#include "context.h"
 
 namespace bdf{
 
@@ -23,6 +24,17 @@ public:
 
   bool Send(const std::string& router,EventMessage* message);
   bool SendHash(const std::string& router, EventMessage* message, uint32_t hash);
+
+  bool Invoke(
+    const std::string& router, 
+    EventMessage* message,
+    const InvokerCallback& cb);
+
+  bool Invoke(
+    const std::string& router, 
+    EventMessage* message, 
+    const InvokerCallback& cb, 
+    uint32_t hash);
 
   //由于协程是放到service handle中的
   //所以调用该函数的地方也需要是再service handle线程中，否则是不同的协程对象

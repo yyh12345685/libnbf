@@ -65,6 +65,17 @@ bool ClientRouter::Send(EventMessage * message){
   return cli->Send(message);
 }
 
+bool ClientRouter::Invoke(EventMessage * message, const InvokerCallback& cb){
+  Client* cli = GetValidClient();
+  //当sigle_send_sigle_recv=1的时候,连接数需要比较多，如果获取不到cli，需重新send
+  if (!cli) {
+    message->status = MessageBase::kInvokeError;
+    cb(message);
+    return false;
+  }
+  return cli->Invoke(message,cb,name_);
+}
+
 EventMessage* ClientRouter::DoSendRecieve(EventMessage* message, uint32_t timeout_ms){
   monitor::MatrixScope matrix_scope(name_, monitor::MatrixScope::kModeAutoFail);
   Client* cli = GetValidClient();

@@ -444,5 +444,8 @@
     <ClInclude Include="src\net\connect_manager.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="src\context.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

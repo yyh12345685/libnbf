@@ -13,7 +13,7 @@ LOGGER_CLASS_IMPL(logger_, TestClientServerHandler);
 void TestClientServerHandler::OnHttpRequestMessage(HttpMessage* message){
   bdf::monitor::MatrixScope matrix_scope(
     "ServerTestOnHttpRequestMessage", bdf::monitor::MatrixScope::kModeAutoSuccess);
-  TRACE(logger_, "OnHttpRequestMessage:"<< *message);
+  TRACE(logger_, "OnHttpRequestMessage info:"<< *message);
   //测试客户端不带接收功能，所以注释掉发送
   //HttpMessage* msg = MessageFactory::Allocate<HttpMessage>();
   HttpMessage* msg = BDF_NEW(HttpMessage);
@@ -43,11 +43,11 @@ void TestClientServerHandler::OnRapidRequestMessage(RapidMessage* message){
     "ServerTestOnRapidRequestMessage", bdf::monitor::MatrixScope::kModeAutoSuccess);
   TRACE(logger_, "OnRapidRequestMessage,body:" << message->body);
   //测试客户端不带接收功能，所以注释掉发送
-  /*RapidMessage* msg = MessageFactory::Allocate<RapidMessage>();
+  RapidMessage* msg = MessageFactory::Allocate<RapidMessage>();
   msg->SetDescriptorId(message->GetDescriptorId());
   msg->sequence_id = message->sequence_id;
   msg->body = "rapid protocol, response hello world...";
-  service::GetIoService().Reply(msg);*/
+  service::GetIoService().Reply(msg);
   MessageFactory::Destroy(message);
 }
 

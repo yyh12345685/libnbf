@@ -63,6 +63,27 @@ bool ClientRouters::SendHash(EventMessage* message, uint32_t hash){
   return router->Send(message);
 }
 
+bool ClientRouters::Invoke(EventMessage * message, const InvokerCallback& cb){
+  int idx = current_++;
+  ClientRouter* router = client_routers_[idx%client_routers_.size()];
+  if (!router) {
+    message->status = MessageBase::kInvokeError;
+    cb(message);
+    return false;
+  }
+  return router->Invoke(message,cb);
+}
+
+bool ClientRouters::Invoke(EventMessage* message, const InvokerCallback& cb, uint32_t hash){
+  ClientRouter* router = client_routers_[hash%client_routers_.size()];
+  if (!router) {
+    message->status = MessageBase::kInvokeError;
+    cb(message);
+    return false;
+  }
+  return router->Invoke(message,cb);
+}
+
 EventMessage* ClientRouters::SendRecieve(EventMessage* message, uint32_t timeout_ms) {
   uint32_t idx = current_++;
   ClientRouter* router = client_routers_[idx%client_routers_.size()];

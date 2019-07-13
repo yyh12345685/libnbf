@@ -42,20 +42,54 @@ void ServiceHandler::Handle(EventMessage* message) {
   //  MessageFactory::Destroy(message);
   //  return;
   //}
-  TRACE(logger_, "msg type:" << (int)(message->type_id) 
-    << ",direction:" << (int)(message->direction));
+  TRACE(logger_, "msg type:" << (int)(message->type_id) << ",direction:" 
+    << (int)(message->direction) << ",status:" << (int)(message->status));
   switch (message->type_id) {
   case MessageType::kHttpMessage:
     return message->direction == MessageBase::kIncomingRequest
-      ? OnHttpRequestMessage(static_cast<HttpMessage*>(message))
-      : OnHttpResponseMessage(static_cast<HttpMessage*>(message));
+      ? HttpRequestMessage(static_cast<HttpMessage*>(message))
+      : HttpResponseMessage(static_cast<HttpMessage*>(message));
   case MessageType::kRapidMessage:
     return message->direction == MessageBase::kIncomingRequest
-      ? OnRapidRequestMessage(static_cast<RapidMessage*>(message))
-      : OnRapidResponseMessage(static_cast<RapidMessage*>(message));
+      ? RapidRequestMessage(static_cast<RapidMessage*>(message))
+      : RapidResponseMessage(static_cast<RapidMessage*>(message));
   default:
     MessageFactory::Destroy(message);
     ERROR(logger_,"unkown message,type_id:"<< message->type_id);
+  }
+}
+
+void ServiceHandler::HttpRequestMessage(HttpMessage* message){
+  OnHttpRequestMessage(message);
+}
+
+void ServiceHandler::RapidRequestMessage(RapidMessage* message){
+  OnRapidRequestMessage(message);
+}
+
+void ServiceHandler::HttpResponseMessage(HttpMessage* message){
+  if (nullptr != message->ctx && nullptr != message->ctx->callback){
+    if (message->status == EventMessage::kStatusOK){
+      monitor::GlobalMatrix::Instance().MarkEnd(message->ctx->monitor_id, true);
+    }else{
+      monitor::GlobalMatrix::Instance().MarkEnd(message->ctx->monitor_id, false);
+    }
+    message->ctx->callback(message);
+  }else{
+    OnHttpResponseMessage(message);
+  }
+}
+
+void ServiceHandler::RapidResponseMessage(RapidMessage* message){
+  if (nullptr != message->ctx && nullptr != message->ctx->callback){
+    if (message->status == EventMessage::kStatusOK) {
+      monitor::GlobalMatrix::Instance().MarkEnd(message->ctx->monitor_id, true);
+    } else {
+      monitor::GlobalMatrix::Instance().MarkEnd(message->ctx->monitor_id, false);
+    }
+    message->ctx->callback(message);
+  } else {
+    OnRapidResponseMessage(message);
   }
 }
 
@@ -66,7 +100,7 @@ void ServiceHandler::OnHttpRequestMessage(HttpMessage* message){
 
 //if use coroutine,should not handle
 void ServiceHandler::OnHttpResponseMessage(HttpMessage* message){
-  WARN(logger_, "not should here,not implement:" << message->type_id);
+  TRACE(logger_, "not should here,not implement:" << message->type_id);
   MessageFactory::Destroy(message);
 }
 
@@ -77,9 +111,8 @@ void ServiceHandler::OnRapidRequestMessage(RapidMessage* message){
 
 //if use coroutine,should not handle
 void ServiceHandler::OnRapidResponseMessage(RapidMessage* message){
-  WARN(logger_, "not should here,not implement:" << message->type_id);
+  TRACE(logger_, "not should here,not implement:" << message->type_id);
   MessageFactory::Destroy(message);
 }
 
 }
-

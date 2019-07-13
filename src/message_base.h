@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <sstream>
 #include "monitor/mem_profile.h"
+#include "context.h"
 
 namespace bdf {
 
@@ -75,6 +76,7 @@ public:
     kStatusTimeout,
     kStatusEncodeFail,
     kInternalFailure,
+    kInvokeError
   };
 
   static const char* ToDirectionString(int type) {
@@ -143,7 +145,12 @@ class EventMessage : public MessageBase {
     descriptor_id(descriptor_id_){
   }
 
-  virtual ~EventMessage() {}
+  virtual ~EventMessage() {
+    if (nullptr !=ctx){
+      BDF_DELETE(ctx);
+      ctx = nullptr;
+    }
+  }
 
   virtual bool IsSynchronous() { return false; }
 
@@ -159,8 +166,9 @@ class EventMessage : public MessageBase {
 
   int64_t descriptor_id;//convert object
   int32_t handle_id;
-
   uint64_t timer_out_id = 0;//for sync message
+
+  ContextBase* ctx = nullptr;
 };
 
 class MessageFactory {

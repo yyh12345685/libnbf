@@ -52,6 +52,7 @@ int ClientMgr::Stop(){
   return 0;
 }
 
+//单项发送，不关心是否返回
 bool ClientMgr::Send(const std::string& router, EventMessage * message){
   ClientRouters* routers = GetClientRouters(router);
   if (nullptr == routers){
@@ -60,6 +61,7 @@ bool ClientMgr::Send(const std::string& router, EventMessage * message){
   }
   return routers->Send(message);
 }
+
 bool ClientMgr::SendHash(const std::string& router, EventMessage* message, uint32_t hash){
   ClientRouters* routers = GetClientRouters(router);
   if (nullptr == routers) {
@@ -69,6 +71,34 @@ bool ClientMgr::SendHash(const std::string& router, EventMessage* message, uint3
   return routers->SendHash(message,hash);
 }
 
+bool ClientMgr::Invoke(
+  const std::string& router,
+  EventMessage* message,
+  const InvokerCallback& cb){
+  ClientRouters* routers = GetClientRouters(router);
+  if (nullptr == routers) {
+    message->status = MessageBase::kInvokeError;
+    cb(message);
+    return false;
+  }
+  return routers->Invoke(message,cb);
+}
+
+bool ClientMgr::Invoke(
+  const std::string& router,
+  EventMessage* message,
+  const InvokerCallback& cb,
+  uint32_t hash){
+  ClientRouters* routers = GetClientRouters(router);
+  if (nullptr == routers) {
+    message->status = MessageBase::kInvokeError;
+    cb(message);
+    return false;
+  }
+  return routers->Invoke(message,cb, hash);
+}
+
+//支持协程
 EventMessage* ClientMgr::SendRecieve(
   const std::string& router,
   EventMessage* message,

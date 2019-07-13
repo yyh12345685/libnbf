@@ -4,6 +4,7 @@
 #include <atomic>
 #include <vector>
 #include "common/logger.h"
+#include "context.h"
 
 namespace bdf{
 
@@ -20,6 +21,8 @@ public:
   int Stop();
 
   bool Send(EventMessage * message);
+
+  bool Invoke(EventMessage * message, const InvokerCallback& cb);
 
   EventMessage* SendRecieve(EventMessage* message, uint32_t timeout_ms = 0){
     return DoSendRecieve(message, timeout_ms);

@@ -25,6 +25,12 @@ public:
 protected:
   void Handle(EventMessage* message);
 
+  void HttpRequestMessage(HttpMessage* message);
+  void HttpResponseMessage(HttpMessage* message);
+
+  void RapidRequestMessage(RapidMessage* message);
+  void RapidResponseMessage(RapidMessage* message);
+
   virtual void OnHttpRequestMessage(HttpMessage* message);
   virtual void OnHttpResponseMessage(HttpMessage* message);
 

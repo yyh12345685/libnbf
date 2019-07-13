@@ -9,7 +9,7 @@
 #include "service/coroutine_service_handle.h"
 #include "client/client_mgr.h"
 #include "net/connect_manager.h"
-#include "monitor/matrix_scope.h"
+#include "monitor/matrix.h"
 
 namespace bdf{
 
@@ -125,6 +125,25 @@ bool Client::Send(EventMessage* message) {
     message->direction = MessageBase::kOnlySend;
   }
   
+  DoSend(message);
+  return true;
+}
+
+bool Client::Invoke(EventMessage* message, const InvokerCallback& cb, const std::string& name){
+  if (GetClientStatus() != kWorking) {
+    INFO(logger_, "Client::Send Channel Broken" << *this);
+    message->status = MessageBase::kInvokeError;
+    cb(message);
+    SetNoBuzy();
+    return false;
+  }
+
+  message->sequence_id = GetSequenceId();
+  message->descriptor_id = (int64_t)((void*)connect_);
+  message->direction = MessageBase::kOutgoingRequest;
+  message->ctx = BDF_NEW(ContextBase);
+  message->ctx->callback = cb;
+  message->ctx->monitor_id = monitor::GlobalMatrix::Instance().MarkBegin(name);
   DoSend(message);
   return true;
 }

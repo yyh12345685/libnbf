@@ -234,6 +234,7 @@
     <ClInclude Include="src\common\string_util.h" />
     <ClInclude Include="src\common\thread_id.h" />
     <ClInclude Include="src\common\time.h" />
+    <ClInclude Include="src\context.h" />
     <ClInclude Include="src\coroutine\coroutine.h" />
     <ClInclude Include="src\coroutine\coroutine_actor.h" />
     <ClInclude Include="src\coroutine\coroutine_schedule.h" />
