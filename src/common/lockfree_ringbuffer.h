@@ -92,7 +92,7 @@ namespace bdf {
   };
 
   template<typename Data>
-  bool mpmc_lockfree_ringbuffer::MPMCLockfreeRingbuffer<Data>::init(int size){
+  bool MPMCLockfreeRingbuffer<Data>::init(int size){
     if (true == bool_cas(&first_init, true, false)){
       int tmp_size = 1;
       while (tmp_size < size){
@@ -113,7 +113,7 @@ namespace bdf {
   }
 
   template<typename Data>
-  bool mpmc_lockfree_ringbuffer::MPMCLockfreeRingbuffer<Data>::push(const Data& data){
+  bool MPMCLockfreeRingbuffer<Data>::push(const Data& data){
     uint64_t head, tail, next;
     int32_t pause_cnt;
     uint32_t loop_count, yield_cnt, spin_count;
@@ -192,7 +192,7 @@ namespace bdf {
   }
 
   template<typename Data>
-  bool mpmc_lockfree_ringbuffer::MPMCLockfreeRingbuffer<Data>::pop(Data& out_data){
+  bool MPMCLockfreeRingbuffer<Data>::pop(Data& out_data){
     uint64_t head, tail, next;
     int32_t pause_cnt;
     uint32_t loop_count, yield_cnt, spin_count;

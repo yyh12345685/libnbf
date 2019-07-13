@@ -61,7 +61,7 @@ void Connecting::OnRead(){
           << ",port:" << GetPort() << ",read size:" << total_read);
         break;
       } else{
-        //if (1 == rand() % 300)
+        if (1 == rand() % 100)
           INFO(logger_, "TCP read failed, fd is:" << fd_ << ",ip:" << GetIp() << ",port:" 
             << GetPort()<< ",total_read:" << total_read << ",errno:" << strerror(errno)
             <<",is_server_:"<<IsServer()<<",prt:"<<this);
@@ -148,7 +148,7 @@ void Connecting::OnWrite(){
       if (errno == EINTR || errno == EAGAIN){
 
       }else{
-        //if (1 == rand() % 300)
+        if (1 == rand() % 100)
           INFO(logger_, "errno:" << errno << ",TCP write failed:" << ",send:" << send
             << ",ret:" << ret << ",ip:" << GetIp() << ",port:" << GetPort()
             <<",is_server_:"<<IsServer()<< ",send capacity:" << outbuf_.GetCapacity()

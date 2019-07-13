@@ -3,7 +3,8 @@
 
 #include <thread>
 #include <memory>
-#include <queue>
+//#include <queue>
+#include "../common/lockfree_ringbuffer.h"
 #include "../common/logger.h"
 #include "../common/thread_id.h"
 #include "matrix_item_map.h"
@@ -16,7 +17,8 @@ class MatrixStatMap;
 
 class MatrixCollector {
  public:
-  typedef std::queue<const MatrixItem*> QueueType;
+  //typedef std::queue<const MatrixItem*> QueueType;
+  typedef MPMCLockfreeRingbuffer<const MatrixItem*> QueueType;
   typedef std::shared_ptr<MatrixStatMap> MatrixStatMapPtr;
 
   MatrixCollector(
@@ -31,9 +33,9 @@ class MatrixCollector {
   inline int Send(const MatrixItem* item) {
     int idx = 0;
     QueueType* queue = GetQueue(idx);
-    locks_[idx]->Lock();
+    //locks_[idx]->Lock();
     queue->push(item);
-    locks_[idx]->UnLock();
+    //locks_[idx]->UnLock();
     return 0;
   }
 
@@ -61,7 +63,7 @@ class MatrixCollector {
   bool GetFileName(std::string& new_name);
 
   std::vector<QueueType*> queue_;
-  std::vector<SpinLock*>locks_;
+  //std::vector<SpinLock*>locks_;
   uint32_t bucket_count_;
   uint32_t queue_size_;
   std::thread* thread_;

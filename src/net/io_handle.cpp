@@ -49,8 +49,7 @@ void IoHandler::Run(HandleData* data){
 void IoHandler::Handle(EventMessage* message){
   TRACE(logger_, "IoHandler::Handle msg:" << *message);
   switch (message->type_io_event) {
-  case MessageType::kIoEvent:
-  {
+  case MessageType::kIoEvent:{
     if (message->event_mask & EVENT_READ) {
       HandleReadEvent(message);
     }
@@ -82,7 +81,7 @@ void IoHandler::HandleIoMessageEvent(EventMessage* message){
   Connecting* reg_con = ConnectManager::Instance().GetConnect(message->descriptor_id);
   Connecting* con = (Connecting*)((void*)(message->descriptor_id));
   if (!reg_con){
-    //if (1 == rand() % 300)
+    if (1 == rand() % 300)
       INFO(logger_, "con is closed,ptr:"<< con);
     HandleIoMessageFailed(message);
     return;
@@ -100,7 +99,7 @@ void IoHandler::HandleIoMessageEvent(EventMessage* message){
   }
   //单向消息encode之后即可释放，双向消息会在返回或者超时的时候释放
   //server答复的消息需要在这里释放掉
-  if ((!message->IsSynchronous() && message->direction == EventMessage::kOnlySend)
+  if (message->direction == EventMessage::kOnlySend
     || message->direction == EventMessage::kOutgoingResponse) {
     MessageFactory::Destroy(message);
   }

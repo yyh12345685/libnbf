@@ -29,12 +29,13 @@ MatrixCollector::MatrixCollector(
   queue_.resize(bucket_count_);
   for (auto& queue : queue_) {
     queue = new QueueType();
+    queue->init(queue_size);
     //queue->resize(queue_size);
   }
-  locks_.resize(queue_.size());
-  for (auto& lock : locks_){
-    lock = new SpinLock();
-  }
+  //locks_.resize(queue_.size());
+  //for (auto& lock : locks_){
+  //  lock = new SpinLock();
+  //}
 
   monitor_file_name_ = AppendData(monitor_file_name_pre_);
 }
@@ -46,10 +47,10 @@ MatrixCollector::~MatrixCollector() {
     delete queue;
   }
   queue_.clear();
-  for (auto& lock : locks_) {
-    delete lock;
-  }
-  locks_.clear();
+  //for (auto& lock : locks_) {
+  //  delete lock;
+  //}
+  //locks_.clear();
 }
 
 int MatrixCollector::Start() {
@@ -157,11 +158,18 @@ void MatrixCollector::ProcessQueueList(MatrixStatMapPtr stat_map){
 }
 
 void MatrixCollector::ProcessQueue(QueueType* queue, MatrixStatMapPtr stat_map, uint32_t& idx) {
-  while (!queue->empty()) {
-    locks_[idx]->Lock();
-    const MatrixItem* item = queue->front();
-    queue->pop();
-    locks_[idx]->UnLock();
+  //while (!queue->empty()) {
+    //locks_[idx]->Lock();
+    //const MatrixItem* item = queue->front();
+    //queue->pop();
+    //locks_[idx]->UnLock();
+  while (queue->size() > 0) {
+    const MatrixItem* item = nullptr;
+    queue->pop(item);
+    if (item == nullptr){
+      INFO(logger,"item == nullptr......");
+      break;
+    }
     switch (item->operation) {
       case Matrix::kSet : 
         stat_map->Set(item->name, item->val, item->persistent);

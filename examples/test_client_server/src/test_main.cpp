@@ -54,6 +54,7 @@ int HttpClientTest(void* data) {
     (bdf::Application<bdf::testserver::TestClientServerHandler>*)data;
   bdf::ForTest::Inst().SetForTest(true);
   INFO(logger, "HttpClientTestFlag start,time:" << time(NULL));
+  sleep(1);
   int times = 5700000;
   while (times-- > 0) {
     if (0 == times % 1900) {

@@ -98,8 +98,9 @@ void SyncSequence::OnTimer(void* function_data){
   }
   case real_timer_type:
     //超时先关闭连接
-    INFO(logger_, "SyncSequence::OnTimer,fd:"<< sync_client_con_->GetFd()
-      <<",sync_client_con_:"<< sync_client_con_);
+    if (1 == rand() % 100)
+      INFO(logger_, "SyncSequence::OnTimer,fd:"<< sync_client_con_->GetFd()
+        <<",sync_client_con_:"<< sync_client_con_);
     //sync_client_con_->OnTimeout(Fired());
     sync_client_con_->RegisterDel(sync_client_con_->GetFd());
     sync_client_con_->CleanSequenceQueue();
