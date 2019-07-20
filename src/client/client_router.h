@@ -24,8 +24,8 @@ public:
 
   bool Invoke(EventMessage * message, const InvokerCallback& cb);
 
-  EventMessage* SendRecieve(EventMessage* message, uint32_t timeout_ms = 0){
-    return DoSendRecieve(message, timeout_ms);
+  EventMessage* SendRecieve(EventMessage* message){
+    return DoSendRecieve(message);
   }
 
 protected:
@@ -34,7 +34,7 @@ protected:
 private:
   LOGGER_CLASS_DECL(logger_);
 
-  EventMessage* DoSendRecieve(EventMessage* message, uint32_t timeout_ms = 0);
+  EventMessage* DoSendRecieve(EventMessage* message);
 
   std::string name_;
   std::vector<Client*> clients_;

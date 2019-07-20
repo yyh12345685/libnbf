@@ -45,7 +45,7 @@ EventMessage* CoroutineActor::RecieveMessage(uint32_t timeout_ms){
 
 bool CoroutineActor::SendMessage(EventMessage* message){
   TRACE(logger_, "SendMessage,is_waiting_" << is_waiting_
-    << ",sequence id:" << message->sequence_id << ",waiting_id_" << waiting_id_
+    << ",sequence id:" << message->sequence_id << ",waiting_id:" << waiting_id_
     << ",msg_list_size:" << msg_list_.size());
   if (is_waiting_ && message->sequence_id != waiting_id_) {
     WARN(logger_, "sequence_id mismatch:" << waiting_id_ << ",msg:" << *message);

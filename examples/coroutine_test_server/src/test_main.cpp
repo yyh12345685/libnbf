@@ -2,7 +2,6 @@
 #include "app/app.h"
 #include "app/appbase.h"
 #include "client/client_mgr.h"
-#include "monitor/matrix_scope.h"
 #include "message.h"
 #include "app_test_server_handle.h"
 #include "task.h"
@@ -13,19 +12,16 @@ class TaskTest:public bdf::Task{
 public:
 
   void RapidTest(){
-    bdf::monitor::MatrixScope matrix_scope(
-      "RapidClient", bdf::monitor::MatrixScope::kModeAutoSuccess);
     bdf::RapidMessage* rapid_message = bdf::MessageFactory::Allocate<bdf::RapidMessage>();
     rapid_message->body = "test rapid_test_client only send:hello world.";
     bdf::AppBase::Get()->GetClientMgr()->Send("rapid_test_client", rapid_message);
 
     bdf::RapidMessage* rapid_message_2 = bdf::MessageFactory::Allocate<bdf::RapidMessage>();
-    rapid_message_2->body = "aaa";
+    rapid_message_2->body = "test send recieve rapid";
     bdf::EventMessage* msg2_resp =
-      bdf::AppBase::Get()->GetClientMgr()->SendRecieve("rapid_test_client", rapid_message_2, 20);
+      bdf::AppBase::Get()->GetClientMgr()->SendRecieve("rapid_test_client", rapid_message_2);
     if (nullptr == msg2_resp) {
-      matrix_scope.SetOkay(false);
-      TRACE(logger_, "msg2_resp is null.");
+      WARN(logger_, "msg2_resp is null.");
       return;
     }
     bdf::RapidMessage* real_msg = dynamic_cast<bdf::RapidMessage*>(msg2_resp);
@@ -34,8 +30,6 @@ public:
   }
 
   void HttpTest() {
-    bdf::monitor::MatrixScope matrix_scope(
-      "HttpClient", bdf::monitor::MatrixScope::kModeAutoSuccess);
     bdf::HttpMessage* hmsg = bdf::MessageFactory::Allocate<bdf::HttpMessage>();
     hmsg->InitRequest("POST", true);
     hmsg->http_info.headers.insert(
@@ -51,10 +45,9 @@ public:
     hmsg2->http_info.url = "/mm?a=xx&b=yy";
     hmsg2->http_info.body = "HttpTest send receive:hello world.";
     bdf::EventMessage* msg2_resp =
-      bdf::AppBase::Get()->GetClientMgr()->SendRecieve("http_test_client", hmsg2, 100);
+      bdf::AppBase::Get()->GetClientMgr()->SendRecieve("http_test_client", hmsg2);
     if (nullptr == msg2_resp) {
-      TRACE(logger_, "msg2_resp is nullptr.");
-      matrix_scope.SetOkay(false);
+      WARN(logger_, "msg2_resp is nullptr.");
       return;
     }
     bdf::HttpMessage* hmsg2_resp = dynamic_cast<bdf::HttpMessage*>(msg2_resp);

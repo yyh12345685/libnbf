@@ -29,9 +29,8 @@ public:
   bool Invoke(EventMessage * message, const InvokerCallback& cb);
   bool Invoke(EventMessage* message, const InvokerCallback& cb,uint32_t hash);
 
-  EventMessage* SendRecieve(EventMessage* message, uint32_t timeout_ms = 0);
-  EventMessage* SendRecieveHash(
-    EventMessage* message, uint32_t hash, uint32_t timeout_ms = 0);
+  EventMessage* SendRecieve(EventMessage* message);
+  EventMessage* SendRecieveHash(EventMessage* message, uint32_t hash);
 
 private:
   LOGGER_CLASS_DECL(logger_);

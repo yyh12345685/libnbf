@@ -76,7 +76,7 @@ bool ClientRouter::Invoke(EventMessage * message, const InvokerCallback& cb){
   return cli->Invoke(message,cb,name_);
 }
 
-EventMessage* ClientRouter::DoSendRecieve(EventMessage* message, uint32_t timeout_ms){
+EventMessage* ClientRouter::DoSendRecieve(EventMessage* message){
   monitor::MatrixScope matrix_scope(name_, monitor::MatrixScope::kModeAutoFail);
   Client* cli = GetValidClient();
   if (!cli) {
@@ -85,7 +85,7 @@ EventMessage* ClientRouter::DoSendRecieve(EventMessage* message, uint32_t timeou
     return nullptr;
   }
 
-  EventMessage* response = cli->SendRecieve(message, timeout_ms);
+  EventMessage* response = cli->SendRecieve(message);
   if (response) {
     matrix_scope.SetOkay(true);
   }

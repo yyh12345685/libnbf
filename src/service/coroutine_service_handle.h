@@ -41,7 +41,7 @@ private:
 
   void ProcessMessageHandle(std::queue<EventMessage*>& msg_list);
 
-  void ProcessItem(EventMessage* msg);
+  void ProcessClientItem(EventMessage* msg);
 
   void Resume(int coroutine_id);
 

@@ -38,15 +38,12 @@ public:
 
   //由于协程是放到service handle中的
   //所以调用该函数的地方也需要是再service handle线程中，否则是不同的协程对象
-  EventMessage* SendRecieve(
-    const std::string& router,
-    EventMessage* message,
-    uint32_t timeout_ms = 0);
+  EventMessage* SendRecieve(const std::string& router,EventMessage* message);
+
   EventMessage* SendRecieveHash(
     const std::string& router,
     EventMessage* message,
-    uint32_t hash,
-    uint32_t timeout_ms = 0);
+    uint32_t hash);
 
 private:
   LOGGER_CLASS_DECL(logger_);

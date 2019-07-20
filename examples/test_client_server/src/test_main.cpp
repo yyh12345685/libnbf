@@ -39,7 +39,7 @@ bdf::EventMessage* RapidTestSendRecv(
   //bdf::RapidMessage* rapid_message_2 = bdf::MessageFactory::Allocate<bdf::RapidMessage>();
   bdf::RapidMessage* rapid_message_2 = BDF_NEW(bdf::RapidMessage);
   rapid_message_2->body = "aaa";
-  return app->GetClientMgr()->SendRecieve("rapid_test_client", rapid_message_2, 20);
+  return app->GetClientMgr()->SendRecieve("rapid_test_client", rapid_message_2);
 }
 
 bool RapidTestInvoe(bdf::Application<bdf::testserver::TestClientServerHandler>* app) {
@@ -124,7 +124,7 @@ bdf::EventMessage* HttpTestSendRecv(
     std::pair<std::string, std::string>("Content-Type", "text/html"));
   hmsg2->http_info.url = "/snd?a=xx&b=yy";
   hmsg2->http_info.body = "test http_test_client send receive:hello world.";
-  return app->GetClientMgr()->SendRecieve("http_test_client", hmsg2, 100);
+  return app->GetClientMgr()->SendRecieve("http_test_client", hmsg2);
 }
 
 bool HttpTestInvoke(bdf::Application<bdf::testserver::TestClientServerHandler>* app) {

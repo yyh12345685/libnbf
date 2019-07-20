@@ -32,7 +32,7 @@ Client::~Client(){
 }
 
 int Client::Start() {
-  ClientConnect* con = CreateClient(address_, timeout_ms_, heartbeat_ms_);
+  ClientConnect* con = CreateClient(address_, heartbeat_ms_);
   if (!con) {
     ERROR(logger_, "Client::Start CreateClient fail"<< ", address:" << address_);
     return -1;
@@ -49,8 +49,7 @@ int Client::Start() {
   return 0;
 }
 
-ClientConnect* Client::CreateClient(
-  const std::string& address, uint32_t timeout_ms, uint32_t heartbeat_ms){
+ClientConnect* Client::CreateClient(const std::string& address, uint32_t heartbeat_ms){
   char ip[256];
   int port;
   int protocol_type = ProtocolHelper::ParseSpecAddr(address.c_str(),ip,&port);
@@ -66,9 +65,9 @@ ClientConnect* Client::CreateClient(
 
   if (protocol->IsSynchronous()) {
     client_connect = 
-      BDF_NEW (SyncClientConnect,timeout_ms, heartbeat_ms,sigle_send_sigle_recv_);
+      BDF_NEW (SyncClientConnect,timeout_ms_, heartbeat_ms,sigle_send_sigle_recv_);
   } else {
-    client_connect = BDF_NEW (AsyncClientConnect,timeout_ms, heartbeat_ms);
+    client_connect = BDF_NEW (AsyncClientConnect,timeout_ms_, heartbeat_ms);
   }
 
   client_connect->SetIp(ip);
@@ -148,7 +147,7 @@ bool Client::Invoke(EventMessage* message, const InvokerCallback& cb, const std:
   return true;
 }
 
-EventMessage* Client::DoSendRecieve(EventMessage* message, uint32_t timeout_ms) {
+EventMessage* Client::DoSendRecieve(EventMessage* message) {
   if (GetClientStatus() != kWorking) {
     INFO(logger_, "Client::DoSendRecieve Channel Broken" << *this);
     MessageFactory::Destroy(message);
@@ -175,7 +174,7 @@ EventMessage* Client::DoSendRecieve(EventMessage* message, uint32_t timeout_ms) 
   
   DoSend(message);
   //TRACE(logger_, "send msg handle_id:" << message->handle_id);
-  EventMessage* response = DoRecieve(timeout_ms);
+  EventMessage* response = DoRecieve();
   if (response && response->status != EventMessage::kStatusOK) {
     TRACE(logger_, "may be time out,status:" << response->status << ",msg:" << *response);
     MessageFactory::Destroy(response);
@@ -186,7 +185,7 @@ EventMessage* Client::DoSendRecieve(EventMessage* message, uint32_t timeout_ms) 
 
 void Client::DoSend(EventMessage* message){
   if (nullptr != CoroutineContext::Instance().GetServiceHandler()){
-    //使用协程handle的时候不为空，非协程框架暂未完整实现
+    //使用协程handle的时候不为空，非协程框架使用异步调用Invoke
     message->handle_id = CoroutineContext::Instance().GetServiceHandler()->GetHandlerId();
   }
   
@@ -194,11 +193,11 @@ void Client::DoSend(EventMessage* message){
   IoService::GetInstance().SendToIoHandle(message);
 }
 
-EventMessage* Client::DoRecieve(uint32_t timeout_ms){
+EventMessage* Client::DoRecieve(){
   if (nullptr != CoroutineContext::Instance().GetCoroutine()){
-    return CoroutineContext::Instance().GetCoroutine()->RecieveMessage(timeout_ms);
+    return CoroutineContext::Instance().GetCoroutine()->RecieveMessage(timeout_ms_);
   }else{
-    //非协程仅供测试使用，非协程需要实现异步调用，用回调函数处理
+    //非协程使用异步调用Invoke，不是用该函数
     return nullptr;
   }
   

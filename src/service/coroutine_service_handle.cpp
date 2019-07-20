@@ -22,8 +22,8 @@ void CoroutineServiceHandler::Run(HandleData* data){
 
   CoroutineSchedule* scheduler = CoroutineContext::Instance().GetScheduler();
   CoroutineActor* coroutine = CoroutineContext::Instance().GetCoroutine();
-  CoroutineFunc func = &CoroutineServiceHandler::ProcessCoroutine;
-  current_coroutine_id_ = scheduler->CoroutineNew(coroutine, func, data);
+  current_coroutine_id_ = scheduler->CoroutineNew(
+    coroutine, &CoroutineServiceHandler::ProcessCoroutine, data);
   //current_timer_coroutine_id_ = scheduler->CoroutineNew(coroutine, func, data);
   //current_task_coroutine_id_ = scheduler->CoroutineNew(coroutine, func, data);
   //不能用while(会导致切换协程等待之后马上切换回来)，先用if
@@ -128,18 +128,10 @@ void CoroutineServiceHandler::Process(HandleData* data){
   ProcessMessageHandle(temp);
 }
 
-void CoroutineServiceHandler::ProcessItem(EventMessage* msg){
-  Connecting* con = (Connecting*)((void*)(msg->descriptor_id));
-  TRACE(logger_, "ProcessItem is server:" << con->IsServer());
-  if (con->IsServer()) {
-    //处理服务端接收的消息
-  } else {
-    //处理客户端接收的消息
+void CoroutineServiceHandler::ProcessClientItem(EventMessage* msg){
     CoroutineActor* coroutine = CoroutineContext::Instance().GetCoroutine();
     coroutine->SendMessage(msg);
-
     Resume(current_coroutine_id_);
-  }
 }
 
 void CoroutineServiceHandler::ProcessMessageHandle(std::queue<EventMessage*>& msg_list) {
@@ -148,8 +140,17 @@ void CoroutineServiceHandler::ProcessMessageHandle(std::queue<EventMessage*>& ms
   while (!msg_list.empty()) {
     EventMessage *msg = msg_list.front();
     msg_list.pop();
-    ProcessItem(msg);
-    Handle(msg);
+
+    Connecting* con = (Connecting*)((void*)(msg->descriptor_id));
+    TRACE(logger_, "ProcessMessageHandle is server:" << con->IsServer());
+
+    if (con->IsServer()){
+      //处理服务端接收的消息
+      Handle(msg);
+    }else{
+      //处理客户端接收的消息
+      ProcessClientItem(msg);
+    }
   }
 }
 

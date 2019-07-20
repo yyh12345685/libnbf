@@ -99,28 +99,25 @@ bool ClientMgr::Invoke(
 }
 
 //支持协程
-EventMessage* ClientMgr::SendRecieve(
-  const std::string& router,
-  EventMessage* message,
-  uint32_t timeout_ms) {
+EventMessage* ClientMgr::SendRecieve(const std::string& router,EventMessage* message) {
   ClientRouters* routers = GetClientRouters(router);
   if (nullptr == routers) {
     MessageFactory::Destroy(message);
     return nullptr;
   }
-  return routers->SendRecieve(message, timeout_ms);
+  return routers->SendRecieve(message);
 }
 EventMessage* ClientMgr::SendRecieveHash(
   const std::string& router,
   EventMessage* message,
-  uint32_t hash,
-  uint32_t timeout_ms) {
+  uint32_t hash) {
+
   ClientRouters* routers = GetClientRouters(router);
   if (nullptr == routers) {
     MessageFactory::Destroy(message);
     return nullptr;
   }
-  return routers->SendRecieveHash(message, hash, timeout_ms);
+  return routers->SendRecieveHash(message, hash);
 }
 
 ClientRouters* ClientMgr::GetClientRouters(const std::string& router){

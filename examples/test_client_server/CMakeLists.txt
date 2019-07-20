@@ -29,12 +29,13 @@ target_link_libraries(test_client_server
 target_compile_definitions(
   test_client_server
   PRIVATE
-  -DMEM_PROFILE=1 )
+  -DMEM_PROFILE=1 
+)
 
 add_custom_target(test_client_server_config
 	COMMAND mkdir -p ${CMAKE_CURRENT_BINARY_DIR}/conf
 	COMMAND mkdir -p ${CMAKE_CURRENT_BINARY_DIR}/log
 	COMMAND cp -rf ${CMAKE_CURRENT_SOURCE_DIR}/conf/* ${CMAKE_CURRENT_BINARY_DIR}/conf/
-	)
+)
 
 add_dependencies(test_client_server test_client_server_config)

@@ -84,24 +84,24 @@ bool ClientRouters::Invoke(EventMessage* message, const InvokerCallback& cb, uin
   return router->Invoke(message,cb);
 }
 
-EventMessage* ClientRouters::SendRecieve(EventMessage* message, uint32_t timeout_ms) {
+EventMessage* ClientRouters::SendRecieve(EventMessage* message) {
   uint32_t idx = current_++;
   ClientRouter* router = client_routers_[idx%client_routers_.size()];
   if (!router) {
     MessageFactory::Destroy(message);
     return nullptr;
   }
-  return router->SendRecieve(message, timeout_ms);
+  return router->SendRecieve(message);
 }
 
 EventMessage* ClientRouters::SendRecieveHash(
-  EventMessage* message, uint32_t hash, uint32_t timeout_ms) {
+  EventMessage* message, uint32_t hash) {
   ClientRouter* router = client_routers_[hash%client_routers_.size()];
   if (!router) {
     MessageFactory::Destroy(message);
     return nullptr;
   }
-  return router->SendRecieve(message, timeout_ms);
+  return router->SendRecieve(message);
 }
 
 }

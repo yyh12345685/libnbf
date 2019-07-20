@@ -137,7 +137,9 @@ class EventMessage : public MessageBase {
   EventMessage(uint8_t type_id): 
     MessageBase(type_id), 
     descriptor_id(0),
-    handle_id(-1){
+    handle_id(-1),
+    timer_out_id(0),
+    ctx(nullptr){
   }
 
   EventMessage(uint8_t type_id_, int64_t descriptor_id_) : 
@@ -166,9 +168,9 @@ class EventMessage : public MessageBase {
 
   int64_t descriptor_id;//convert object
   int32_t handle_id;
-  uint64_t timer_out_id = 0;//for sync message
+  uint64_t timer_out_id;//for sync message
 
-  ContextBase* ctx = nullptr;
+  ContextBase* ctx;
 };
 
 class MessageFactory {

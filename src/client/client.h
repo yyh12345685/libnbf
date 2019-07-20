@@ -35,8 +35,8 @@ public:
 
   bool Invoke(EventMessage* message, const InvokerCallback& cb,const std::string& name);
 
-  EventMessage* SendRecieve(EventMessage* message, uint32_t timeout_ms = 0){
-    return DoSendRecieve(message, timeout_ms);
+  EventMessage* SendRecieve(EventMessage* message){
+    return DoSendRecieve(message);
   }
 
   int GetClientStatus() const {
@@ -64,12 +64,11 @@ public:
 private:
   LOGGER_CLASS_DECL(logger_);
 
-  ClientConnect* CreateClient(
-    const std::string& address, uint32_t timeout_ms, uint32_t heartbeat_ms);
+  ClientConnect* CreateClient(const std::string& address,uint32_t heartbeat_ms);
 
-  EventMessage* DoSendRecieve(EventMessage* message, uint32_t timeout_ms = 0);
+  EventMessage* DoSendRecieve(EventMessage* message);
   void DoSend(EventMessage* message);
-  EventMessage* DoRecieve(uint32_t timeout_ms = 0);
+  EventMessage* DoRecieve();
 
   static int64_t GetSequenceId();
 

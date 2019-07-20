@@ -75,7 +75,8 @@ add_library(bdf
 target_compile_definitions(
   bdf
   PRIVATE
-  -DMEM_PROFILE=1 )
+  -DMEM_PROFILE=1 
+)
 
 add_subdirectory(monitor/test)
 add_subdirectory(tester)

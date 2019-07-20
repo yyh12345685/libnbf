@@ -59,9 +59,8 @@ int CoroutineSchedule::CoroutineNew(CoroutineActor *corotine, CoroutineFunc func
     ++corotine->nco;
     return id;
   } else {
-    int i;
-    for (i = 0; i < corotine->cap; i++) {
-      int id = (i + corotine->nco) % corotine->cap;
+    for (int idx = 0; idx < corotine->cap; idx++) {
+      int id = (idx + corotine->nco) % corotine->cap;
       if (corotine->coctx[id] == nullptr) {
         corotine->coctx[id] = coctx;
         ++corotine->nco;
@@ -122,6 +121,7 @@ void CoroutineSchedule::CoroutineResume(CoroutineActor* corotine, int id) {
     WARN(logger_, "unkown status:" << status);
     break;
   }
+  TRACE(logger_, "changed status:" << status << ",running id:" << corotine->running);
 }
 
 static void SaveStack(CoroContext* coctx, char *top){
