@@ -9,7 +9,6 @@
 namespace bdf { 
 
 class HandleData;
-class CoroutineActor;
 
 class CoroutineServiceHandler : 
   public ServiceHandler, public OnTimerBase {
@@ -33,7 +32,7 @@ protected:
 private:
   LOGGER_CLASS_DECL(logger_);
 
-  static void ProcessCoroutine(CoroutineActor* coroutine, void* data);
+  static void ProcessCoroutine(void* data);
   void ProcessTimer();
   void Process(HandleData* data);
 

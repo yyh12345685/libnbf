@@ -68,7 +68,7 @@ private:
 
   EventMessage* DoSendRecieve(EventMessage* message);
   void DoSend(EventMessage* message);
-  EventMessage* DoRecieve();
+  EventMessage* DoRecieve(EventMessage* message);
 
   static int64_t GetSequenceId();
 

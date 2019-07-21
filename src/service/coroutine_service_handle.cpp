@@ -19,29 +19,17 @@ void CoroutineServiceHandler::Run(HandleData* data){
   prctl(PR_SET_NAME, "CoroutineServiceHandler");
   TRACE(logger_, "CoroutineServiceHandler::Run.");
   CoroutineContext::Instance().Init(this,&timer_);
-
   CoroutineSchedule* scheduler = CoroutineContext::Instance().GetScheduler();
-  CoroutineActor* coroutine = CoroutineContext::Instance().GetCoroutine();
-  current_coroutine_id_ = scheduler->CoroutineNew(
-    coroutine, &CoroutineServiceHandler::ProcessCoroutine, data);
-  //current_timer_coroutine_id_ = scheduler->CoroutineNew(coroutine, func, data);
-  //current_task_coroutine_id_ = scheduler->CoroutineNew(coroutine, func, data);
-  //不能用while(会导致切换协程等待之后马上切换回来)，先用if
-  //必须要需要切换的时候才切换协程，后续优化为协程池
-  if(scheduler->CoroutineStatus(coroutine, current_coroutine_id_)/*&&
-    scheduler->CoroutineStatus(coroutine, current_timer_coroutine_id_) &&
-    scheduler->CoroutineStatus(coroutine, current_task_coroutine_id_)*/){
-    scheduler->CoroutineResume(coroutine, current_coroutine_id_);
-    //scheduler->CoroutineResume(coroutine, current_timer_coroutine_id_);
-    //scheduler->CoroutineResume(coroutine, current_task_coroutine_id_);
-  }
+  scheduler->InitCoroSchedule(&CoroutineServiceHandler::ProcessCoroutine, data);
 
   while (data->is_run) {
+    ProcessTimer();
+    ProcessTask(data);
+
     if (data->data_.empty()) {
       usleep(1);
       continue;
     }
-
     std::queue<EventMessage*> temp;
     data->lock_.lock();
     temp.swap(data->data_);
@@ -51,7 +39,7 @@ void CoroutineServiceHandler::Run(HandleData* data){
   INFO(logger_, "CoroutineServiceHandler::Run will be exit.");
 }
 
-void CoroutineServiceHandler::ProcessCoroutine(CoroutineActor* coroutine, void* data){
+void CoroutineServiceHandler::ProcessCoroutine(void* data){
   TRACE(logger_, "CoroutineServiceHandler::Process. thread id:"<< ThreadId::Get());
   HandleData* handle_data = (HandleData*)data;
   CoroutineServiceHandler* handle = 
@@ -62,38 +50,28 @@ void CoroutineServiceHandler::ProcessCoroutine(CoroutineActor* coroutine, void* 
   }
 
   while (handle_data->is_run) {
-    handle->ProcessTimer();
-    handle->ProcessTask(handle_data);
+    //handle->ProcessTimer();
+    //handle->ProcessTask(handle_data);
     handle->Process(handle_data);
   }
   TRACE(logger_, "CoroutineServiceHandler thread will be exit.");
 }
 
-void CoroutineServiceHandler::Resume(int coroutine_id){
-  if (coroutine_id < 0){
-    TRACE(logger_, "Coroutine not created...");
-    return;
-  }
-  CoroutineSchedule* scheduler = CoroutineContext::Instance().GetScheduler();
-  CoroutineActor* coroutine = CoroutineContext::Instance().GetCoroutine();
-  if (scheduler->CoroutineStatus(coroutine, coroutine_id)) {
-    TRACE(logger_, "CoroutineResume coroutine:" << coroutine << ",id:" << coroutine_id);
-    scheduler->CoroutineResume(coroutine, coroutine_id);
-  }
-}
-
 void CoroutineServiceHandler::ProcessTimer() {
   timer_.ProcessTimer();
-
-  //if (0 == process_times){
-  //  Resume(current_timer_coroutine_id_);
-  //}
 }
 
 //when send receive timeout
 void CoroutineServiceHandler::OnTimer(void* function_data){
   TRACE(logger_, "CoroutineServiceHandler::OnTimer.");
-  Resume(current_coroutine_id_);
+  int coro_id = *(int*)function_data;
+  if (coro_id < 0) {
+    //not to here,否则会丢消息
+    ERROR(logger_, "error coro_id:" << coro_id);
+    return;
+  }
+  CoroutineSchedule* scheduler = CoroutineContext::Instance().GetScheduler();
+  scheduler->ProcessCoroutine(coro_id);
 }
 
 void CoroutineServiceHandler::ProcessTask(HandleData* data){
@@ -111,7 +89,6 @@ void CoroutineServiceHandler::ProcessTask(HandleData* data){
     task->OnTask(nullptr);
   }
 
-  //Resume(current_task_coroutine_id_);
 }
 
 void CoroutineServiceHandler::Process(HandleData* data){
@@ -129,9 +106,16 @@ void CoroutineServiceHandler::Process(HandleData* data){
 }
 
 void CoroutineServiceHandler::ProcessClientItem(EventMessage* msg){
-    CoroutineActor* coroutine = CoroutineContext::Instance().GetCoroutine();
-    coroutine->SendMessage(msg);
-    Resume(current_coroutine_id_);
+  if (msg->coro_id<0){
+    //not to here,否则会丢消息
+    ERROR(logger_, "error coro_id:" << msg->coro_id);
+    MessageFactory::Destroy(msg);
+    return;
+  }
+  CoroutineSchedule* scheduler = CoroutineContext::Instance().GetScheduler();
+  CoroutineActor* coroutine = scheduler->GetCoroutineCtx(msg->coro_id);
+  coroutine->SendMessage(msg);
+  scheduler->ProcessCoroutine(msg->coro_id);
 }
 
 void CoroutineServiceHandler::ProcessMessageHandle(std::queue<EventMessage*>& msg_list) {

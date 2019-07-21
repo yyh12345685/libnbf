@@ -168,13 +168,10 @@ EventMessage* Client::DoSendRecieve(EventMessage* message) {
     DoSend(message);
     return nullptr;
   }
-  if (nullptr != CoroutineContext::Instance().GetCoroutine()){
-    CoroutineContext::Instance().GetCoroutine()->SetWaitingId(message->sequence_id);
-  }
   
   DoSend(message);
   //TRACE(logger_, "send msg handle_id:" << message->handle_id);
-  EventMessage* response = DoRecieve();
+  EventMessage* response = DoRecieve(message);
   if (response && response->status != EventMessage::kStatusOK) {
     TRACE(logger_, "may be time out,status:" << response->status << ",msg:" << *response);
     MessageFactory::Destroy(response);
@@ -193,11 +190,21 @@ void Client::DoSend(EventMessage* message){
   IoService::GetInstance().SendToIoHandle(message);
 }
 
-EventMessage* Client::DoRecieve(){
-  if (nullptr != CoroutineContext::Instance().GetCoroutine()){
-    return CoroutineContext::Instance().GetCoroutine()->RecieveMessage(timeout_ms_);
+EventMessage* Client::DoRecieve(EventMessage* message){
+  if (nullptr != CoroutineContext::Instance().GetScheduler()){
+    int coro_id = CoroutineContext::Instance().GetScheduler()->GetAvailableCoroId();
+    CoroutineActor* actor = CoroutineContext::Instance().GetScheduler()->GetCoroutineCtx(coro_id);
+    if (nullptr){
+      WARN(logger_, "no valid coroutine id:" << coro_id);
+      return nullptr;
+    }
+    TRACE(logger_, "get coroutine id:" << coro_id << ",ptr:" << actor);
+    message->coro_id = coro_id;
+    actor->SetWaitingId(message->sequence_id);
+    return actor->RecieveMessage(message,timeout_ms_);
   }else{
     //非协程使用异步调用Invoke，不是用该函数
+    WARN(logger_, "use error,not should to here...");
     return nullptr;
   }
   

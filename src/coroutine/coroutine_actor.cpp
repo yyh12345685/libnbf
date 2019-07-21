@@ -11,22 +11,24 @@ namespace bdf{
 
 LOGGER_CLASS_IMPL(logger_, CoroutineActor);
 
-EventMessage* CoroutineActor::RecieveMessage(uint32_t timeout_ms){
+EventMessage* CoroutineActor::RecieveMessage(EventMessage* message,uint32_t timeout_ms){
   TRACE(logger_, "CoroutineActor::RecieveMessage,timeout_ms:"
     << timeout_ms<<",msg_list_:"<<msg_list_.size());
   uint64_t time_id = 0;
   if (msg_list_.empty()){
     if (timeout_ms) {
+      //超时参数其实必须要设置的
       CoroutineServiceHandler* hdl = CoroutineContext::Instance().GetServiceHandler();
       TimerData data;
-      data.function_data = nullptr;
+      data.function_data = &message->coro_id;
       data.time_out_ms = timeout_ms;
       data.time_proc = hdl;
       time_id = CoroutineContext::Instance().GetTimer()->AddTimer(timeout_ms, data);
     }
     CoroutineSchedule* scheduler = CoroutineContext::Instance().GetScheduler();
     TRACE(logger_, "RecieveMessage CoroutineYield:" << this);
-    scheduler->CoroutineYield(this);
+    
+    scheduler->CoroutineResume(message->coro_id);
   }
   is_waiting_ = false;
   waiting_id_ = -1;

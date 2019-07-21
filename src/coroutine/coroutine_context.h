@@ -20,15 +20,26 @@ struct CoroutineContext {
 
   static void Init(CoroutineServiceHandler* service_handle,Timer* timer);
 
-  inline static CoroutineActor* GetCoroutine() {
-    return Instance().coroutine_;
+  inline static CoroutineActor* GetCurCoroutineCtx() {
+    return Instance().scheduler_->GetCoroutineCtx(Instance().GetCurCoroutineId()) ;
   }
+
+  inline static int GetCurCoroutineId() {
+    return Instance().cur_coroutine_id_;
+  }
+
+  inline static void SetCurCoroutineId(int& cur_coroutine_id) {
+    Instance().cur_coroutine_id_ = cur_coroutine_id;
+  }
+
   inline static CoroutineSchedule* GetScheduler() {
     return Instance().scheduler_;
   }
+
   inline static Timer* GetTimer() {
     return Instance().timer_;
   }
+
   inline static CoroutineServiceHandler* GetServiceHandler() {
     return Instance().service_handle_;
   }
@@ -38,16 +49,15 @@ struct CoroutineContext {
   }
 
   ~CoroutineContext() {
-    if (nullptr != scheduler_ && nullptr != coroutine_){
-      scheduler_->CoroutineClose(coroutine_);
+    if (nullptr != scheduler_){
       delete scheduler_;
     }
   }
 
-  CoroutineSchedule* scheduler_;
-  CoroutineActor* coroutine_;
-  CoroutineServiceHandler* service_handle_;
-  Timer* timer_;
+  CoroutineSchedule* scheduler_ = nullptr;
+  int cur_coroutine_id_ = -1;
+  CoroutineServiceHandler* service_handle_ = nullptr;
+  Timer* timer_ = nullptr;
 };
 
 }

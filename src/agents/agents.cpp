@@ -42,8 +42,10 @@ void Agents::Stop(){
   INFO(logger_, "Agents::Stop.");
 	if(nullptr != agent_master_)
     agent_master_->Stop();
+  INFO(logger_, "master Stop ok.");
 	if(nullptr != agent_slaves_)
     agent_slaves_->Stop();
+  INFO(logger_, "slave Stop ok.");
 }
 
 int Agents::AddModrw(EventFunctionBase *ezfd, int fd, bool set, bool lock){

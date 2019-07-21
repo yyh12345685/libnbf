@@ -7,7 +7,7 @@ void CoroutineContext::Init(CoroutineServiceHandler* service_handle,Timer* timer
   Instance().timer_ = timer;
   Instance().service_handle_ = service_handle;
   Instance().scheduler_ = new CoroutineSchedule;
-  Instance().coroutine_ = Instance().scheduler_->CoroutineInit();
+  Instance().cur_coroutine_id_ = -1;
 }
 
 }

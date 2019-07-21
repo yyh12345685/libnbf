@@ -78,8 +78,9 @@ int IoService::ThreadStop(){
     handle_thread_.service_handle_data_[cn]->is_run = false;
   }
   for (int cn = 0; cn < io_service_config_.io_handle_thread_count; cn++) {
-    handle_thread_.service_handle_data_[cn]->is_run = false;
+    handle_thread_.io_handle_data_[cn]->is_run = false;
   }
+  INFO(logger_, "IoService::Set Stope ok.");
   return 0;
 }
 

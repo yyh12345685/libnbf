@@ -52,6 +52,7 @@ set(BDF_SRC
 
   coroutine/coroutine_actor.cpp
   coroutine/coroutine_context.cpp
+  coroutine/coroutine_impl.cpp
   coroutine/coroutine_schedule.cpp
 
   service/io_service.cpp

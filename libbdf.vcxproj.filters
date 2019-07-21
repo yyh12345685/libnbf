@@ -202,9 +202,6 @@
     <ClCompile Include="examples\test_client_server\src\test_client_server_handle.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\coroutine\coroutine_schedule.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="src\coroutine\coroutine_context.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -224,6 +221,12 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="src\net\connect_manager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\coroutine\coroutine_impl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\coroutine\coroutine_schedule.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -414,9 +417,6 @@
     <ClInclude Include="src\coroutine\coroutine_context.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="src\coroutine\coroutine_schedule.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="src\service\coroutine_service_handle.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -445,6 +445,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="src\context.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\coroutine\coroutine_impl.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\coroutine\coroutine_schedule.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

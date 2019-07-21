@@ -2,30 +2,29 @@
 
 #include <ucontext.h>
 
-#define STACK_SIZE (1024*1024)
-#define DEFAULT_COROUTINE 32
+#define STACK_SIZE (512*1024)
+#define DEFAULT_COROUTINE 128
 
 namespace bdf {
 
-struct CoroContext;
-class CoroutineActor;
+struct CoroutineActor;
 
-struct Coroutine {
+struct CoroSchedule {
   char stack[STACK_SIZE];
-  ucontext_t main;
+  ucontext_t main_ctx;
   int nco;
   int cap;
   int running;
-  CoroContext **coctx;
+  CoroutineActor **coctx;
 };
 
-typedef void(*CoroutineFunc)(CoroutineActor*, void*);
+typedef void(*CoroutineFunc)(void*);
 
 struct CoroContext {
   CoroutineFunc func;
   void *ud;
   ucontext_t ctx;
-  Coroutine* corotine;
+  CoroSchedule* corotine;
   int cap;
   int size;
   int status;

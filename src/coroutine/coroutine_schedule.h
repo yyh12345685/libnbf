@@ -1,35 +1,45 @@
-
 #pragma once
 
-#include "coroutine/coroutine.h"
-#include "common/logger.h"
+#include <vector>
+#include <set>
+#include <unordered_set>
+#include "coroutine/coroutine_impl.h"
 
-#define STACK_SIZE (1024*1024)
-#define DEFAULT_COROUTINE 32
+namespace bdf {
 
-namespace bdf{
-
-struct CoroutineActor;
+class CoroutineActor;
 
 class CoroutineSchedule {
 public:
-  enum {
-    kCoroutineInvalid = 0,
-    kCoroutineReady = 1,
-    kCoroutineRunning = 2,
-    kCoroutineSuspend = 3,
-  };
+  ~CoroutineSchedule();
 
-  CoroutineActor* CoroutineInit();
-  void CoroutineClose(CoroutineActor*);
+  void InitCoroSchedule(CoroutineFunc func, void* data);
 
-  int CoroutineNew(CoroutineActor*, CoroutineFunc, void *ud);
-  void CoroutineResume(CoroutineActor*, int id);
-  int CoroutineStatus(CoroutineActor*, int id);
-  int CoroutineRunning(CoroutineActor*);
-  void CoroutineYield(CoroutineActor*);
+  void ProcessCoroutine(int coro_id);
+
+  int GetAvailableCoroId();
+
+  CoroutineActor* GetCoroutineCtx(int id);
+
+  //启动协程或者恢复挂起的协程
+  void CoroutineResume(int id);
+  //获取正在运行的协程id
+  int GetRunningId();
+protected:
+  int CoroutineStatus(int id);
+
+  //挂起运行中的协程
+  void CoroutineYield();
 
 private:
+
+  std::vector<int> all_coro_list_;//全部
+  std::set<int> available_coro_list_;//可用的
+  std::unordered_set<int> task_coro_list_;//任务中的
+
+  CoroutineImpl coro_impl_;
+  CoroSchedule* coro_sche_;
+
   LOGGER_CLASS_DECL(logger_);
 };
 

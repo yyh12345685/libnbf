@@ -40,6 +40,7 @@ void* EventLoopThread::Run(void *arg){
   prctl(PR_SET_NAME, "EventLoopThread");
   EventLoopThread *t = (EventLoopThread *)arg;
   t->Main();
+  INFO(logger, "EventLoopThread Stop.");
   return nullptr;
 }
 

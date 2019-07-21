@@ -169,6 +169,7 @@
     <ClCompile Include="src\common\string_util.cpp" />
     <ClCompile Include="src\coroutine\coroutine_actor.cpp" />
     <ClCompile Include="src\coroutine\coroutine_context.cpp" />
+    <ClCompile Include="src\coroutine\coroutine_impl.cpp" />
     <ClCompile Include="src\coroutine\coroutine_schedule.cpp" />
     <ClCompile Include="src\event\event_data.cpp" />
     <ClCompile Include="src\event\event_driver.cpp" />
@@ -237,8 +238,9 @@
     <ClInclude Include="src\context.h" />
     <ClInclude Include="src\coroutine\coroutine.h" />
     <ClInclude Include="src\coroutine\coroutine_actor.h" />
-    <ClInclude Include="src\coroutine\coroutine_schedule.h" />
+    <ClInclude Include="src\coroutine\coroutine_impl.h" />
     <ClInclude Include="src\coroutine\coroutine_context.h" />
+    <ClInclude Include="src\coroutine\coroutine_schedule.h" />
     <ClInclude Include="src\event\event_data.h" />
     <ClInclude Include="src\event\event_driver.h" />
     <ClInclude Include="src\event\event_loop_thread.h" />

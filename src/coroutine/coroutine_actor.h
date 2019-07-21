@@ -8,7 +8,7 @@ namespace bdf{
 
 class EventMessage;
 
-class CoroutineActor:public Coroutine{
+class CoroutineActor:public CoroContext {
 public:
   CoroutineActor():
     is_waiting_(false),
@@ -16,10 +16,10 @@ public:
 
   }
 
-  EventMessage* RecieveMessage(uint32_t timeout_ms = 0);
+  EventMessage* RecieveMessage(EventMessage* message,uint32_t timeout_ms = 0);
   bool SendMessage(EventMessage* message);
 
-  inline void SetWaitingId(uint64_t sequence_id) {
+  inline void SetWaitingId(const uint64_t& sequence_id) {
     is_waiting_ = true;
     waiting_id_ = sequence_id;
   }
