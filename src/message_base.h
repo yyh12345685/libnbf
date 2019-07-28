@@ -140,7 +140,7 @@ class EventMessage : public MessageBase {
     handle_id(-1),
     timer_out_id(0),
     ctx(nullptr),
-    coro_id(-1){
+    coroutine_id(-1){
   }
 
   EventMessage(uint8_t type_id_, int64_t descriptor_id_) : 
@@ -172,7 +172,7 @@ class EventMessage : public MessageBase {
   uint64_t timer_out_id;//for sync message
 
   ContextBase* ctx;
-  int coro_id;
+  int coroutine_id;
 };
 
 class MessageFactory {

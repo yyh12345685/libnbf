@@ -17,10 +17,9 @@ EventMessage* CoroutineActor::RecieveMessage(EventMessage* message,uint32_t time
   uint64_t time_id = 0;
   if (msg_list_.empty()){
     if (timeout_ms) {
-      //超时参数其实必须要设置的
       CoroutineServiceHandler* hdl = CoroutineContext::Instance().GetServiceHandler();
       TimerData data;
-      data.function_data = &message->coro_id;
+      data.function_data = &message->coroutine_id;
       data.time_out_ms = timeout_ms;
       data.time_proc = hdl;
       time_id = CoroutineContext::Instance().GetTimer()->AddTimer(timeout_ms, data);
@@ -28,7 +27,7 @@ EventMessage* CoroutineActor::RecieveMessage(EventMessage* message,uint32_t time
     CoroutineSchedule* scheduler = CoroutineContext::Instance().GetScheduler();
     TRACE(logger_, "RecieveMessage CoroutineYield:" << this);
     
-    scheduler->CoroutineResume(message->coro_id);
+    scheduler->CoroutineYield(message->coroutine_id);
   }
   is_waiting_ = false;
   waiting_id_ = -1;

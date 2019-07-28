@@ -13,7 +13,7 @@ public:
   CoroutineActor():
     is_waiting_(false),
     waiting_id_(-1){
-
+    msg_list_.clear();
   }
 
   EventMessage* RecieveMessage(EventMessage* message,uint32_t timeout_ms = 0);

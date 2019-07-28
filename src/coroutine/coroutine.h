@@ -15,7 +15,7 @@ struct CoroSchedule {
   int nco;
   int cap;
   int running;
-  CoroutineActor **coctx;
+  CoroutineActor **coctxs;
 };
 
 typedef void(*CoroutineFunc)(void*);
@@ -25,7 +25,7 @@ struct CoroContext {
   void *ud;
   ucontext_t ctx;
   CoroSchedule* corotine;
-  int cap;
+  int ctx_cap;
   int size;
   int status;
   char *stack;

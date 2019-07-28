@@ -192,14 +192,14 @@ void Client::DoSend(EventMessage* message){
 
 EventMessage* Client::DoRecieve(EventMessage* message){
   if (nullptr != CoroutineContext::Instance().GetScheduler()){
-    int coro_id = CoroutineContext::Instance().GetScheduler()->GetAvailableCoroId();
-    CoroutineActor* actor = CoroutineContext::Instance().GetScheduler()->GetCoroutineCtx(coro_id);
+    int coro_id = CoroutineContext::GetCurCoroutineId();
+    CoroutineActor* actor = CoroutineContext::GetCurCoroutineCtx();
     if (nullptr){
       WARN(logger_, "no valid coroutine id:" << coro_id);
       return nullptr;
     }
     TRACE(logger_, "get coroutine id:" << coro_id << ",ptr:" << actor);
-    message->coro_id = coro_id;
+    message->coroutine_id = coro_id;
     actor->SetWaitingId(message->sequence_id);
     return actor->RecieveMessage(message,timeout_ms_);
   }else{

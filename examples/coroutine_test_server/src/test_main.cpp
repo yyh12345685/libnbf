@@ -12,10 +12,13 @@ class TaskTest:public bdf::Task{
 public:
 
   void RapidTest(){
+
+    TRACE(logger_, "RapidTest Send.");
     bdf::RapidMessage* rapid_message = bdf::MessageFactory::Allocate<bdf::RapidMessage>();
     rapid_message->body = "test rapid_test_client only send:hello world.";
     bdf::AppBase::Get()->GetClientMgr()->Send("rapid_test_client", rapid_message);
 
+    TRACE(logger_, "RapidTest SendRecieve.");
     bdf::RapidMessage* rapid_message_2 = bdf::MessageFactory::Allocate<bdf::RapidMessage>();
     rapid_message_2->body = "test send recieve rapid";
     bdf::EventMessage* msg2_resp =
@@ -30,6 +33,8 @@ public:
   }
 
   void HttpTest() {
+
+    TRACE(logger_, "HttpTest Send.");
     bdf::HttpMessage* hmsg = bdf::MessageFactory::Allocate<bdf::HttpMessage>();
     hmsg->InitRequest("POST", true);
     hmsg->http_info.headers.insert(
@@ -38,6 +43,7 @@ public:
     hmsg->http_info.body = "HttpTest only send:hello world.";
     bdf::AppBase::Get()->GetClientMgr()->Send("http_test_client", hmsg);
 
+    TRACE(logger_, "HttpTest SendRecieve.");
     bdf::HttpMessage* hmsg2 = bdf::MessageFactory::Allocate<bdf::HttpMessage>();
     hmsg2->InitRequest("POST", true);
     hmsg2->http_info.headers.insert(

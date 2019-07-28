@@ -7,13 +7,15 @@ namespace bdf{
 
 LOGGER_CLASS_IMPL(logger_, CoroutineImpl);
 
+//from https://github.com/cloudwu/coroutine
+
 CoroutineActor* CoNew(
   CoroSchedule *corotine, CoroutineFunc func, void *ud) {
-  CoroutineActor* coctx = (CoroutineActor*)malloc(sizeof(*coctx));
+  CoroutineActor* coctx = new CoroutineActor;
   coctx->func = func;
   coctx->ud = ud;
   coctx->corotine = corotine;
-  coctx->cap = 0;
+  coctx->ctx_cap = 0;
   coctx->size = 0;
   coctx->status = CoroutineImpl::kCoroutineReady;
   coctx->stack = nullptr;
@@ -22,29 +24,28 @@ CoroutineActor* CoNew(
 
 void CoDelete(CoroutineActor*coctx) {
   free(coctx->stack);
-  free(coctx);
+  delete(coctx);
 }
 
 CoroSchedule* CoroutineImpl::CoroutineInit() {
   CoroSchedule* corotine = new CoroSchedule;
-  //Coroutine *corotine = (Coroutine*)malloc(sizeof(*corotine));
   corotine->nco = 0;
   corotine->cap = DEFAULT_COROUTINE;
   corotine->running = -1;
-  corotine->coctx = (CoroutineActor**)malloc(sizeof(CoroutineActor*) * corotine->cap);
-  memset(corotine->coctx, 0, sizeof(CoroutineActor*) * corotine->cap);
+  corotine->coctxs = (CoroutineActor**)malloc(sizeof(CoroutineActor*) * corotine->cap);
+  memset(corotine->coctxs, 0, sizeof(CoroutineActor*) * corotine->cap);
   return corotine;
 }
 
 void CoroutineImpl::CoroutineClose(CoroSchedule *corotine) {
-  for (int i = 0; i < corotine->cap; i++) {
-    CoroutineActor * coctx = corotine->coctx[i];
+  for (int idx = 0; idx < corotine->cap; idx++) {
+    CoroutineActor * coctx = corotine->coctxs[idx];
     if (coctx) {
       CoDelete(coctx);
     }
   }
-  free(corotine->coctx);
-  corotine->coctx = nullptr;
+  free(corotine->coctxs);
+  corotine->coctxs = nullptr;
   delete(corotine);
 }
 
@@ -52,9 +53,9 @@ int CoroutineImpl::CoroutineNew(CoroSchedule *corotine, CoroutineFunc func, void
   CoroutineActor *coctx = CoNew(corotine, func, ud);
   if (corotine->nco >= corotine->cap) {
     int id = corotine->cap;
-    corotine->coctx = (CoroutineActor**)realloc(corotine->coctx, corotine->cap * 2 * sizeof(CoroutineActor*));
-    memset(corotine->coctx + corotine->cap, 0, sizeof(CoroutineActor *) * corotine->cap);
-    corotine->coctx[corotine->cap] = coctx;
+    corotine->coctxs = (CoroutineActor**)realloc(corotine->coctxs, corotine->cap * 2 * sizeof(CoroutineActor*));
+    memset(corotine->coctxs + corotine->cap, 0, sizeof(CoroutineActor *) * corotine->cap);
+    corotine->coctxs[corotine->cap] = coctx;
     corotine->cap *= 2;
     ++corotine->nco;
     TRACE(logger_, "create coroutine_id_:" << id <<",ptr:"<< coctx);
@@ -62,8 +63,8 @@ int CoroutineImpl::CoroutineNew(CoroSchedule *corotine, CoroutineFunc func, void
   } else {
     for (int idx = 0; idx < corotine->cap; idx++) {
       int id = (idx + corotine->nco) % corotine->cap;
-      if (corotine->coctx[id] == nullptr) {
-        corotine->coctx[id] = coctx;
+      if (corotine->coctxs[id] == nullptr) {
+        corotine->coctxs[id] = coctx;
         ++corotine->nco;
         TRACE(logger_, "create coroutine_id_:" << id << ",ptr:" << coctx);
         return id;
@@ -77,10 +78,10 @@ static void MainFunc(uint32_t low32, uint32_t hi32) {
   uintptr_t ptr = (uintptr_t)low32 | ((uintptr_t)hi32 << 32);
   CoroSchedule *corotine = (CoroSchedule *)ptr;
   int id = corotine->running;
-  CoroutineActor *coctx = corotine->coctx[id];
+  CoroutineActor *coctx = corotine->coctxs[id];
   coctx->func(/*corotine, */coctx->ud);
   CoDelete(coctx);
-  corotine->coctx[id] = nullptr;
+  corotine->coctxs[id] = nullptr;
   --corotine->nco;
   corotine->running = -1;
 }
@@ -95,7 +96,7 @@ void CoroutineImpl::CoroutineResume(CoroSchedule* corotine, int id) {
     return;
   }
 
-  CoroutineActor *coctx = corotine->coctx[id];
+  CoroutineActor *coctx = corotine->coctxs[id];
   if (coctx == nullptr)
     return;
   int status = coctx->status;
@@ -129,13 +130,13 @@ void CoroutineImpl::CoroutineResume(CoroSchedule* corotine, int id) {
 void CoroutineImpl::SaveStack(CoroutineActor* coctx, char *top){
   char dummy = 0;
   if (top - &dummy >= STACK_SIZE){
-    WARN(logger_, "stack is more than:" << STACK_SIZE);
+    ERROR(logger_, "stack is more than:" << STACK_SIZE);
     return;
   }
-  if (coctx->cap < top - &dummy) {
+  if (coctx->ctx_cap < top - &dummy) {
     free(coctx->stack);
-    coctx->cap = top - &dummy;
-    coctx->stack = (char*)malloc(coctx->cap);
+    coctx->ctx_cap = top - &dummy;
+    coctx->stack = (char*)malloc(coctx->ctx_cap);
   }
   coctx->size = top - &dummy;
   memcpy(coctx->stack, &dummy, coctx->size);
@@ -147,7 +148,7 @@ void CoroutineImpl::CoroutineYield(CoroSchedule * corotine) {
     WARN(logger_, "error id:" << id);
     return;
   }
-  CoroutineActor * coctx = corotine->coctx[id];
+  CoroutineActor * coctx = corotine->coctxs[id];
   if (corotine->stack >= (char *)&coctx){
     WARN(logger_, "error stack:" << corotine->stack);
     return;
@@ -163,7 +164,7 @@ CoroutineActor* CoroutineImpl::GetCoroutineCtx(CoroSchedule * corotine,int id){
     WARN(logger_, "error id:" << id);
     return nullptr;
   }
-  return corotine->coctx[id];
+  return corotine->coctxs[id];
 }
 
 int CoroutineImpl::CoroutineStatus(CoroSchedule* corotine, int id) {
@@ -172,10 +173,10 @@ int CoroutineImpl::CoroutineStatus(CoroSchedule* corotine, int id) {
     return kCoroutineInvalid;
   }
 
-  if (corotine->coctx[id] == nullptr) {
+  if (corotine->coctxs[id] == nullptr) {
     return kCoroutineInvalid;
   }
-  return corotine->coctx[id]->status;
+  return corotine->coctxs[id]->status;
 }
 
 int CoroutineImpl::CoroutineRunning(CoroSchedule * corotine) {

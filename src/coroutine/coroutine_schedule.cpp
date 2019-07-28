@@ -20,7 +20,6 @@ void CoroutineSchedule::InitCoroSchedule(CoroutineFunc func, void* data){
     all_coro_list_.emplace_back(coroutine_id);
     available_coro_list_.insert(coroutine_id);
     if (is_first){
-      CoroutineContext::SetCurCoroutineId(coroutine_id);
       is_first = false;
     }
   }
@@ -40,13 +39,17 @@ int CoroutineSchedule::GetAvailableCoroId(){
 
 }
 
-void CoroutineSchedule::ProcessCoroutine(int coro_id){
-  if (coro_id == GetRunningId()){
-    CoroutineYield();
-  }
+void CoroutineSchedule::CoroutineYield(int coro_id){
 
   task_coro_list_.erase(coro_id);
   available_coro_list_.insert(coro_id);
+
+  if (coro_id == GetRunningId()){
+    TRACE(logger_, "will be yield coroutine:"<< coro_id);
+    CoroutineYield();
+  } else {
+    TRACE(logger_, "coro_id:" << coro_id<<",GetRunningId()"<< GetRunningId());
+  }
 }
 
 CoroutineActor* CoroutineSchedule::GetCoroutineCtx(int id){
@@ -59,8 +62,10 @@ void CoroutineSchedule::CoroutineResume(int id) {
     //如果当前是在协程中，先切出去
     CoroutineYield();
   }
+  CoroutineContext::SetCurCoroutineId(id);
   task_coro_list_.insert(id);
   available_coro_list_.erase(id);
+  TRACE(logger_, "will be resume coroutine:" << id);
   coro_impl_.CoroutineResume(coro_sche_, id);
 }
 

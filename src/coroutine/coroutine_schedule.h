@@ -15,7 +15,7 @@ public:
 
   void InitCoroSchedule(CoroutineFunc func, void* data);
 
-  void ProcessCoroutine(int coro_id);
+  void CoroutineYield(int coro_id);
 
   int GetAvailableCoroId();
 

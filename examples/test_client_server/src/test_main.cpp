@@ -142,7 +142,7 @@ bool HttpTestInvoke(bdf::Application<bdf::testserver::TestClientServerHandler>* 
 }
 
 int HttpClientTest(void* data) {
-  prctl(PR_SET_NAME, "RapidClientTest222222");
+  prctl(PR_SET_NAME, "HttpClientTest222222");
   bdf::Application<bdf::testserver::TestClientServerHandler>* app =
     (bdf::Application<bdf::testserver::TestClientServerHandler>*)data;
   bdf::ForTest::Inst().SetForTest(true);

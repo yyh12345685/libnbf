@@ -44,7 +44,7 @@ void SyncClientConnect::OnDecodeMessage(EventMessage* message) {
   message->status = EventMessage::kStatusOK;
   message->direction = EventMessage::kIncomingResponse;
   message->sequence_id = keeper_message->sequence_id;
-  message->coro_id = keeper_message->coro_id;
+  message->coroutine_id = keeper_message->coroutine_id;
   message->handle_id = keeper_message->handle_id;
   message->descriptor_id = (int64_t)((void*)(this));
   if (nullptr != keeper_message->ctx && nullptr != keeper_message->ctx->callback) {
