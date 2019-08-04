@@ -25,16 +25,18 @@ void CoroutineServiceHandler::Run(HandleData* data){
   scheduler->CoroutineResume(coro_id);
 
   while (data->is_run) {
-    if (data->data_.empty()) {
-      usleep(1);
+    //ProcessTimer();
+    //Process(data);//也许是处理客户端的
+    if (scheduler->CoroutineResumeActive()){
       continue;
     }
 
-    std::queue<EventMessage*> temp;
-    data->lock_.lock();
-    temp.swap(data->data_);
-    data->lock_.unlock();
-    ProcessMessageHandle(temp);
+    if (CoroutineContext::GetCurCoroutineId() < 0) {
+      int coro_id = scheduler->GetAvailableCoroId();
+      scheduler->CoroutineResume(coro_id);
+    }else{
+      WARN(logger_, "not to here.coro id:"<< CoroutineContext::GetCurCoroutineId());
+    }
   }
   INFO(logger_, "CoroutineServiceHandler::Run exit.");
 }
@@ -71,7 +73,8 @@ void CoroutineServiceHandler::OnTimer(void* function_data){
     return;
   }
   CoroutineSchedule* scheduler = CoroutineContext::Instance().GetScheduler();
-  scheduler->CoroutineResume(coro_id);
+  //本来就在协程里面，会先切出来，然后切到另外一个协程
+  scheduler->CoroutineYieldToActive(coro_id);
 }
 
 void CoroutineServiceHandler::ProcessTask(HandleData* data){
@@ -115,7 +118,8 @@ void CoroutineServiceHandler::ProcessClientItem(EventMessage* msg){
   CoroutineSchedule* scheduler = CoroutineContext::Instance().GetScheduler();
   CoroutineActor* coroutine = scheduler->GetCoroutineCtx(msg->coroutine_id);
   coroutine->SendMessage(msg);
-  scheduler->CoroutineResume(msg->coroutine_id);
+  //本来就在协程里面，会先切出来，然后切到另外一个协程
+  scheduler->CoroutineYieldToActive(msg->coroutine_id);
 }
 
 void CoroutineServiceHandler::ProcessMessageHandle(std::queue<EventMessage*>& msg_list) {

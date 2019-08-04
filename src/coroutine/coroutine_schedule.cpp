@@ -32,6 +32,7 @@ int CoroutineSchedule::GetAvailableCoroId(){
       || CoroutineImpl::kCoroutineSuspend == status) {
       return id;
     }
+    return id;
   }
 
   WARN(logger_, "no available coro:" << available_coro_list_.size());
@@ -40,15 +41,24 @@ int CoroutineSchedule::GetAvailableCoroId(){
 }
 
 void CoroutineSchedule::CoroutineYield(int coro_id){
-
-  task_coro_list_.erase(coro_id);
-  available_coro_list_.insert(coro_id);
-
+  available_coro_list_.erase(coro_id);
   if (coro_id == GetRunningId()){
     TRACE(logger_, "will be yield coroutine:"<< coro_id);
+    CoroutineContext::SetCurCoroutineId(-1);
     CoroutineYield();
   } else {
-    TRACE(logger_, "coro_id:" << coro_id<<",GetRunningId()"<< GetRunningId());
+    WARN(logger_, "coro_id:" << coro_id<<",GetRunningId()"<< GetRunningId());
+  }
+}
+
+void CoroutineSchedule::CoroutineYieldToActive(int coro_id){
+  //说明要切换协程，切换回来之后可能是收到了客户端的消息或者超时
+  active_coro_list_.push(coro_id);
+  if (GetRunningId() >= 0) {
+    //当前是在协程中，切出去
+    TRACE(logger_, "cur coro id:" << GetRunningId() << ",change to coro id:" << coro_id);
+    CoroutineContext::SetCurCoroutineId(-1);
+    CoroutineYield();
   }
 }
 
@@ -56,15 +66,31 @@ CoroutineActor* CoroutineSchedule::GetCoroutineCtx(int id){
   return coro_impl_.GetCoroutineCtx(coro_sche_,id);
 }
 
-void CoroutineSchedule::CoroutineResume(int id) {
-  //说明要切换协程，切换回来之后可能是收到了客户端的消息或者超市
-  if (GetRunningId() >= 0) {
-    //如果当前是在协程中，先切出去
-    CoroutineYield();
+//启动协程或者恢复有返回的协程
+bool CoroutineSchedule::CoroutineResumeActive(){
+  if (GetRunningId() >= 0){
+    INFO(logger_, "not to here,cur coro id:" << GetRunningId());
+    return false;
   }
+  if (active_coro_list_.size()>0){
+    int id = active_coro_list_.front();
+    TRACE(logger_, "change to coro id:" << id);
+    active_coro_list_.pop();
+    CoroutineResume(id);
+    return true;
+  }
+  return false;
+}
+
+void CoroutineSchedule::CoroutineResume(int id) {
+  //if (GetRunningId() >= 0) {
+  //  //如果当前是在协程中，先切出去
+  //  INFO(logger_, "cur coro id:" << GetRunningId() << ",change to coro id:" << id);
+  //  CoroutineContext::SetCurCoroutineId(-1);
+  //  CoroutineYield();
+  //}
   CoroutineContext::SetCurCoroutineId(id);
-  task_coro_list_.insert(id);
-  available_coro_list_.erase(id);
+  available_coro_list_.insert(id);
   TRACE(logger_, "will be resume coroutine:" << id);
   coro_impl_.CoroutineResume(coro_sche_, id);
 }

@@ -15,6 +15,7 @@ EventMessage* CoroutineActor::RecieveMessage(EventMessage* message,uint32_t time
   TRACE(logger_, "CoroutineActor::RecieveMessage,timeout_ms:"
     << timeout_ms<<",msg_list_:"<<msg_list_.size());
   uint64_t time_id = 0;
+  CoroutineSchedule* scheduler = CoroutineContext::Instance().GetScheduler();
   if (msg_list_.empty()){
     if (timeout_ms) {
       CoroutineServiceHandler* hdl = CoroutineContext::Instance().GetServiceHandler();
@@ -24,9 +25,7 @@ EventMessage* CoroutineActor::RecieveMessage(EventMessage* message,uint32_t time
       data.time_proc = hdl;
       time_id = CoroutineContext::Instance().GetTimer()->AddTimer(timeout_ms, data);
     }
-    CoroutineSchedule* scheduler = CoroutineContext::Instance().GetScheduler();
     TRACE(logger_, "RecieveMessage CoroutineYield:" << this);
-    
     scheduler->CoroutineYield(message->coroutine_id);
   }
   is_waiting_ = false;
@@ -36,10 +35,12 @@ EventMessage* CoroutineActor::RecieveMessage(EventMessage* message,uint32_t time
   }
   
   if (!msg_list_.empty()) {
-    EventMessage* message = msg_list_.front();
+    EventMessage* msg = msg_list_.front();
     msg_list_.pop_front();
-    return message;
+    return msg;
   } else {
+    INFO(logger_, "maybe time out:"<< timeout_ms <<",coro id:" << 
+      message->coroutine_id  << ",running id:" << scheduler ->GetRunningId()<<",prt:"<< this);
     return nullptr;
   }
 }

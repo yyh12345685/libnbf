@@ -28,7 +28,7 @@ struct CoroutineContext {
     return Instance().cur_coroutine_id_;
   }
 
-  inline static void SetCurCoroutineId(int& cur_coroutine_id) {
+  inline static void SetCurCoroutineId(int cur_coroutine_id) {
     Instance().cur_coroutine_id_ = cur_coroutine_id;
   }
 

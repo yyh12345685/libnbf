@@ -34,8 +34,10 @@
     <None Include="examples\coroutine_test_server\conf\router.conf" />
     <None Include="examples\coroutine_test_server\conf\coroutine_test_server.conf" />
     <None Include="examples\coroutine_stress_testing\conf\router.conf" />
-    <None Include="examples\coroutine_stress_testing\conf\logger.conf" />
-    <None Include="examples\coroutine_stress_testing\conf\coroutine_stress_testing.conf" />
+    <None Include="examples\coroutine_stress_testing\conf\stress_testing_client.conf" />
+    <None Include="examples\coroutine_stress_testing\conf\stress_testing_server.conf" />
+    <None Include="examples\coroutine_stress_testing\conf\logger_cli.conf" />
+    <None Include="examples\coroutine_stress_testing\conf\logger_svr.conf" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />
@@ -237,6 +239,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="examples\coroutine_stress_testing\src\coro_test_server_handle.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="examples\coroutine_stress_testing\src\coro_server_main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

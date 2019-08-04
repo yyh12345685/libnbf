@@ -1,14 +1,12 @@
-#include <unistd.h>
-#include <sys/prctl.h>
 #include "app/app.h"
-#include "app/appbase.h"
 #include "client/client_mgr.h"
 #include "message.h"
 #include "coro_test_server_handle.h"
+#include "task.h"
 
 LOGGER_STATIC_DECL_IMPL(logger_, "root");
 
-void RapidClientTestSigle(bdf::Application<bdf::testserver::CoroTestServerHandler>* app){
+void RapidClientTestSigle(){
   TRACE(logger_, "RapidTest SendRecieve.");
   bdf::RapidMessage* rapid_message_2 = bdf::MessageFactory::Allocate<bdf::RapidMessage>();
   rapid_message_2->body = "test send recieve rapid";
@@ -23,18 +21,7 @@ void RapidClientTestSigle(bdf::Application<bdf::testserver::CoroTestServerHandle
   bdf::MessageFactory::Destroy(real_msg);
 }
 
-int RapidClientTest(void* data) {
-  prctl(PR_SET_NAME, "RapidClientTest111111");
-  bdf::Application<bdf::testserver::CoroTestServerHandler>* app =
-    (bdf::Application<bdf::testserver::CoroTestServerHandler>*)data;
-
-  while (true){
-    RapidClientTestSigle(app);
-  }
-  return 0;
-}
-
-void HttpClientTestSigle(bdf::Application<bdf::testserver::CoroTestServerHandler>* app){
+void HttpClientTestSigle(){
   TRACE(logger_, "HttpTest SendRecieve.");
   bdf::HttpMessage* hmsg2 = bdf::MessageFactory::Allocate<bdf::HttpMessage>();
   hmsg2->InitRequest("POST", true);
@@ -53,50 +40,29 @@ void HttpClientTestSigle(bdf::Application<bdf::testserver::CoroTestServerHandler
   bdf::MessageFactory::Destroy(hmsg2_resp);
 }
 
-int HttpClientTest(void* data) {
-  prctl(PR_SET_NAME, "RapidClientTest222222");
-  bdf::Application<bdf::testserver::CoroTestServerHandler>* app =
-    (bdf::Application<bdf::testserver::CoroTestServerHandler>*)data;
-
-  while (true){
-    HttpClientTestSigle(app);
+class ClientTaskTest :public bdf::Task {
+  virtual void OnTask(void* function_data) {
+    INFO(logger_, "start task.");
+    while (true) {
+      RapidClientTestSigle();
+      //HttpClientTestSigle();
+    }
+    INFO(logger_, "exit task.");
   }
-}
-
-void StartRapidTest(void* app){
-  int thread_num = 2;
-  std::vector<std::thread*> threads_rapid;
-  for (int idx = 0; idx < thread_num; idx++) {
-    std::thread* rt = new std::thread(&RapidClientTest, &app);
-    threads_rapid.push_back(rt);
-  }
-
-  for (int idx = 0; idx < thread_num; idx++){
-    threads_rapid[idx]->join();
-    delete threads_rapid[idx];
-  }
-}
-
-void StartHttpTest(void* app){
-  int thread_num = 2;
-  std::vector<std::thread*> threads_http;
-  for (int idx = 0; idx < thread_num; idx++) {
-    std::thread* rt = new std::thread(&RapidClientTest, &app);
-    threads_http.push_back(rt);
-  }
-
-  for (int idx = 0; idx < thread_num; idx++){
-    threads_http[idx]->join();
-    delete threads_http[idx];
-  }
-}
+};
 
 int main(int argc, char *argv[]){
   bdf::Application<bdf::testserver::CoroTestServerHandler> app;
+  ClientTaskTest client_test_task;
   app.SetOnAfterStart([&]() {
-    StartRapidTest(&app);
-    StartHttpTest(&app);
+    bdf::service::GetIoService().SendTaskToServiceHandle(&client_test_task);
+    return 0;
+  });
+  ClientTaskTest client_test_task1;
+  app.SetOnAfterStart([&]() {
+    bdf::service::GetIoService().SendTaskToServiceHandle(&client_test_task1);
     return 0;
   });
   return app.Run(argc, argv);
 }
+

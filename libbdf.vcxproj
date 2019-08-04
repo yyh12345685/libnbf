@@ -119,9 +119,11 @@
   <ItemGroup>
     <None Include=".gitignore" />
     <None Include="basic.cmake" />
-    <None Include="examples\coroutine_stress_testing\conf\coroutine_stress_testing.conf" />
-    <None Include="examples\coroutine_stress_testing\conf\logger.conf" />
+    <None Include="examples\coroutine_stress_testing\conf\logger_cli.conf" />
+    <None Include="examples\coroutine_stress_testing\conf\logger_svr.conf" />
     <None Include="examples\coroutine_stress_testing\conf\router.conf" />
+    <None Include="examples\coroutine_stress_testing\conf\stress_testing_client.conf" />
+    <None Include="examples\coroutine_stress_testing\conf\stress_testing_server.conf" />
     <None Include="examples\coroutine_test_server\conf\logger.conf" />
     <None Include="examples\coroutine_test_server\conf\router.conf" />
     <None Include="examples\coroutine_test_server\conf\coroutine_test_server.conf" />
@@ -153,6 +155,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="examples\coroutine_stress_testing\src\coro_client_main.cpp" />
+    <ClCompile Include="examples\coroutine_stress_testing\src\coro_server_main.cpp" />
     <ClCompile Include="examples\coroutine_stress_testing\src\coro_test_server_handle.cpp" />
     <ClCompile Include="examples\coroutine_test_server\src\app_test_server_handle.cpp" />
     <ClCompile Include="examples\coroutine_test_server\src\test_main.cpp" />

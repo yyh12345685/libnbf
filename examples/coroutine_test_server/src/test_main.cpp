@@ -1,6 +1,5 @@
 #include <unistd.h>
 #include "app/app.h"
-#include "app/appbase.h"
 #include "client/client_mgr.h"
 #include "message.h"
 #include "app_test_server_handle.h"
@@ -62,7 +61,7 @@ public:
   }
 
   virtual void OnTask(void* function_data) {
-    TRACE(logger_, "on task...");
+    INFO(logger_, "on task.");
     int times = 1000000;
     while (times-- > 0) {
       if (times % 2 == 0){
@@ -70,10 +69,10 @@ public:
       }else{
         RapidTest();
       }
-      
       sleep(3);
       //break;
     }
+    INFO(logger_, "exit task.");
   }
 };
 
