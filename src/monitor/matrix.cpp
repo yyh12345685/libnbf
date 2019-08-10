@@ -42,6 +42,8 @@ int GlobalMatrix::Init(
 
   if (0 != collector->Start()) {
     ERROR(logger, "GlobalMatrix::Init Collector start fail");
+    delete item_map;
+    delete collector;
     delete global_matrix;
     return -1;
   }
@@ -51,10 +53,13 @@ int GlobalMatrix::Init(
 }
 
 int GlobalMatrix::Destroy() {
+  INFO(logger, "GlobalMatrix Stop start.");
+  global_matrix_->Stop();
   if (global_matrix_) {
     delete global_matrix_;
     global_matrix_ = nullptr;
   }
+  INFO(logger, "GlobalMatrix Stop ok.");
   return 0;
 }
 
@@ -152,6 +157,10 @@ int Matrix::SendToCollector(const MatrixItem* item) {
 
 Matrix::MatrixStatMapPtr Matrix::GetMatrixStatMap() {
   return collector_->GetMatrixStatMap();
+}
+
+void Matrix::Stop(){
+  collector_->Stop();
 }
 
 }

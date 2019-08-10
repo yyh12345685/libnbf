@@ -26,11 +26,11 @@ target_link_libraries(coroutine_test_server
   rt
 )
 
-target_compile_definitions(
-  coroutine_test_server
-  PRIVATE
-  -DMEM_PROFILE=1 
-)
+#target_compile_definitions(
+#  coroutine_test_server
+#  PRIVATE
+#  -DMEM_PROFILE=1 
+#)
 
 add_custom_target(coroutine_test_server_config
 	COMMAND mkdir -p ${CMAKE_CURRENT_BINARY_DIR}/conf

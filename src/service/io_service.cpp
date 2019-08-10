@@ -131,6 +131,10 @@ uint32_t IoService::GetServiceHandleId(EventMessage* msg){
   return (id_hs++) % handle_thread_.service_handle_data_.size();
 }
 
+uint32_t IoService::GetServiceHandleCount() {
+  return handle_thread_.service_handle_thread_.size();
+}
+
 void IoService::SendToServiceHandle(EventMessage* msg){
   uint32_t id = GetServiceHandleId(msg);
   TRACE(logger_, "handle id:" << msg->handle_id << ",Get id:" << id);

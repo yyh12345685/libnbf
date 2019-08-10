@@ -32,7 +32,6 @@ void SyncSequence::StartTimeCheck(){
 }
 
 int SyncSequence::Put(EventMessage* message) {
-  message->birthtime = Time::GetMillisecond();
   lock_.lock();
   list_.emplace_back(message);
   lock_.unlock();
@@ -43,7 +42,7 @@ int SyncSequence::Put(EventMessage* message) {
   }
   
   TimerData real_td;
-  real_td.time_out_ms = timeout_ms_;
+  //real_td.time_out_ms = timeout_ms_;
   real_td.time_proc = this;
   real_td.function_data = (void*)(&real_timer_type);
   //这里才是真正的设置超时的地方
@@ -82,17 +81,18 @@ void SyncSequence::OnTimer(void* function_data){
   switch (timer_type)
   {
   case check_timer_type:{
-    std::list<size_t> time_ids;
+    //std::list<size_t> time_ids;
     time_lock_.lock();
-    timer_.ProcessTimerTest(time_ids);
+    timer_.ProcessTimer();
+    //timer_.ProcessTimerTest(time_ids);
     time_lock_.unlock();
-    std::string ids_str;
-    for (const auto& id : time_ids) {
-      ids_str.append(common::ToString(id)).append("-");
-    }
-    if (!ids_str.empty()){
-      TRACE(logger_, "ProcessTimerTest,ids:" << ids_str);
-    }
+    //std::string ids_str;
+    //for (const auto& id : time_ids) {
+    //  ids_str.append(common::ToString(id)).append("-");
+    //}
+    //if (!ids_str.empty()){
+    //  TRACE(logger_, "ProcessTimerTest,ids:" << ids_str);
+    //}
     StartTimeCheck();
     break;
   }

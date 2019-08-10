@@ -55,6 +55,9 @@ void Connecting::OnRead(){
   while (rc){
     nread = Socket::TcpSocketRead(fd_, tmp, sizeof(tmp));
     if (nread < 0){
+      if (EINTR == errno) {
+        continue;
+      }
       if (EAGAIN == errno || EWOULDBLOCK == errno){
         //nodata or data has all readed
         DEBUG(logger_, "TcpSocketRead errno:" << errno << ",ip:" << GetIp()
@@ -145,6 +148,9 @@ void Connecting::OnWrite(){
       }
       TRACE(logger_, "send size is:" << ret);
     } else if (ret < 0){
+      if (EINTR == errno) {
+        continue;
+      }
       if (errno == EINTR || errno == EAGAIN){
 
       }else{

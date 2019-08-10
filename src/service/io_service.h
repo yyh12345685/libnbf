@@ -61,6 +61,7 @@ public:
   int AgentsAddModr(EventFunctionBase* ezfd, int fd);
   int AgentsDel(EventFunctionBase* ezfd, int fd);
 
+  uint32_t GetServiceHandleCount();
 private:
   void SendToIoHandleInner(EventMessage* msg);
 

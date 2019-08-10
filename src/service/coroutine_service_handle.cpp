@@ -25,14 +25,14 @@ void CoroutineServiceHandler::Run(HandleData* data){
   scheduler->CoroutineResume(coro_id);
 
   while (data->is_run) {
-    //ProcessTimer();
-    //Process(data);//也许是处理客户端的
+    //这里负责切换到协程，所有业务都在协程中处理
     if (scheduler->CoroutineResumeActive()){
       continue;
     }
 
     if (CoroutineContext::GetCurCoroutineId() < 0) {
       int coro_id = scheduler->GetAvailableCoroId();
+      TRACE(logger_, "CoroutineResume available coro id:"<< coro_id);
       scheduler->CoroutineResume(coro_id);
     }else{
       WARN(logger_, "not to here.coro id:"<< CoroutineContext::GetCurCoroutineId());
@@ -111,7 +111,7 @@ void CoroutineServiceHandler::Process(HandleData* data){
 void CoroutineServiceHandler::ProcessClientItem(EventMessage* msg){
   if (msg->coroutine_id <0){
     //not to here,否则会丢消息
-    ERROR(logger_, "error coro_id:" << msg->coroutine_id);
+    WARN(logger_, "error coro_id:" << msg->coroutine_id);
     MessageFactory::Destroy(msg);
     return;
   }
@@ -131,7 +131,11 @@ void CoroutineServiceHandler::ProcessMessageHandle(std::queue<EventMessage*>& ms
 
     Connecting* con = (Connecting*)((void*)(msg->descriptor_id));
     TRACE(logger_, "ProcessMessageHandle is server:" << con->IsServer());
-
+    if (MessageBase::kStatusOK != msg->status){
+      //超时或者连接被关闭
+      MessageFactory::Destroy(msg);
+      continue;
+    }
     if (con->IsServer()){
       //处理服务端接收的消息
       Handle(msg);

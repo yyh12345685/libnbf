@@ -20,17 +20,17 @@ add_executable(stress_client_test
 target_link_libraries(stress_client_test
   bdf
   ${LOG4CPLUS_LIBRARIES}
-	#${TCMALLOC_LIBRARIES}
-	#${UNWIND_LIBRARIES}
+	${TCMALLOC_LIBRARIES}
+	${UNWIND_LIBRARIES}
   pthread
   rt
 )
 
-target_compile_definitions(
-  stress_client_test
-  PRIVATE
-  -DMEM_PROFILE=1 
-)
+#target_compile_definitions(
+#  stress_client_test
+#  PRIVATE
+#  -DMEM_PROFILE=1 
+#)
 
 add_custom_target(coroutine_stress_testing_config
 	COMMAND mkdir -p ${CMAKE_CURRENT_BINARY_DIR}/conf
@@ -48,14 +48,14 @@ add_executable(stress_server_test
 target_link_libraries(stress_server_test
   bdf
   ${LOG4CPLUS_LIBRARIES}
-	#${TCMALLOC_LIBRARIES}
-	#${UNWIND_LIBRARIES}
+	${TCMALLOC_LIBRARIES}
+	${UNWIND_LIBRARIES}
   pthread
   rt
 )
 
-target_compile_definitions(
-  stress_server_test
-  PRIVATE
-  -DMEM_PROFILE=1 
-)
+#target_compile_definitions(
+#  stress_server_test
+#  PRIVATE
+#  -DMEM_PROFILE=1 
+#)

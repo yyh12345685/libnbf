@@ -81,8 +81,10 @@ int AsyncClientConnect::EncodeMsg(EventMessage* message){
 
 void AsyncClientConnect::OnTimeout(EventMessage* msg){
   if (msg->type_id == MessageType::kHeartBeatMessage) {
-    DEBUG(logger, "AsyncClientChannel::OnTimeout break");
-    CleanClient();
+    //HeartBeat time out
+    INFO(logger, "AsyncClientChannel::OnTimeout HeartBeat time out.");
+    OnClose();
+    //CleanClient();
   } else {
     DEBUG(logger, "AsyncClientChannel::OnTimeout message");
   }

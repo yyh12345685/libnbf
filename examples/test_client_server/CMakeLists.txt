@@ -26,11 +26,11 @@ target_link_libraries(test_client_server
   rt
 )
 
-target_compile_definitions(
-  test_client_server
-  PRIVATE
-  -DMEM_PROFILE=1 
-)
+#target_compile_definitions(
+#  test_client_server
+#  PRIVATE
+#  -DMEM_PROFILE=1 
+#)
 
 add_custom_target(test_client_server_config
 	COMMAND mkdir -p ${CMAKE_CURRENT_BINARY_DIR}/conf

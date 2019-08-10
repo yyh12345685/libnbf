@@ -61,7 +61,7 @@ int Agents::Del(EventFunctionBase* ezfd, int fd){
 }
 
 Agents::~Agents() {
-  Stop();
+  //Stop();
 	
 	if(nullptr != agent_master_)
     BDF_DELETE(agent_master_);

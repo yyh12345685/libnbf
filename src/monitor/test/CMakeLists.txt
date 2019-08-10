@@ -28,7 +28,8 @@ add_test(t_matrix_stat t_matrix_stat)
 
 add_executable(t_mem_profile t_mem_profile.cpp)
 add_test(t_mem_profile t_mem_profile)
-target_compile_definitions(
-  t_mem_profile
-  PRIVATE
-  -DMEM_PROFILE=1 )
+
+#target_compile_definitions(
+#  t_mem_profile
+#  PRIVATE
+#  -DMEM_PROFILE=1 )

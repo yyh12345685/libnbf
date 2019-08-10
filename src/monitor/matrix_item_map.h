@@ -6,8 +6,8 @@
 #include <vector>
 #include <unordered_map>
 #include "matrix_item.h"
-#include "../common/logger.h"
-#include "../common/spin_lock.h"
+#include "common/logger.h"
+#include "common/spin_lock.h"
 
 namespace bdf{
 namespace monitor {

@@ -85,6 +85,7 @@ class Matrix {
 
   MatrixStatMapPtr GetMatrixStatMap();
 
+  void Stop();
  private:
   LOGGER_CLASS_DECL(logger);
 

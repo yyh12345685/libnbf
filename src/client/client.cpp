@@ -116,7 +116,6 @@ bool Client::Send(EventMessage* message) {
     return false;
   }
 
-  //message->sequence_id = GetSequenceId();
   message->descriptor_id = (int64_t)((void*)connect_);
   if (message->IsSynchronous()){
     message->direction = MessageBase::kSendNoCareResponse;
@@ -184,6 +183,8 @@ void Client::DoSend(EventMessage* message){
   if (nullptr != CoroutineContext::Instance().GetServiceHandler()){
     //使用协程handle的时候不为空，非协程框架使用异步调用Invoke
     message->handle_id = CoroutineContext::Instance().GetServiceHandler()->GetHandlerId();
+    int coro_id = CoroutineContext::GetCurCoroutineId();
+    message->coroutine_id = coro_id;
   }
   
   TRACE(logger_, "SendToIoHandle,handle_id:" << message->handle_id);
@@ -197,12 +198,12 @@ EventMessage* Client::DoRecieve(EventMessage* message){
     //CoroutineActor* actor = scheduler->GetCoroutineCtx(coro_id);
     int coro_id = CoroutineContext::GetCurCoroutineId();
     CoroutineActor* actor = CoroutineContext::GetCurCoroutineCtx();
-    if (nullptr == actor){
+    if (nullptr == actor || coro_id < 0){
       WARN(logger_, "no valid coroutine id:" << coro_id);
       return nullptr;
     }
     TRACE(logger_, "get coroutine id:" << coro_id << ",ptr:" << actor);
-    message->coroutine_id = coro_id;
+    //message->coroutine_id = coro_id;
     actor->SetWaitingId(message->sequence_id);
     return actor->RecieveMessage(message,timeout_ms_);
   }else{

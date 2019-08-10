@@ -21,9 +21,13 @@ EventMessage* CoroutineActor::RecieveMessage(EventMessage* message,uint32_t time
       CoroutineServiceHandler* hdl = CoroutineContext::Instance().GetServiceHandler();
       TimerData data;
       data.function_data = &message->coroutine_id;
-      data.time_out_ms = timeout_ms;
+      //data.time_out_ms = timeout_ms;
       data.time_proc = hdl;
-      time_id = CoroutineContext::Instance().GetTimer()->AddTimer(timeout_ms, data);
+      //这里定时器增加5ms，因为在async_client_connect和sync_sequence也有个定时器，那个时间是标准的
+      //需要connect中的定时器先触发，否则回有bug，所以这里先简单解决，多延迟5ms
+      //如果协程中的定时器先触发，会导致消息顺序不对
+      int real_time_out = timeout_ms + 5;
+      time_id = CoroutineContext::Instance().GetTimer()->AddTimer(real_time_out, data);
     }
     TRACE(logger_, "RecieveMessage CoroutineYield:" << this);
     scheduler->CoroutineYield(message->coroutine_id);
@@ -50,11 +54,17 @@ bool CoroutineActor::SendMessage(EventMessage* message){
     << ",sequence id:" << message->sequence_id << ",waiting_id:" << waiting_id_
     << ",msg_list_size:" << msg_list_.size());
   if (is_waiting_ && message->sequence_id != waiting_id_) {
-    WARN(logger_, "sequence_id mismatch:" << waiting_id_ << ",msg:" << *message);
+    INFO(logger_, "sequence_id mismatch:" << waiting_id_ << ",msg:" << *message);
+    //同步的协议超时就关闭了连接，不会来到这里
+    //rapid协议超时之后返回的，两个定时器的原因
+    if (is_waiting_> message->sequence_id){
+      MessageFactory::Destroy(message);
+    }
     return false;
   }
   
   msg_list_.emplace_back(message);
+  waiting_id_ = -1;
   return true;
 }
 

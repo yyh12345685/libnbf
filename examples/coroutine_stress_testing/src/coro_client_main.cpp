@@ -3,6 +3,7 @@
 #include "message.h"
 #include "coro_test_server_handle.h"
 #include "task.h"
+#include "service/io_service.h"
 
 LOGGER_STATIC_DECL_IMPL(logger_, "root");
 
@@ -13,7 +14,7 @@ void RapidClientTestSigle(){
   bdf::EventMessage* msg2_resp =
     bdf::AppBase::Get()->GetClientMgr()->SendRecieve("rapid_test_client", rapid_message_2);
   if (nullptr == msg2_resp) {
-    WARN(logger_, "msg2_resp is null.");
+    INFO(logger_, "msg2_resp is null.");
     return;
   }
   bdf::RapidMessage* real_msg = dynamic_cast<bdf::RapidMessage*>(msg2_resp);
@@ -32,7 +33,7 @@ void HttpClientTestSigle(){
   bdf::EventMessage* msg2_resp =
     bdf::AppBase::Get()->GetClientMgr()->SendRecieve("http_test_client", hmsg2);
   if (nullptr == msg2_resp) {
-    WARN(logger_, "msg2_resp is nullptr.");
+    INFO(logger_, "msg2_resp is nullptr.");
     return;
   }
   bdf::HttpMessage* hmsg2_resp = dynamic_cast<bdf::HttpMessage*>(msg2_resp);
@@ -45,7 +46,7 @@ class ClientTaskTest :public bdf::Task {
     INFO(logger_, "start task.");
     while (true) {
       RapidClientTestSigle();
-      //HttpClientTestSigle();
+      HttpClientTestSigle();
     }
     INFO(logger_, "exit task.");
   }
@@ -55,12 +56,10 @@ int main(int argc, char *argv[]){
   bdf::Application<bdf::testserver::CoroTestServerHandler> app;
   ClientTaskTest client_test_task;
   app.SetOnAfterStart([&]() {
-    bdf::service::GetIoService().SendTaskToServiceHandle(&client_test_task);
-    return 0;
-  });
-  ClientTaskTest client_test_task1;
-  app.SetOnAfterStart([&]() {
-    bdf::service::GetIoService().SendTaskToServiceHandle(&client_test_task1);
+    uint32_t service_handle_cnt = bdf::IoService::GetInstance().GetServiceHandleCount();
+    for (uint32_t idx = 0; idx < service_handle_cnt;idx++) {
+      bdf::service::GetIoService().SendTaskToServiceHandle(&client_test_task);
+    }
     return 0;
   });
   return app.Run(argc, argv);

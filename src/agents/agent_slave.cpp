@@ -12,7 +12,7 @@ AgentSlave::AgentSlave(){
 }
 
 AgentSlave::~AgentSlave() {
-  Stop();
+  //Stop();
   for (auto& thread : slave_event_threads_) {
     BDF_DELETE(thread);
   }
