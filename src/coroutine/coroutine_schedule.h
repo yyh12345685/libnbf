@@ -18,7 +18,10 @@ public:
 
   void CoroutineYield(int coro_id);
 
-  void CoroutineYieldToActive(int coro_id);
+  //挂起运行中的协程
+  void CoroutineYield();
+
+  bool CoroutineYieldToActive(int coro_id);
 
   int GetAvailableCoroId();
 
@@ -33,8 +36,9 @@ public:
 protected:
   int CoroutineStatus(int id);
 
-  //挂起运行中的协程
-  void CoroutineYield();
+  int CoroutineSize(){
+    return coro_sche_->cap;
+  }
 
 private:
 

@@ -3,7 +3,7 @@
 #include <ucontext.h>
 
 #define STACK_SIZE (512*1024)
-#define DEFAULT_COROUTINE 128
+#define DEFAULT_COROUTINE 512
 
 namespace bdf {
 

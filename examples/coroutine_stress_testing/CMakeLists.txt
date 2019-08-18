@@ -14,16 +14,23 @@ set(EXECUTABLE_OUTPUT_PATH  ${CMAKE_CURRENT_BINARY_DIR}/bin)
 
 add_executable(stress_client_test
   ${FILELIST}
+  src/client_task_test.cpp
   src/coro_client_main.cpp
 )
 
 target_link_libraries(stress_client_test
   bdf
   ${LOG4CPLUS_LIBRARIES}
-	${TCMALLOC_LIBRARIES}
-	${UNWIND_LIBRARIES}
+	#${TCMALLOC_LIBRARIES}
+	#${UNWIND_LIBRARIES}
   pthread
   rt
+)
+
+target_compile_definitions(
+  stress_client_test
+  PRIVATE
+  -DCLIENT_TEST=1 
 )
 
 #target_compile_definitions(
@@ -48,8 +55,8 @@ add_executable(stress_server_test
 target_link_libraries(stress_server_test
   bdf
   ${LOG4CPLUS_LIBRARIES}
-	${TCMALLOC_LIBRARIES}
-	${UNWIND_LIBRARIES}
+	#${TCMALLOC_LIBRARIES}
+	#${UNWIND_LIBRARIES}
   pthread
   rt
 )

@@ -92,7 +92,7 @@ void CoroutineImpl::CoroutineResume(CoroSchedule* corotine, int id) {
     return;
   }
   if (id < 0 || id >= corotine->cap){
-    WARN(logger_, "error id" << id<<",cap:"<< corotine->cap);
+    WARN(logger_, "error id:" << id<<",cap:"<< corotine->cap);
     return;
   }
 

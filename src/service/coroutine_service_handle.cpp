@@ -35,7 +35,7 @@ void CoroutineServiceHandler::Run(HandleData* data){
       TRACE(logger_, "CoroutineResume available coro id:"<< coro_id);
       scheduler->CoroutineResume(coro_id);
     }else{
-      WARN(logger_, "not to here.coro id:"<< CoroutineContext::GetCurCoroutineId());
+      WARN(logger_, "not to here,coro id:"<< CoroutineContext::GetCurCoroutineId());
     }
   }
   INFO(logger_, "CoroutineServiceHandler::Run exit.");
@@ -66,7 +66,7 @@ void CoroutineServiceHandler::ProcessTimer() {
 //when send receive timeout
 void CoroutineServiceHandler::OnTimer(void* function_data){
   TRACE(logger_, "CoroutineServiceHandler::OnTimer.");
-  int coro_id = *(int*)function_data;
+  int coro_id = *(int*)(function_data);
   if (coro_id < 0) {
     //not to here,否则会丢消息
     ERROR(logger_, "error coro_id:" << coro_id);
@@ -74,7 +74,9 @@ void CoroutineServiceHandler::OnTimer(void* function_data){
   }
   CoroutineSchedule* scheduler = CoroutineContext::Instance().GetScheduler();
   //本来就在协程里面，会先切出来，然后切到另外一个协程
-  scheduler->CoroutineYieldToActive(coro_id);
+  if (!scheduler->CoroutineYieldToActive(coro_id)){
+    WARN(logger_, "yield failed, coro_id:" << coro_id);
+  }
 }
 
 void CoroutineServiceHandler::ProcessTask(HandleData* data){
@@ -84,7 +86,9 @@ void CoroutineServiceHandler::ProcessTask(HandleData* data){
 
   TRACE(logger_, "CoroutineServiceHandler::ProcessTask.");
   std::queue<Task*> temp;
+  data->lock_task_.lock();
   temp.swap(data->task_);
+  data->lock_task_.unlock();
 
   while (!temp.empty()) {
     Task *task = temp.front();
@@ -109,34 +113,42 @@ void CoroutineServiceHandler::Process(HandleData* data){
 }
 
 void CoroutineServiceHandler::ProcessClientItem(EventMessage* msg){
+  CoroutineSchedule* scheduler = CoroutineContext::Instance().GetScheduler();
   if (msg->coroutine_id <0){
     //not to here,否则会丢消息
     WARN(logger_, "error coro_id:" << msg->coroutine_id);
+    scheduler->CoroutineYield();
     MessageFactory::Destroy(msg);
     return;
   }
-  CoroutineSchedule* scheduler = CoroutineContext::Instance().GetScheduler();
   CoroutineActor* coroutine = scheduler->GetCoroutineCtx(msg->coroutine_id);
-  coroutine->SendMessage(msg);
-  //本来就在协程里面，会先切出来，然后切到另外一个协程
-  scheduler->CoroutineYieldToActive(msg->coroutine_id);
+  if (coroutine->SendMessage(msg)){
+    //本来就在协程里面，会先切出来，然后切到另外一个协程
+    if (!scheduler->CoroutineYieldToActive(msg->coroutine_id)){
+      WARN(logger_, "yield failed, coro_id:" << msg->coroutine_id);
+    }
+  }else{
+    //超时的
+    MessageFactory::Destroy(msg);
+  }
 }
 
 void CoroutineServiceHandler::ProcessMessageHandle(std::queue<EventMessage*>& msg_list) {
   TRACE(logger_, "handle id:" << GetHandlerId()
     << ",ProcessMessage size:" << msg_list.size());
+  CoroutineSchedule* scheduler = CoroutineContext::Instance().GetScheduler();
   while (!msg_list.empty()) {
     EventMessage *msg = msg_list.front();
     msg_list.pop();
 
-    Connecting* con = (Connecting*)((void*)(msg->descriptor_id));
-    TRACE(logger_, "ProcessMessageHandle is server:" << con->IsServer());
+    TRACE(logger_, "message is:" << *msg);
     if (MessageBase::kStatusOK != msg->status){
-      //超时或者连接被关闭
+      //超时或者连接被关闭等无效消息
+      scheduler->CoroutineYield();
       MessageFactory::Destroy(msg);
       continue;
     }
-    if (con->IsServer()){
+    if (msg->direction == MessageBase::kIncomingRequest){
       //处理服务端接收的消息
       Handle(msg);
     }else{

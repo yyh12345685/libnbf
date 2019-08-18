@@ -1,7 +1,9 @@
+#include <unistd.h>
 #include "coro_test_server_handle.h"
 #include "message.h"
 #include "service/io_service.h"
 #include "monitor/matrix_scope.h"
+#include "client_task_test.h"
 
 namespace bdf {
 
@@ -19,6 +21,12 @@ void CoroTestServerHandler::OnRapidRequestMessage(RapidMessage* message){
     MessageFactory::Destroy(message);
     return;
   }
+  //usleep(1000 * 100);
+
+#ifdef CLIENT_TEST
+  ClientTaskTest::HttpClientTestSigle();
+#endif
+
   RapidMessage* msg = MessageFactory::Allocate<RapidMessage>();
   msg->SetDescriptorId(message->GetDescriptorId());
   msg->sequence_id = message->sequence_id;
@@ -32,6 +40,12 @@ void CoroTestServerHandler::OnHttpRequestMessage(HttpMessage* message) {
   TRACE(logger_, "OnHttpRequestMessage:" << *message);
   bdf::monitor::MatrixScope matrix_scope(
     "OnHttpRequestMessage", bdf::monitor::MatrixScope::kModeAutoSuccess);
+  //usleep(1000 * 200);
+
+#ifdef CLIENT_TEST
+  ClientTaskTest::RapidClientTestSigle();
+#endif
+
   HttpMessage* msg = MessageFactory::Allocate<HttpMessage>();
   msg->SetDescriptorId(message->GetDescriptorId());
   msg->InitReply(message, 200, false);

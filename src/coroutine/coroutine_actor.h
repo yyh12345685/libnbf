@@ -10,11 +10,7 @@ class EventMessage;
 
 class CoroutineActor:public CoroContext {
 public:
-  CoroutineActor():
-    is_waiting_(false),
-    waiting_id_(-1){
-    msg_list_.clear();
-  }
+  CoroutineActor();
 
   EventMessage* RecieveMessage(EventMessage* message,uint32_t timeout_ms = 0);
   bool SendMessage(EventMessage* message);

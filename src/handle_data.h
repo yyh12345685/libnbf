@@ -21,6 +21,7 @@ struct HandleData {
   std::queue<Task*> task_;
 
   std::mutex lock_;
+  std::mutex lock_task_;
   bool is_run = false;
 
   Handler* handle_ = nullptr;

@@ -154,6 +154,7 @@
     <Text Include="src\tester\CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="examples\coroutine_stress_testing\src\client_task_test.cpp" />
     <ClCompile Include="examples\coroutine_stress_testing\src\coro_client_main.cpp" />
     <ClCompile Include="examples\coroutine_stress_testing\src\coro_server_main.cpp" />
     <ClCompile Include="examples\coroutine_stress_testing\src\coro_test_server_handle.cpp" />
@@ -220,6 +221,7 @@
     <ClCompile Include="src\tester\t_timer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="examples\coroutine_stress_testing\src\client_task_test.h" />
     <ClInclude Include="examples\coroutine_stress_testing\src\coro_test_server_handle.h" />
     <ClInclude Include="examples\coroutine_test_server\src\app_test_server_handle.h" />
     <ClInclude Include="examples\test_client_server\src\test_client_server_handle.h" />

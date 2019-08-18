@@ -25,6 +25,8 @@ void EventMessage::Dump(std::ostream& os) const {
   os << "{\"type\": \"EventMessage\""
     << ", \"descriptor_id\": " << descriptor_id
     << ", \"handle_id\": " << handle_id
+    << ", \"timer_out_id\": " << timer_out_id
+    << ", \"coro_id\": " << coroutine_id
     << ", \"messagebase\": " << ToString();
   os << "}";
 }
