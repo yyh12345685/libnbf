@@ -99,11 +99,17 @@ void CoroutineServiceHandler::ProcessTask(HandleData* data){
 }
 
 void CoroutineServiceHandler::Process(HandleData* data){
+  CoroutineSchedule* scheduler = CoroutineContext::Instance().GetScheduler();
+  int static empty_times = 0;
   if (data->data_.empty()) {
     usleep(1);
+    empty_times++;
+    if (0 == empty_times % 10){
+      scheduler->CoroutineYield();
+    }
     return;
   }
-
+  empty_times = 0;
   std::queue<EventMessage*> temp;
   data->lock_.lock();
   temp.swap(data->data_);

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-#include <set>
+//#include <set>
 #include <unordered_set>
 #include <queue>
 #include "coroutine/coroutine_impl.h"
@@ -23,6 +23,8 @@ public:
 
   bool CoroutineYieldToActive(int coro_id);
 
+  bool AfterYieldToAvailable(int coro_id);
+
   int GetAvailableCoroId();
 
   CoroutineActor* GetCoroutineCtx(int id);
@@ -43,7 +45,8 @@ protected:
 private:
 
   std::vector<int> all_coro_list_;//全部
-  std::set<int> available_coro_list_;//可用的
+
+  std::unordered_set<int> available_coro_list_;//可用的
 
   //任务结束的协程，客户端答复了，或者超时了
   std::queue<int> active_coro_list_;

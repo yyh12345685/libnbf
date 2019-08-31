@@ -42,6 +42,7 @@ int AppBase::Start(int argc, char* argv[]) {
     return -1;
   }
 
+  srand(time(nullptr));
   if (0 != StartLogger()) {
     return -1;
   }

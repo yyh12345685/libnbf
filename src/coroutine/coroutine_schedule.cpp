@@ -14,24 +14,15 @@ CoroutineSchedule::~CoroutineSchedule(){
 
 void CoroutineSchedule::InitCoroSchedule(CoroutineFunc func, void* data){
   coro_sche_ = coro_impl_.CoroutineInit();
-  bool is_first = true;
   for (int idx = 0; idx < coro_sche_->cap;idx++) {
     int coroutine_id = coro_impl_.CoroutineNew(coro_sche_, func, data);
     all_coro_list_.emplace_back(coroutine_id);
     available_coro_list_.insert(coroutine_id);
-    if (is_first){
-      is_first = false;
-    }
   }
 }
 
 int CoroutineSchedule::GetAvailableCoroId(){
   for (const auto id: available_coro_list_){
-    //int status = CoroutineStatus(id);
-    //if (CoroutineImpl::kCoroutineReady == status
-    //  || CoroutineImpl::kCoroutineSuspend == status) {
-    //  return id;
-    //}
     return id;
   }
 
@@ -55,11 +46,11 @@ bool CoroutineSchedule::CoroutineYieldToActive(int coro_id){
     return false;
   }
   //说明要切换协程，切换回来之后可能是收到了客户端的消息或者超时
-  active_coro_list_.push(coro_id);
-  if (!available_coro_list_.insert(coro_id).second) {
-    INFO(logger_, "repeated resume coro id:" << coro_id);
-    //return false;
-  }
+  active_coro_list_.emplace(coro_id);
+  //if (!available_coro_list_.insert(coro_id).second) {
+  //  INFO(logger_, "repeated resume coro id:" << coro_id);
+  //  //return false;
+  //}
   if (GetRunningId() >= 0) {
     //当前是在协程中，切出去
     TRACE(logger_, "cur coro id:" << GetRunningId() << ",change to coro id:" << coro_id);
@@ -69,6 +60,14 @@ bool CoroutineSchedule::CoroutineYieldToActive(int coro_id){
     WARN(logger_, "warn CoroutineYieldToActive coro id:" << coro_id);
     return false;
   }
+}
+
+bool CoroutineSchedule::AfterYieldToAvailable(int coro_id){
+  if (!available_coro_list_.insert(coro_id).second) {
+  INFO(logger_, "repeated resume coro id:" << coro_id);
+  //return false;
+  }
+  return true;
 }
 
 CoroutineActor* CoroutineSchedule::GetCoroutineCtx(int id){
@@ -104,6 +103,7 @@ void CoroutineSchedule::CoroutineResume(int id) {
   //  CoroutineYield();
   //}
   if (id < 0 || id >= CoroutineSize()){
+    WARN(logger_,"invalid id:"<<id);
     return;
   }
 

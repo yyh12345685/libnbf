@@ -12,15 +12,16 @@ namespace bdf{
 
 LOGGER_CLASS_IMPL(logger_, CoroutineActor);
 
-//for test,will be to delete
+//for not release
 //////////////////////////////////////////////////////////////////////////
-static std::vector<int> coro_id_test;
+//用来在不同的协程中传递协程id，直接一个协程中的变量，无法传递到另外一个协程
+static std::vector<int> g_coro_id_tmp;
 static void InitCoroTest(){
-  if (coro_id_test.size() != 0){
+  if (g_coro_id_tmp.size() != 0){
     return;
   }
   for (int idx = 0; idx < 100000;idx++) {
-    coro_id_test.emplace_back(idx);
+    g_coro_id_tmp.emplace_back(idx);
   }
 }
 //////////////////////////////////////////////////////////////////////////
@@ -38,25 +39,29 @@ EventMessage* CoroutineActor::RecieveMessage(EventMessage* message,uint32_t time
   uint64_t time_id = 0;
   CoroutineSchedule* scheduler = CoroutineContext::Instance().GetScheduler();
   uint64_t seq_id_send_tmp = message->sequence_id;
+  int cur_coro_id = CoroutineContext::GetCurCoroutineId();
   int coro_id_tmp = message->coroutine_id;
-  if (coro_id_tmp<0 || coro_id_tmp>512){
-    WARN(logger_, "error coro_id_tmp:"<< coro_id_tmp);
+  if (cur_coro_id != coro_id_tmp){
+    INFO(logger_, "may be send failed in io handle, cur_coro_id:"
+      << cur_coro_id <<",coro_id_tmp:"<< coro_id_tmp);
+    return nullptr;
   }
   if (msg_list_.empty()){
     if (timeout_ms) {
       CoroutineServiceHandler* hdl = CoroutineContext::Instance().GetServiceHandler();
       TimerData data;
-      data.function_data = &coro_id_test[coro_id_tmp];
+      data.function_data = &g_coro_id_tmp[cur_coro_id]/*&cur_coro_id*/;
       data.time_proc = hdl;
-      //这里定时器增加5ms，因为在async_client_connect和sync_sequence也有个定时器，那个时间是标准的
-      //需要connect中的定时器先触发，否则回有bug，所以这里先简单解决，多延迟5ms
-      //如果协程中的定时器先触发，会导致消息顺序不对
-      int real_time_out = timeout_ms + 5;
+      //这里定时器增加3ms，因为在async_client_connect和sync_sequence也有个定时器，那个时间是标准的
+      //理论上需要connect中的定时器先触发，如果协程中的定时器先触发
+      //connect中定时器后触发会导致SendMessage中waiting_id_和message的sequence_id差异越大
+      int real_time_out = timeout_ms + 2;
       time_id = CoroutineContext::Instance().GetTimer()->AddTimer(real_time_out, data);
     }
     TRACE(logger_, "ThreadId:"<< ThreadId::Get()
       <<",RecieveMessage CoroutineYield:" << this<<",msg"<< *message);
-    scheduler->CoroutineYield(coro_id_tmp);
+    scheduler->CoroutineYield(cur_coro_id);
+    scheduler->AfterYieldToAvailable(cur_coro_id);
   }
   is_waiting_ = false;
   waiting_id_ = -1;
@@ -84,13 +89,10 @@ bool CoroutineActor::SendMessage(EventMessage* message){
     << ",sequence id:" << message->sequence_id << ",waiting_id:" << waiting_id_
     << ",msg_list_size:" << msg_list_.size());
   if (is_waiting_ && message->sequence_id != waiting_id_) {
-    INFO(logger_, "sequence_id mismatch:" << waiting_id_ 
+    /*INFO*/TRACE(logger_, "sequence_id mismatch:" << waiting_id_
       << ",msg_list_size:"<< msg_list_ .size()<<",msg:" << *message);
     //同步的协议超时就关闭了连接，不会来到这里,到外面处理
     //rapid协议超时之后返回的，两个定时器的原因
-    //if (is_waiting_ > message->sequence_id){
-    //  MessageFactory::Destroy(message);
-    //}
     return false;
   }
   TRACE(logger_, "ThreadId:" << ThreadId::Get() << ",respose message:" << *message);

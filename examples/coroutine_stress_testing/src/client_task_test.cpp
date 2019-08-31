@@ -23,6 +23,10 @@ void ClientTaskTest::RapidClientTestSigle() {
     return;
   }
   bdf::RapidMessage* real_msg = dynamic_cast<bdf::RapidMessage*>(msg2_resp);
+  if (nullptr == real_msg){
+    WARN(logger_, "real_msg is null.");
+    return;
+  }
   TRACE(logger_, "receive msg:" << *real_msg);
   bdf::MessageFactory::Destroy(real_msg);
 }
@@ -53,6 +57,10 @@ void ClientTaskTest::HttpClientTestSigle() {
     return;
   }
   bdf::HttpMessage* hmsg2_resp = dynamic_cast<bdf::HttpMessage*>(msg2_resp);
+  if (nullptr == hmsg2_resp) {
+    WARN(logger_, "real_msg is null.");
+    return;
+  }
   TRACE(logger_, "receive msg:" << *hmsg2_resp);
   bdf::MessageFactory::Destroy(hmsg2_resp);
 }
