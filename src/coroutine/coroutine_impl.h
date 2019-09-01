@@ -6,7 +6,7 @@
 
 namespace bdf{
 
-struct CoroSchedule;
+//struct CoroSchedule;
 
 //from https://github.com/cloudwu/coroutine
 
@@ -19,7 +19,7 @@ public:
     kCoroutineSuspend = 3,
   };
 
-  CoroSchedule* CoroutineInit();
+  CoroSchedule* CoroutineInit(int coroutine_size = DEFAULT_COROUTINE);
   void CoroutineClose(CoroSchedule* corotine);
 
   //创建协程

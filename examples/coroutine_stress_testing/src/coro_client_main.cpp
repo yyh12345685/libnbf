@@ -14,7 +14,7 @@ int StartTaskThread(void* data) {
   ClientTaskTest client_test_task;
   while (true){
     bdf::service::GetIoService().SendTaskToServiceHandle(&client_test_task);
-    if (0 == (send_times%6800)){
+    if (0 == (send_times%8000)){
       sleep(1);
     }
     send_times++;

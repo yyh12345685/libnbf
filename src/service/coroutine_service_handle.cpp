@@ -10,6 +10,7 @@
 #include "handle_data.h"
 #include "task.h"
 #include "net/connect.h"
+#include "service/io_service.h"
 
 namespace bdf {
 
@@ -17,10 +18,11 @@ LOGGER_CLASS_IMPL(logger_, CoroutineServiceHandler);
 
 void CoroutineServiceHandler::Run(HandleData* data){
   prctl(PR_SET_NAME, "CoroutineServiceHandler");
-  TRACE(logger_, "CoroutineServiceHandler::Run.");
+  INFO(logger_, "CoroutineServiceHandler::Run,thread id:"<< ThreadId::Get());
   CoroutineContext::Instance().Init(this,&timer_);
   CoroutineSchedule* scheduler = CoroutineContext::Instance().GetScheduler();
-  scheduler->InitCoroSchedule(&CoroutineServiceHandler::ProcessCoroutine, data);
+  int coroutine_size = IoService::GetInstance().GetIoServiceConfig().coroutine_size;
+  scheduler->InitCoroSchedule(&CoroutineServiceHandler::ProcessCoroutine, data, coroutine_size);
   int coro_id = scheduler->GetAvailableCoroId();
   scheduler->CoroutineResume(coro_id);
 
@@ -33,6 +35,9 @@ void CoroutineServiceHandler::Run(HandleData* data){
     if (CoroutineContext::GetCurCoroutineId() < 0) {
       int coro_id = scheduler->GetAvailableCoroId();
       TRACE(logger_, "CoroutineResume available coro id:"<< coro_id);
+      if (coro_id < 0){
+        continue;
+      }
       scheduler->CoroutineResume(coro_id);
     }else{
       WARN(logger_, "not to here,coro id:"<< CoroutineContext::GetCurCoroutineId());

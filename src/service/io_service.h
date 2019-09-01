@@ -62,6 +62,10 @@ public:
   int AgentsDel(EventFunctionBase* ezfd, int fd);
 
   uint32_t GetServiceHandleCount();
+
+  const IoServiceConfig& GetIoServiceConfig(){
+    return io_service_config_;
+  }
 private:
   void SendToIoHandleInner(EventMessage* msg);
 

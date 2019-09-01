@@ -27,10 +27,10 @@ void CoDelete(CoroutineActor*coctx) {
   delete(coctx);
 }
 
-CoroSchedule* CoroutineImpl::CoroutineInit() {
+CoroSchedule* CoroutineImpl::CoroutineInit(int coroutine_size) {
   CoroSchedule* corotine = new CoroSchedule;
   corotine->nco = 0;
-  corotine->cap = DEFAULT_COROUTINE;
+  corotine->cap = coroutine_size;
   corotine->running = -1;
   corotine->coctxs = (CoroutineActor**)malloc(sizeof(CoroutineActor*) * corotine->cap);
   memset(corotine->coctxs, 0, sizeof(CoroutineActor*) * corotine->cap);

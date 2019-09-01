@@ -1,6 +1,7 @@
 #include "coroutine_schedule.h"
 #include "coroutine_actor.h"
 #include "coroutine_context.h"
+#include "common/thread_id.h"
 
 namespace bdf {
 
@@ -12,21 +13,41 @@ CoroutineSchedule::~CoroutineSchedule(){
   }
 }
 
-void CoroutineSchedule::InitCoroSchedule(CoroutineFunc func, void* data){
-  coro_sche_ = coro_impl_.CoroutineInit();
+void CoroutineSchedule::InitCoroSchedule(
+  CoroutineFunc func, void* data, int coroutine_size){
+
+  coro_sche_ = coro_impl_.CoroutineInit(coroutine_size);
+  int max_coro_id = -1;
   for (int idx = 0; idx < coro_sche_->cap;idx++) {
     int coroutine_id = coro_impl_.CoroutineNew(coro_sche_, func, data);
     all_coro_list_.emplace_back(coroutine_id);
     available_coro_list_.insert(coroutine_id);
+    if (coroutine_id > max_coro_id){
+      max_coro_id = coroutine_id;
+    }
   }
+
+  CoroutineID::GetInst().InitAllIds(max_coro_id);
 }
 
 int CoroutineSchedule::GetAvailableCoroId(){
+
+  //for debug
+  static time_t now = time(NULL);
+  time_t cur_time = time(NULL);
+  if ((cur_time - now) > 180) {
+    //3分钟一次trace
+    INFO(logger_, "ThreadId:" << ThreadId::Get()
+      <<",AvailableCoroId size:" << available_coro_list_.size());
+    now = cur_time;
+  }
+
   for (const auto id: available_coro_list_){
     return id;
   }
 
-  WARN(logger_, "no available coro,coro size:" << available_coro_list_.size());
+  WARN(logger_, "ThreadId:" << ThreadId::Get() 
+    << ",no available coro,coro size:" << available_coro_list_.size());
   return -1;
 }
 
@@ -64,8 +85,8 @@ bool CoroutineSchedule::CoroutineYieldToActive(int coro_id){
 
 bool CoroutineSchedule::AfterYieldToAvailable(int coro_id){
   if (!available_coro_list_.insert(coro_id).second) {
-  INFO(logger_, "repeated resume coro id:" << coro_id);
-  //return false;
+    INFO(logger_, "repeated resume coro id:" << coro_id);
+    //return false;
   }
   return true;
 }
@@ -123,6 +144,17 @@ int CoroutineSchedule::CoroutineStatus(int id) {
 void CoroutineSchedule::CoroutineYield() {
   CoroutineContext::SetCurCoroutineId(-1);
   coro_impl_.CoroutineYield(coro_sche_);
+}
+
+void CoroutineID::InitAllIds(int max_coro_id){
+  if (!all_coro_ids_.empty()){
+    return;
+  }
+
+  //因为这个版本的 coroutine id是从0依次递增
+  for (int idx = 0; idx < max_coro_id; idx++) {
+    all_coro_ids_.emplace_back(idx);
+  }
 }
 
 }

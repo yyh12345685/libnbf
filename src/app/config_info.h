@@ -19,7 +19,7 @@ struct IoServiceConfig {
     io_handle_thread_count(2),
     service_handle_thread_count(2),
     service_count(1),
-    stack_size(2048),
+    coroutine_size(256),
     monitor_token_bucket(16), 
     monitor_queue_bucket(16), 
     monitor_queue_size(1024 * 128) {
@@ -34,7 +34,7 @@ struct IoServiceConfig {
   std::string router_file;
 
   // coroutine 
-  uint32_t stack_size;
+  uint32_t coroutine_size;
 
   // monitor
   std::string monitor_file_name;

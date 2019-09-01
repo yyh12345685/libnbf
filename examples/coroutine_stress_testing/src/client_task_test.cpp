@@ -19,7 +19,7 @@ void ClientTaskTest::RapidClientTestSigle() {
   bdf::EventMessage* msg2_resp =
     bdf::AppBase::Get()->GetClientMgr()->SendRecieve("rapid_test_client", rapid_message_2);
   if (nullptr == msg2_resp) {
-    INFO(logger_, "msg2_resp is null.");
+    TRACE(logger_, "msg2_resp is null.");
     return;
   }
   bdf::RapidMessage* real_msg = dynamic_cast<bdf::RapidMessage*>(msg2_resp);
@@ -53,7 +53,7 @@ void ClientTaskTest::HttpClientTestSigle() {
   bdf::EventMessage* msg2_resp =
     bdf::AppBase::Get()->GetClientMgr()->SendRecieve("http_test_client", hmsg2);
   if (nullptr == msg2_resp) {
-    INFO(logger_, "msg2_resp is nullptr.");
+    TRACE(logger_, "msg2_resp is nullptr.");
     return;
   }
   bdf::HttpMessage* hmsg2_resp = dynamic_cast<bdf::HttpMessage*>(msg2_resp);

@@ -14,7 +14,7 @@ class CoroutineSchedule {
 public:
   ~CoroutineSchedule();
 
-  void InitCoroSchedule(CoroutineFunc func, void* data);
+  void InitCoroSchedule(CoroutineFunc func, void* data,int coroutine_size);
 
   void CoroutineYield(int coro_id);
 
@@ -55,6 +55,21 @@ private:
   CoroSchedule* coro_sche_;
 
   LOGGER_CLASS_DECL(logger_);
+};
+
+class CoroutineID{
+public:
+  static CoroutineID& GetInst() {
+    static CoroutineID inst;
+    return inst;
+  }
+  void InitAllIds(int max_coro_id);
+
+  std::vector<int>& GetAllCoroIds() { 
+    return all_coro_ids_; 
+  }
+private:
+  std::vector<int> all_coro_ids_;
 };
 
 }

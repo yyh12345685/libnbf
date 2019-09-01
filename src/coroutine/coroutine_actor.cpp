@@ -12,25 +12,10 @@ namespace bdf{
 
 LOGGER_CLASS_IMPL(logger_, CoroutineActor);
 
-//for not release
-//////////////////////////////////////////////////////////////////////////
-//用来在不同的协程中传递协程id，直接一个协程中的变量，无法传递到另外一个协程
-static std::vector<int> g_coro_id_tmp;
-static void InitCoroTest(){
-  if (g_coro_id_tmp.size() != 0){
-    return;
-  }
-  for (int idx = 0; idx < 100000;idx++) {
-    g_coro_id_tmp.emplace_back(idx);
-  }
-}
-//////////////////////////////////////////////////////////////////////////
-
 CoroutineActor::CoroutineActor() :
   is_waiting_(false),
   waiting_id_(-1) {
   msg_list_.clear();
-  InitCoroTest();
 }
 
 EventMessage* CoroutineActor::RecieveMessage(EventMessage* message,uint32_t timeout_ms){
@@ -47,21 +32,21 @@ EventMessage* CoroutineActor::RecieveMessage(EventMessage* message,uint32_t time
     return nullptr;
   }
   if (msg_list_.empty()){
-    if (timeout_ms) {
-      CoroutineServiceHandler* hdl = CoroutineContext::Instance().GetServiceHandler();
-      TimerData data;
-      data.function_data = &g_coro_id_tmp[cur_coro_id]/*&cur_coro_id*/;
-      data.time_proc = hdl;
-      //这里定时器增加3ms，因为在async_client_connect和sync_sequence也有个定时器，那个时间是标准的
-      //理论上需要connect中的定时器先触发，如果协程中的定时器先触发
-      //connect中定时器后触发会导致SendMessage中waiting_id_和message的sequence_id差异越大
-      int real_time_out = timeout_ms + 2;
-      time_id = CoroutineContext::Instance().GetTimer()->AddTimer(real_time_out, data);
-    }
+    CoroutineServiceHandler* hdl = CoroutineContext::Instance().GetServiceHandler();
+    TimerData data;
+    data.function_data = &(CoroutineID::GetInst().GetAllCoroIds()[cur_coro_id])/*&cur_coro_id*/;
+    data.time_proc = hdl;
+    //这里定时器增加1ms，因为在async_client_connect和sync_sequence也有个定时器，那个时间是标准的
+    //理论上需要connect中的定时器先触发，如果协程中的定时器先触发
+    //connect中定时器后触发会导致SendMessage中waiting_id_和message的sequence_id差异越大
+    int real_time_out = timeout_ms + 1;
+    time_id = CoroutineContext::Instance().GetTimer()->AddTimer(real_time_out, data);
     TRACE(logger_, "ThreadId:"<< ThreadId::Get()
       <<",RecieveMessage CoroutineYield:" << this<<",msg"<< *message);
     scheduler->CoroutineYield(cur_coro_id);
     scheduler->AfterYieldToAvailable(cur_coro_id);
+  }else{
+    WARN(logger_, "msg_list_ size is:" << msg_list_.size());
   }
   is_waiting_ = false;
   waiting_id_ = -1;
@@ -73,12 +58,15 @@ EventMessage* CoroutineActor::RecieveMessage(EventMessage* message,uint32_t time
     EventMessage* msg = msg_list_.front();
     msg_list_.pop_front();
     if (seq_id_send_tmp != msg->sequence_id) {
-      WARN(logger_, "ThreadId:" << ThreadId::Get()
+      //服务端返回一条消息多次/超时了，然后又收到返回?
+      WARN(logger_, "ThreadId:" << ThreadId::Get() << ",ccoro id:"<< cur_coro_id
         << ",send message seq_id:" << seq_id_send_tmp << ",resp message:" << *msg);
+      MessageFactory::Destroy(msg);
+      return nullptr;
     }
     return msg;
   } else {
-    INFO(logger_, "maybe time out:"<< timeout_ms <<",coro id:" << 
+    /*INFO*/TRACE(logger_, "maybe time out:"<< timeout_ms <<",coro id:" <<
       coro_id_tmp << ",running id:" << scheduler ->GetRunningId()<<",prt:"<< this);
     return nullptr;
   }
