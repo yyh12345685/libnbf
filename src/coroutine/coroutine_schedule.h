@@ -4,6 +4,7 @@
 //#include <set>
 #include <unordered_set>
 #include <queue>
+#include "common/common.h"
 #include "coroutine/coroutine_impl.h"
 
 namespace bdf {
@@ -35,6 +36,8 @@ public:
   void CoroutineResume(int id);
   //获取正在运行的协程id
   int GetRunningId();
+
+  void ProcessDebug();
 protected:
   int CoroutineStatus(int id);
 
@@ -54,6 +57,14 @@ private:
   CoroutineImpl coro_impl_;
   CoroSchedule* coro_sche_;
 
+  //for debug begin
+  struct  YieldTimeDebug{
+    bool is_yield = false;
+    time_t yield_time = 0;
+  };
+  std::vector<YieldTimeDebug> yield_time_debug_;
+  //for debug end
+
   LOGGER_CLASS_DECL(logger_);
 };
 
@@ -63,13 +74,22 @@ public:
     static CoroutineID inst;
     return inst;
   }
+  ~CoroutineID(){
+    for (auto id: all_coro_ids_){
+      delete id;
+    }
+  }
+
   void InitAllIds(int max_coro_id);
 
-  std::vector<int>& GetAllCoroIds() { 
+  std::vector<int*>& GetAllCoroIds() { 
     return all_coro_ids_; 
   }
 private:
-  std::vector<int> all_coro_ids_;
+  std::vector<int*> all_coro_ids_;
+  DISALLOW_COPY_AND_ASSIGN(CoroutineID)
+  CoroutineID(){
+  }
 };
 
 }

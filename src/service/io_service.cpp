@@ -146,8 +146,8 @@ void IoService::SendToServiceHandle(EventMessage* msg){
 
 void IoService::SendTaskToServiceHandle(Task* task){
   static thread_local std::atomic<uint32_t> id_task(0);
-  HandleData* hd =handle_thread_.service_handle_data_.at(
-    (id_task++) % handle_thread_.service_handle_data_.size());
+  uint32_t tid = (id_task++) % handle_thread_.service_handle_data_.size();
+  HandleData* hd =handle_thread_.service_handle_data_.at(tid);
   hd->lock_task_.lock();
   hd->task_.emplace(task);
   hd->lock_task_.unlock();

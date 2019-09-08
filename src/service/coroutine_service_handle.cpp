@@ -46,6 +46,11 @@ void CoroutineServiceHandler::Run(HandleData* data){
   INFO(logger_, "CoroutineServiceHandler::Run exit.");
 }
 
+static void ProcessDebug(){
+  CoroutineSchedule* scheduler = CoroutineContext::Instance().GetScheduler();
+  scheduler->ProcessDebug();
+}
+
 void CoroutineServiceHandler::ProcessCoroutine(void* data){
   TRACE(logger_, "CoroutineServiceHandler::Process. thread id:"<< ThreadId::Get());
   HandleData* handle_data = (HandleData*)data;
@@ -60,6 +65,7 @@ void CoroutineServiceHandler::ProcessCoroutine(void* data){
     handle->ProcessTimer();
     handle->ProcessTask(handle_data);
     handle->Process(handle_data);
+    ProcessDebug();
   }
   TRACE(logger_, "CoroutineServiceHandler thread will be exit.");
 }
@@ -80,7 +86,7 @@ void CoroutineServiceHandler::OnTimer(void* function_data){
   CoroutineSchedule* scheduler = CoroutineContext::Instance().GetScheduler();
   //本来就在协程里面，会先切出来，然后切到另外一个协程
   if (!scheduler->CoroutineYieldToActive(coro_id)){
-    WARN(logger_, "yield failed, coro_id:" << coro_id);
+    TRACE(logger_, "yield failed, coro_id:" << coro_id);
   }
 }
 
@@ -127,7 +133,7 @@ void CoroutineServiceHandler::ProcessClientItem(EventMessage* msg){
   CoroutineSchedule* scheduler = CoroutineContext::Instance().GetScheduler();
   if (msg->coroutine_id <0){
     //not to here,否则会丢消息
-    WARN(logger_, "error coro_id:" << msg->coroutine_id);
+    ERROR(logger_, "error coro_id:" << msg->coroutine_id);
     scheduler->CoroutineYield();
     MessageFactory::Destroy(msg);
     return;
@@ -135,8 +141,8 @@ void CoroutineServiceHandler::ProcessClientItem(EventMessage* msg){
   CoroutineActor* coroutine = scheduler->GetCoroutineCtx(msg->coroutine_id);
   if (coroutine->SendMessage(msg)){
     //本来就在协程里面，会先切出来，然后切到另外一个协程
-    if (!scheduler->CoroutineYieldToActive(msg->coroutine_id)){
-      WARN(logger_, "yield failed, coro_id:" << msg->coroutine_id);
+    if (!scheduler->CoroutineYieldToActive(msg->coroutine_id)) {
+      WARN(logger_, "client yield failed, coro_id:" << msg->coroutine_id);
     }
   }else{
     //超时的
