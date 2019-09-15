@@ -31,9 +31,10 @@ EventMessage* CoroutineActor::RecieveMessage(EventMessage* message,uint32_t time
       << cur_coro_id <<",coro_id_tmp:"<< coro_id_tmp);
     return nullptr;
   }
+  CoroTimer* tim = nullptr;
   if (msg_list_.empty()){
     CoroutineServiceHandler* hdl = CoroutineContext::Instance().GetServiceHandler();
-    CoroTimer* tim = new CoroTimer(hdl);
+    tim = new CoroTimer(hdl);
     tim->timer_data_ = (CoroutineID::GetInst().GetAllCoroIds()[cur_coro_id]);
     //这里定时器增加1ms，因为在async_client_connect和sync_sequence也有个定时器，那个时间是标准的
     //理论上需要connect中的定时器先触发，如果协程中的定时器先触发
@@ -49,8 +50,9 @@ EventMessage* CoroutineActor::RecieveMessage(EventMessage* message,uint32_t time
   }
   is_waiting_ = false;
   waiting_id_ = -1;
-  if (0 != time_id){
+  if (0 != time_id && nullptr != tim){
     CoroutineContext::Instance().GetTimerMgr()->DelTimer(time_id);
+    delete tim;
   }
   
   if (!msg_list_.empty()) {

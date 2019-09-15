@@ -11,6 +11,7 @@
 #include "task.h"
 #include "net/connect.h"
 #include "service/io_service.h"
+#include "common/time.h"
 
 namespace bdf {
 
@@ -173,6 +174,13 @@ void CoroutineServiceHandler::ProcessMessageHandle(std::queue<EventMessage*>& ms
     }
     if (msg->direction == MessageBase::kIncomingRequest){
       //处理服务端接收的消息
+      uint64_t birth_to_now = Time::GetCurrentClockTime()- msg->birthtime;
+      if (birth_to_now > 500){
+        //从io handle到service handle超过500ms,过载保护
+        INFO(logger_, "birth_to_now:"<< birth_to_now <<",msg:" << *msg);
+        MessageFactory::Destroy(msg);
+        continue;
+      }
       Handle(msg);
     }else{
       //处理客户端接收的消息
@@ -184,7 +192,7 @@ void CoroutineServiceHandler::ProcessMessageHandle(std::queue<EventMessage*>& ms
 void CoroTimer::OnTimer(void* timer_data, uint64_t time_id){
   int coro_id_tmp = *(int*)(timer_data);
   service_handle_->OnTimerCoro(timer_data, coro_id_tmp);
-  delete this;
+  //delete this;
 }
 
 }

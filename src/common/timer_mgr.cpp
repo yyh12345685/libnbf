@@ -9,10 +9,13 @@ LOGGER_CLASS_IMPL(logger_, TimerMgr)
 uint64_t TimerMgr::GetTimerId(){
   volatile static uint64_t tmid = 0;
   uint64_t id = __sync_add_and_fetch(&tmid, 1);
-	if(id > 0)
+  if (id > 0) {
     return id;
-	else//start with 1
-		return 1;
+  } else {
+    //start with 1
+    tmid = 1;
+    return 1;
+  }
 }
 
 void TimerMgr::AddTimerInThread(timer_id id, TimerMgrBase *timer, uint64_t when){
@@ -68,8 +71,10 @@ int TimerMgr::RunTimer(){
   uint64_t now = Time::GetCurrentClockTime();
   while (!timer_map_.empty()){
     TimerItem iter = timer_map_.begin();
-    if (iter->first >= now) // >= to avoid infinite loop if user call "add_timer(timer, 0)"
+    if (iter->first >= now) {
+      // >= to avoid infinite loop if user call "AddTimer(timer, 0)"
       break;
+    }
 		//TRACE(logger_,"iter->first:"<<iter->first<<",now:"<<now);
 
     TimerInfo info = iter->second;

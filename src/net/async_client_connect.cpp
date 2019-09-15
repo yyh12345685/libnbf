@@ -34,7 +34,7 @@ void AsyncClientConnect::OnDecodeMessage(EventMessage* message){
     return;
   }
 
-  message->birthtime = Time::GetMillisecond();
+  message->birthtime = Time::GetCurrentClockTime();
   message->status = MessageBase::kStatusOK;
   message->direction = MessageBase::kIncomingResponse;
   message->sequence_id = keeper_message->sequence_id;

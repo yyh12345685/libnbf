@@ -16,7 +16,7 @@ Timer::~Timer() {
 }
 
 uint64_t Timer::AddTimer(uint64_t after_ms, TimerData& data){
-  uint64_t cur_time_ms = Time::GetMillisecond();
+  uint64_t cur_time_ms = Time::GetCurrentClockTime();
   data.time_out_ms = cur_time_ms + after_ms;
   size_t time_id;
   heap_timer_.Insert(data, time_id);
@@ -29,7 +29,7 @@ int Timer::DelTimer(uint64_t id){
 }
 
 int Timer::ProcessTimer(){
-  uint64_t cur_time_ms = Time::GetMillisecond();
+  uint64_t cur_time_ms = Time::GetCurrentClockTime();
   TimerData* event_timeo = heap_timer_.Top();
   while (nullptr != event_timeo
     && cur_time_ms >= event_timeo->time_out_ms 
@@ -42,7 +42,7 @@ int Timer::ProcessTimer(){
 }
 
 int Timer::ProcessTimerTest(std::list<size_t>& ids){
-  uint64_t cur_time_ms = Time::GetMillisecond();
+  uint64_t cur_time_ms = Time::GetCurrentClockTime();
   TimerData* event_timeo = heap_timer_.Top();
   while (nullptr != event_timeo
     && cur_time_ms >= event_timeo->time_out_ms
@@ -58,7 +58,7 @@ int Timer::ProcessTimerTest(std::list<size_t>& ids){
 //改为取到top之后，先pop，发现还是不太对
 //所以后面协程里面的Timer改为了common目录下的TimerMgr
 int Timer::ProcessTimerCoro() {
-  uint64_t cur_time_ms = Time::GetMillisecond();
+  uint64_t cur_time_ms = Time::GetCurrentClockTime();
   TimerData* event_timeo = heap_timer_.Top();
   while (nullptr != event_timeo
     && cur_time_ms >= event_timeo->time_out_ms

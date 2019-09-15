@@ -35,7 +35,7 @@ void ServerConnect::OnDecodeMessage(EventMessage* message) {
     return;
   }
 
-  message->birthtime = Time::GetMillisecond();
+  message->birthtime = Time::GetCurrentClockTime();
   message->status = MessageBase::kStatusOK;
   message->direction = MessageBase::kIncomingRequest;
   message->descriptor_id = (int64_t)((void*)this);

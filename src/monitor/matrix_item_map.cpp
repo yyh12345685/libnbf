@@ -16,7 +16,7 @@ int MatrixBucketItemMap::GenerateToken(uint64_t token, const std::string& name) 
   int ret = 
     map_.insert(std::make_pair(
           token, 
-          new MatrixItem(Matrix::kTimeDistribute, name, Time::GetMicrosecond()))).second ?
+          new MatrixItem(Matrix::kTimeDistribute, name, Time::GetMicrosecondOri()))).second ?
     0 : -1;
   lock_.UnLock();
   return ret;
@@ -26,7 +26,7 @@ int MatrixBucketItemMap::FetchToken(uint64_t token, MatrixItem** item) {
   lock_.Lock();
   auto it = map_.find(token);
   if (it != map_.end()) {
-    it->second->val = Time::GetMicrosecond() - it->second->val;
+    it->second->val = Time::GetMicrosecondOri() - it->second->val;
     *item = it->second;
     map_.erase(it);
     lock_.UnLock();

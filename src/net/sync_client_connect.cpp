@@ -40,7 +40,7 @@ void SyncClientConnect::OnDecodeMessage(EventMessage* message) {
     INFO(logger, "11111111,size:"<< sync_sequence_.Size());
   }
 
-  message->birthtime = Time::GetMillisecond();
+  message->birthtime = Time::GetCurrentClockTime();
   message->status = EventMessage::kStatusOK;
   message->direction = EventMessage::kIncomingResponse;
   message->sequence_id = keeper_message->sequence_id;

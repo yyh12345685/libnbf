@@ -18,7 +18,7 @@ class MatrixScope {
   };
 
   MatrixScope(const std::string& name, int mode = kModeLazy)
-      : item_(new MatrixItem(Matrix::kTimeDistribute, name, Time::GetMicrosecond()))
+      : item_(new MatrixItem(Matrix::kTimeDistribute, name, Time::GetMicrosecondOri()))
       , mode_(mode) { 
   }
 
@@ -27,7 +27,7 @@ class MatrixScope {
     static const std::string success = "OK";
     static const std::string fail = "ERR";
 
-    item_->val = Time::GetMicrosecond() - item_->val;
+    item_->val = Time::GetMicrosecondOri() - item_->val;
     if (item_->result.empty() && mode_ != kModeLazy) {
       if (mode_ == kModeAutoFail) 
         item_->result = fail;

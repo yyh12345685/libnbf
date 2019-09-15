@@ -55,6 +55,7 @@ class Time {
      return 0;
    }
 
+  //测试下来，有优化的版本貌似计算不是特别准确
   //毫秒
   inline static uint64_t GetMillisecond() {
     struct timeval tv;
@@ -62,6 +63,7 @@ class Time {
     return  (tv.tv_usec/1000 + tv.tv_sec*1000);
   }
 
+  //测试下来，有优化的版本貌似计算不是特别准确,优先使用clock_gettime吧
   //微秒
   inline static uint64_t GetMicrosecond() {
     struct timeval tv;
@@ -70,10 +72,33 @@ class Time {
   }
 
   //毫秒
+  inline static uint64_t GetMillisecondOri() {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return  (tv.tv_usec / 1000 + tv.tv_sec * 1000);
+  }
+
+  //无优化的版本占用系统cpu较高，优先使用clock_gettime吧
+  //微秒
+  inline static uint64_t GetMicrosecondOri() {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return (tv.tv_usec + tv.tv_sec * 1000000);
+  }
+
+  //毫秒
   inline static uint64_t GetCurrentClockTime(){
     struct timespec tp;
     clock_gettime(CLOCK_MONOTONIC, &tp);
     uint64_t now = (uint64_t)tp.tv_sec * 1000 + tp.tv_nsec / 1000000;
+    return now;
+  }
+
+  //微秒
+  inline static uint64_t GetCurrentClockTimeus() {
+    struct timespec tp;
+    clock_gettime(CLOCK_MONOTONIC, &tp);
+    uint64_t now = (uint64_t)tp.tv_sec * 1000000 + tp.tv_nsec / 1000;
     return now;
   }
 
