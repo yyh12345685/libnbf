@@ -69,7 +69,9 @@ void ClientTaskTest::OnTask(void* function_data) {
   TRACE(logger_, "start task.");
   while (true) {
     RapidClientTestSigle();
+    //RapidClientTestSigle();
     HttpClientTestSigle();
+    //HttpClientTestSigle();
     break;
   }
   TRACE(logger_, "exit task.");

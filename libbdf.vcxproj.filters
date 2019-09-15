@@ -247,6 +247,9 @@
     <ClCompile Include="examples\coroutine_stress_testing\src\client_task_test.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\common\timer_mgr.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\monitor\matrix.h">
@@ -475,6 +478,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="examples\coroutine_stress_testing\src\client_task_test.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\timer_mgr.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

@@ -55,16 +55,26 @@ class Time {
      return 0;
    }
 
+  //∫¡√Î
   inline static uint64_t GetMillisecond() {
     struct timeval tv;
     GetTimeOfDay(&tv, NULL);
     return  (tv.tv_usec/1000 + tv.tv_sec*1000);
   }
 
+  //Œ¢√Î
   inline static uint64_t GetMicrosecond() {
     struct timeval tv;
     GetTimeOfDay(&tv, NULL);
     return (tv.tv_usec + tv.tv_sec * 1000000);
+  }
+
+  //∫¡√Î
+  inline static uint64_t GetCurrentClockTime(){
+    struct timespec tp;
+    clock_gettime(CLOCK_MONOTONIC, &tp);
+    uint64_t now = (uint64_t)tp.tv_sec * 1000 + tp.tv_nsec / 1000000;
+    return now;
   }
 
 };

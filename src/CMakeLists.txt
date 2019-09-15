@@ -11,6 +11,7 @@ set(BDF_SRC
   common/string_util.cpp
   common/buffer.cpp
   common/ini_files.cpp
+  common/timer_mgr.cpp
 
   monitor/matrix.cpp
   monitor/matrix_item.cpp

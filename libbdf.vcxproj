@@ -177,6 +177,7 @@
     <ClCompile Include="src\common\ini_files.cpp" />
     <ClCompile Include="src\common\buffer.cpp" />
     <ClCompile Include="src\common\string_util.cpp" />
+    <ClCompile Include="src\common\timer_mgr.cpp" />
     <ClCompile Include="src\coroutine\coroutine_actor.cpp" />
     <ClCompile Include="src\coroutine\coroutine_context.cpp" />
     <ClCompile Include="src\coroutine\coroutine_impl.cpp" />
@@ -247,6 +248,7 @@
     <ClInclude Include="src\common\string_util.h" />
     <ClInclude Include="src\common\thread_id.h" />
     <ClInclude Include="src\common\time.h" />
+    <ClInclude Include="src\common\timer_mgr.h" />
     <ClInclude Include="src\context.h" />
     <ClInclude Include="src\coroutine\coroutine.h" />
     <ClInclude Include="src\coroutine\coroutine_actor.h" />

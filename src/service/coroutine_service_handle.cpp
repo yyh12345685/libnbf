@@ -19,10 +19,11 @@ LOGGER_CLASS_IMPL(logger_, CoroutineServiceHandler);
 void CoroutineServiceHandler::Run(HandleData* data){
   prctl(PR_SET_NAME, "CoroutineServiceHandler");
   INFO(logger_, "CoroutineServiceHandler::Run,thread id:"<< ThreadId::Get());
-  CoroutineContext::Instance().Init(this,&timer_);
+  CoroutineContext::Instance().Init(this,&time_mgr_);
   CoroutineSchedule* scheduler = CoroutineContext::Instance().GetScheduler();
   int coroutine_size = IoService::GetInstance().GetIoServiceConfig().coroutine_size;
-  scheduler->InitCoroSchedule(&CoroutineServiceHandler::ProcessCoroutine, data, coroutine_size);
+  scheduler->InitCoroSchedule(
+    &CoroutineServiceHandler::ProcessCoroutine, data, coroutine_size);
   int coro_id = scheduler->GetAvailableCoroId();
   scheduler->CoroutineResume(coro_id);
 
@@ -71,22 +72,27 @@ void CoroutineServiceHandler::ProcessCoroutine(void* data){
 }
 
 void CoroutineServiceHandler::ProcessTimer() {
-  timer_.ProcessTimer();
+  time_mgr_.RunTimer();
 }
 
 //when send receive timeout
-void CoroutineServiceHandler::OnTimer(void* function_data){
+void CoroutineServiceHandler::OnTimerCoro(void* function_data, int& coro_id){
   TRACE(logger_, "CoroutineServiceHandler::OnTimer.");
-  int coro_id = *(int*)(function_data);
-  if (coro_id < 0) {
+  int coro_id_tmp = *(int*)(function_data);
+  if (coro_id_tmp < 0) {
     //not to here,否则会丢消息
     ERROR(logger_, "error coro_id:" << coro_id);
     return;
   }
+
+  if (coro_id_tmp != coro_id){
+    WARN(logger_, "may be error tmp coro_id:" << coro_id_tmp << ",coro_id" << coro_id);
+  }
+
   CoroutineSchedule* scheduler = CoroutineContext::Instance().GetScheduler();
   //本来就在协程里面，会先切出来，然后切到另外一个协程
-  if (!scheduler->CoroutineYieldToActive(coro_id)){
-    TRACE(logger_, "yield failed, coro_id:" << coro_id);
+  if (!scheduler->CoroutineYieldToActive(coro_id_tmp)) {
+    TRACE(logger_, "yield failed, coro_id:" << coro_id_tmp);
   }
 }
 
@@ -173,6 +179,12 @@ void CoroutineServiceHandler::ProcessMessageHandle(std::queue<EventMessage*>& ms
       ProcessClientItem(msg);
     }
   }
+}
+
+void CoroTimer::OnTimer(void* timer_data, uint64_t time_id){
+  int coro_id_tmp = *(int*)(timer_data);
+  service_handle_->OnTimerCoro(timer_data, coro_id_tmp);
+  delete this;
 }
 
 }

@@ -8,7 +8,7 @@ namespace bdf {
 struct CoroutineActor;
 class CoroutineSchedule;
 class CoroutineServiceHandler;
-class Timer;
+class TimerMgr;
 
 struct CoroutineContext {
  public:
@@ -18,7 +18,9 @@ struct CoroutineContext {
     return context_;
   }
 
-  static void Init(CoroutineServiceHandler* service_handle,Timer* timer);
+  static void Init(
+    CoroutineServiceHandler* service_handle,
+    TimerMgr* time_mgr);
 
   inline static CoroutineActor* GetCurCoroutineCtx() {
     return Instance().scheduler_->GetCoroutineCtx(Instance().GetCurCoroutineId()) ;
@@ -36,8 +38,8 @@ struct CoroutineContext {
     return Instance().scheduler_;
   }
 
-  inline static Timer* GetTimer() {
-    return Instance().timer_;
+  inline static TimerMgr* GetTimerMgr() {
+    return Instance().time_mgr_;
   }
 
   inline static CoroutineServiceHandler* GetServiceHandler() {
@@ -57,7 +59,7 @@ struct CoroutineContext {
   CoroutineSchedule* scheduler_ = nullptr;
   int cur_coroutine_id_ = -1;
   CoroutineServiceHandler* service_handle_ = nullptr;
-  Timer* timer_ = nullptr;
+  TimerMgr* time_mgr_ = nullptr;
 };
 
 }

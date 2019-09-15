@@ -54,26 +54,40 @@ int CoroutineSchedule::GetAvailableCoroId(){
 
 void CoroutineSchedule::ProcessDebug(){
   static thread_local time_t now = time(NULL);
+  //static thread_local time_t now_1 = now;
   time_t cur_time = time(NULL);
-  if ((cur_time - now) > 45) {
-    //45秒一次trace
+  if ((cur_time - now) > 60) {
+    //60秒一次trace
     INFO(logger_, "ThreadId:" << ThreadId::Get()
       << ",AvailableCoroId size:" << available_coro_list_.size());
     now = cur_time;
     for (size_t idx = 0; idx < yield_time_debug_.size(); idx++) {
       if (yield_time_debug_[idx].is_yield) {
         int yield_times = cur_time - yield_time_debug_[idx].yield_time;
-        if (yield_times >= 45) {
+        if (yield_times >= 10) {
           INFO(logger_, "ThreadId:" << ThreadId::Get() << ",try to resume coro id:"
             << idx << ",yield times:" << yield_times);
-          CoroutineYieldToActive(idx);
-        } else {
-          INFO(logger_, "ThreadId:" << ThreadId::Get() << ",coro id:" << idx
-            << ",yield times:" << yield_times);
         }
       }
     }
   }
+  //10到20秒内的做一次纠正
+  //if ((cur_time - now_1) > 10) {
+  //  now_1 = cur_time;
+  //  for (size_t idx = 0; idx < yield_time_debug_.size(); idx++) {
+  //    if (yield_time_debug_[idx].is_yield) {
+  //      int yield_times = cur_time - yield_time_debug_[idx].yield_time;
+  //      if (yield_times >= 10) {
+  //        INFO(logger_, "ThreadId:" << ThreadId::Get() << ",try to resume coro id:"
+  //          << idx << ",yield times:" << yield_times);
+  //        CoroutineYieldToActive(idx);
+  //      } else {
+  //        TRACE(logger_, "ThreadId:" << ThreadId::Get() << ",coro id:" << idx
+  //          << ",yield times:" << yield_times);
+  //      }
+  //    }
+  //  }
+  //}
 }
 
 void CoroutineSchedule::CoroutineYield(int coro_id){

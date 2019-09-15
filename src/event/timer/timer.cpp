@@ -32,7 +32,7 @@ int Timer::ProcessTimer(){
   uint64_t cur_time_ms = Time::GetMillisecond();
   TimerData* event_timeo = heap_timer_.Top();
   while (nullptr != event_timeo
-    && cur_time_ms > event_timeo->time_out_ms 
+    && cur_time_ms >= event_timeo->time_out_ms 
     && nullptr != event_timeo->time_proc) {
     event_timeo->time_proc->OnTimer(event_timeo->function_data);
     heap_timer_.Pop();
@@ -45,10 +45,27 @@ int Timer::ProcessTimerTest(std::list<size_t>& ids){
   uint64_t cur_time_ms = Time::GetMillisecond();
   TimerData* event_timeo = heap_timer_.Top();
   while (nullptr != event_timeo
-    && cur_time_ms > event_timeo->time_out_ms
+    && cur_time_ms >= event_timeo->time_out_ms
     && nullptr != event_timeo->time_proc) {
     event_timeo->time_proc->OnTimer(event_timeo->function_data);
     ids.emplace_back(heap_timer_.Pop());
+    event_timeo = heap_timer_.Top();
+  }
+  return 0;
+}
+
+//协程情况下，使用ProcessTimerCoro不太对，开始认为是取到top之后切换，下一个协程还是取到相同的top
+//改为取到top之后，先pop，发现还是不太对
+//所以后面协程里面的Timer改为了common目录下的TimerMgr
+int Timer::ProcessTimerCoro() {
+  uint64_t cur_time_ms = Time::GetMillisecond();
+  TimerData* event_timeo = heap_timer_.Top();
+  while (nullptr != event_timeo
+    && cur_time_ms >= event_timeo->time_out_ms
+    && nullptr != event_timeo->time_proc) {
+    heap_timer_.Pop();
+    event_timeo->time_proc->OnTimerCoro(
+      event_timeo->function_data, event_timeo->coro_id);
     event_timeo = heap_timer_.Top();
   }
   return 0;

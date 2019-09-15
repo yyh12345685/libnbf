@@ -25,6 +25,7 @@ public:
   int ProcessTimer();
 
   int ProcessTimerTest(std::list<size_t>& ids);
+  int ProcessTimerCoro();
 
   void Clear();
 

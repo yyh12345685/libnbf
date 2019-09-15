@@ -2,8 +2,7 @@
 #pragma once
 
 #include <queue>
-#include "event/timer/timer.h"
-#include "event/timer/timer_base.h"
+#include "common/timer_mgr.h"
 #include "service/service_handle.h"
 
 namespace bdf { 
@@ -11,12 +10,9 @@ namespace bdf {
 class HandleData;
 
 class CoroutineServiceHandler : 
-  public ServiceHandler, public OnTimerBase {
+  public ServiceHandler{
 public:
-  CoroutineServiceHandler():
-    current_coroutine_id_(-1)/*,
-    current_timer_coroutine_id_(-1),
-    current_task_coroutine_id_(-1)*/{
+  CoroutineServiceHandler(){
   }
   virtual ~CoroutineServiceHandler(){
   }
@@ -28,7 +24,10 @@ public:
   }
 
 protected:
-  virtual void OnTimer(void* function_data);
+  friend class CoroTimer;
+  virtual void OnTimer(void* function_data){}
+
+  virtual void OnTimerCoro(void* function_data, int& coro_id);
 private:
   LOGGER_CLASS_DECL(logger_);
 
@@ -42,13 +41,20 @@ private:
 
   void ProcessClientItem(EventMessage* msg);
 
-  void Resume(int coroutine_id);
+  TimerMgr time_mgr_;
+};
 
-  int current_coroutine_id_;
-  //int current_timer_coroutine_id_;
-  //int current_task_coroutine_id_;
 
-  Timer timer_;
+class CoroTimer : public TimerMgrBase {
+public:
+  CoroTimer(CoroutineServiceHandler* handle):
+    service_handle_(handle){
+  }
+
+  virtual void OnTimer(void* timer_data, uint64_t time_id);
+  virtual ~CoroTimer() { }
+protected:
+  CoroutineServiceHandler* service_handle_;
 };
 
 }
