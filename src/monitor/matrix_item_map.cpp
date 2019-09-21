@@ -12,27 +12,27 @@ LOGGER_CLASS_IMPL(logger, MatrixItemMap);
 thread_local uint32_t MatrixItemMap::token_id_ = 0;
 
 int MatrixBucketItemMap::GenerateToken(uint64_t token, const std::string& name) {
-  lock_.Lock();
+  lock_.lock();
   int ret = 
     map_.insert(std::make_pair(
           token, 
           new MatrixItem(Matrix::kTimeDistribute, name, Time::GetMicrosecondOri()))).second ?
     0 : -1;
-  lock_.UnLock();
+  lock_.unlock();
   return ret;
 }
 
 int MatrixBucketItemMap::FetchToken(uint64_t token, MatrixItem** item) {
-  lock_.Lock();
+  lock_.lock();
   auto it = map_.find(token);
   if (it != map_.end()) {
     it->second->val = Time::GetMicrosecondOri() - it->second->val;
     *item = it->second;
     map_.erase(it);
-    lock_.UnLock();
+    lock_.unlock();
     return 0;
   }
-  lock_.UnLock();
+  lock_.lock();
   return -1;
 }
 

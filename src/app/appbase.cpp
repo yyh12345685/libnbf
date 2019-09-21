@@ -24,20 +24,20 @@ AppBase::~AppBase() {
   }
 }
 
-int AppBase::Run(int argc, char* argv[]) {
-  if (0 != Start(argc, argv)) {
+int AppBase::AppRun(int argc, char* argv[]) {
+  if (0 != AppStart(argc, argv)) {
     return -1;
   }
 
-  if (0 != Wait()) {
+  if (0 != AppWait()) {
     return -1;
   }
 
-  Stop();
+  AppStop();
   return 0;
 }
 
-int AppBase::Start(int argc, char* argv[]) {
+int AppBase::AppStart(int argc, char* argv[]) {
   if (0 != cmd_parser_.ParseCmd(argc, argv)) {
     return -1;
   }
@@ -47,7 +47,7 @@ int AppBase::Start(int argc, char* argv[]) {
     return -1;
   }
 
-  if (0 != InitApplication()) {
+  if (0 != SetApplication()) {
     return -1;
   }
 
@@ -61,7 +61,7 @@ int AppBase::Start(int argc, char* argv[]) {
     return -1;
   }
 
-  if (0 != StartIoService()) {
+  if (0 != StartService()) {
     return -1;
   }
 
@@ -76,27 +76,27 @@ int AppBase::Start(int argc, char* argv[]) {
   return 0;
 }
 
-int AppBase::Wait() {
-  if (0 != WaitIoService()) {
+int AppBase::AppWait() {
+  if (0 != WaitService()) {
     return -1;
   }
   return 0;
 }
 
-int AppBase::Stop() {
+int AppBase::AppStop() {
   INFO(logger_, "AppBase::OnStop");
   OnStop();
 
   INFO(logger_, "AppBase::StopClientManager");
   StopClientManager();
 
-  INFO(logger_, "AppBase::StopIoService");
-  StopIoService();
+  INFO(logger_, "AppBase::StopService");
+  StopService();
 
   return 0;
 }
 
-int AppBase::InitApplication() {
+int AppBase::SetApplication() {
   AppBase::Set(this);
 
   if (cmd_parser_.daemon_mode_) {
@@ -131,16 +131,16 @@ int AppBase::LoadConfig() {
   return 0;
 }
 
-int AppBase::StartIoService() {
-  TRACE(logger_, "AppBase::StartIoService().");
+int AppBase::StartService() {
+  TRACE(logger_, "AppBase::StartService().");
   if (0 != IoService::GetInstance().Init(io_service_config_)) {
-    ERROR(logger_, "Application::StartIOService Init fail");
+    ERROR(logger_, "Application::StartService Init fail");
     return -1;
   }
 
   ServiceHandler* handle_tmp = CreateServiceHandler();
   if (0 != IoService::GetInstance().Start(handle_tmp)) {
-    ERROR(logger_, "Application::StartIOService Start fail");
+    ERROR(logger_, "Application::StartService Start fail");
     return -1;
   }
 
@@ -165,19 +165,19 @@ void AppBase::HandleSignal() {
 
 void AppBase::StopApp(int signal) {
   INFO(logger_, "service will be Stop,signal:" << signal);
-  AppBase::Get()->Stop();
+  AppBase::Get()->AppStop();
 }
 
 int AppBase::StopClientManager(){
   return client_mgr_->Stop();
 }
 
-int AppBase::WaitIoService() {
+int AppBase::WaitService() {
   IoService::GetInstance().Wait();
   return 0;
 }
 
-int AppBase::StopIoService() {
+int AppBase::StopService() {
   IoService::GetInstance().Stop();
   return 0;
 }

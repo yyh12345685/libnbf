@@ -86,6 +86,6 @@ int main(int argc, char *argv[]){
     bdf::service::GetIoService().SendTaskToServiceHandle(&test_task);
     return 0;
   });
-  app.Run(argc,argv);
+  app.AppRun(argc,argv);
   return 0;
 }

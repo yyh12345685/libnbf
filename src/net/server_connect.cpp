@@ -3,10 +3,12 @@
 #include "common/time.h"
 #include "service/io_service.h"
 #include "net/connect_manager.h"
+#include "agents/agents.h"
+#include "agents/agent_master.h"
 
 namespace bdf {
 
-LOGGER_CLASS_IMPL(logger, ServerConnect);
+LOGGER_CLASS_IMPL(logger_, ServerConnect);
 
 ServerConnect::ServerConnect(){
 }
@@ -19,11 +21,16 @@ void ServerConnect::OnClose() {
   //as client,if connect is closed,only closed fd
   //RegisterDel(fd_);
   Clean();
-  if (ConnectManager::Instance().GetConnect((uint64_t)this)){
-    ConnectManager::Instance().UnRegisterConnect((uint64_t)this);
-    //·ÀÖ¹ÖØ¸´Îö¹¹
+  //if (ConnectManager::Instance().GetConnect((uint64_t)this)){
+  //  ConnectManager::Instance().UnRegisterConnect((uint64_t)this);
+  //  //·ÀÖ¹ÖØ¸´Îö¹¹
     Destroy();
-  }
+  //}
+}
+
+void ServerConnect::Destroy(){
+  IoService::GetInstance().GetAgents()->GetMaster()->AreaseReleasedConnect(this);
+  //BDF_DELETE(this);
 }
 
 void ServerConnect::OnDecodeMessage(EventMessage* message) {

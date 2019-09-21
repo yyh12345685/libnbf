@@ -58,11 +58,11 @@ private:
   CoroSchedule* coro_sche_;
 
   //for debug begin
-  struct  YieldTimeDebug{
-    bool is_yield = false;
-    time_t yield_time = 0;
-  };
-  std::vector<YieldTimeDebug> yield_time_debug_;
+  //struct  YieldTimeDebug{
+  //  bool is_yield = false;
+  //  time_t yield_time = 0;
+  //};
+  //std::vector<YieldTimeDebug> yield_time_debug_;
   //for debug end
 
   LOGGER_CLASS_DECL(logger_);

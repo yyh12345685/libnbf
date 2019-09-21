@@ -5,9 +5,10 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <mutex>
 #include "matrix_item.h"
 #include "common/logger.h"
-#include "common/spin_lock.h"
+//#include "common/spin_lock.h"
 
 namespace bdf{
 namespace monitor {
@@ -15,7 +16,8 @@ namespace monitor {
 class MatrixBucketItemMap {
  public:
   typedef std::unordered_map<uint64_t, MatrixItem*> ItemMap;
-  typedef SpinLock LockType;
+  //typedef SpinLock LockType;
+  typedef std::mutex LockType;
 
   int GenerateToken(uint64_t token, const std::string& name);
   int FetchToken(uint64_t token, MatrixItem** item);

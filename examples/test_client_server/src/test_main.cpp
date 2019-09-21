@@ -28,7 +28,6 @@ void RapidClientTestCallBack(bdf::EventMessage* msg) {
 }
 
 void RapidTestSend(bdf::Application<bdf::testserver::TestClientServerHandler>* app) {
-  //bdf::RapidMessage* rapid_message = bdf::MessageFactory::Allocate<bdf::RapidMessage>();
   bdf::RapidMessage* rapid_message = BDF_NEW(bdf::RapidMessage);
   rapid_message->body = "test only send rapid_test_client:hello world.";
   app->GetClientMgr()->Send("rapid_test_client", rapid_message);
@@ -36,7 +35,6 @@ void RapidTestSend(bdf::Application<bdf::testserver::TestClientServerHandler>* a
 
 bdf::EventMessage* RapidTestSendRecv(
   bdf::Application<bdf::testserver::TestClientServerHandler>* app) {
-  //bdf::RapidMessage* rapid_message_2 = bdf::MessageFactory::Allocate<bdf::RapidMessage>();
   bdf::RapidMessage* rapid_message_2 = BDF_NEW(bdf::RapidMessage);
   rapid_message_2->body = "aaa";
   return app->GetClientMgr()->SendRecieve("rapid_test_client", rapid_message_2);
@@ -48,9 +46,27 @@ bool RapidTestInvoe(bdf::Application<bdf::testserver::TestClientServerHandler>* 
   bool ret = app->GetClientMgr()->Invoke(
     "rapid_test_client", rapid_message_3, &RapidClientTestCallBack);
   if (!ret) {
-    TRACE(logger, "ret is false.");
+    INFO(logger, "ret is false.");
   }
   return ret;
+}
+
+int YaceRapidClientTest(void* data) {
+  prctl(PR_SET_NAME, "RapidClientTest111111");
+  bdf::Application<bdf::testserver::TestClientServerHandler>* app =
+    (bdf::Application<bdf::testserver::TestClientServerHandler>*)data;
+  INFO(logger, "YaceRapidClientTest start,time:" << time(NULL));
+  int64_t req_times = 0;
+  while (true) {
+    if (0 == req_times % 20000) {
+      sleep(1);
+    }
+    //test
+    RapidTestInvoe(app);
+    req_times++;
+  }
+  INFO(logger, "YaceRapidClientTest stop,time:" << time(NULL));
+  return 0;
 }
 
 int RapidClientTest(void* data) {
@@ -141,6 +157,26 @@ bool HttpTestInvoke(bdf::Application<bdf::testserver::TestClientServerHandler>* 
   return ret;
 }
 
+int YaceHttpClientTest(void* data) {
+  prctl(PR_SET_NAME, "YaceHttpClientTest222222");
+  bdf::Application<bdf::testserver::TestClientServerHandler>* app =
+    (bdf::Application<bdf::testserver::TestClientServerHandler>*)data;
+  bdf::ForTest::Inst().SetForTest(true);
+  INFO(logger, "YaceHttpClientTest start,time:" << time(NULL));
+  sleep(1);
+  int64_t req_times = 0;
+  while (true) {
+    if (0 == req_times % 20000) {
+      sleep(1);
+    }
+
+    HttpTestInvoke(app);
+    req_times++;
+  }
+  INFO(logger, "YaceHttpClientTest stop,time:" << time(NULL));
+  return 0;
+}
+
 int HttpClientTest(void* data) {
   prctl(PR_SET_NAME, "HttpClientTest222222");
   bdf::Application<bdf::testserver::TestClientServerHandler>* app =
@@ -179,12 +215,14 @@ int HttpClientTest(void* data) {
 int main(int argc, char *argv[]){
   bdf::Application<bdf::testserver::TestClientServerHandler> app;
   app.SetOnAfterStart([&](){
-    std::thread t1(&RapidClientTest, &app);
-    std::thread t2(&HttpClientTest, &app);
+    //std::thread t1(&RapidClientTest, &app);
+    //std::thread t2(&HttpClientTest, &app);
+    std::thread t1(&YaceRapidClientTest, &app);
+    std::thread t2(&YaceHttpClientTest, &app);
     t1.join();
     t2.join();
     return 0;
   });
-  return app.Run(argc,argv);
+  return app.AppRun(argc,argv);
 }
 

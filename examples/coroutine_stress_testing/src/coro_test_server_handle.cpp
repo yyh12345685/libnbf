@@ -30,7 +30,7 @@ void CoroTestServerHandler::OnRapidRequestMessage(RapidMessage* message){
   RapidMessage* msg = MessageFactory::Allocate<RapidMessage>();
   msg->SetDescriptorId(message->GetDescriptorId());
   msg->sequence_id = message->sequence_id;
-  msg->body = "rapid protocol, response hello world...";
+  msg->body = "rapid response hello .";
   service::GetIoService().Reply(msg);
   MessageFactory::Destroy(message);
 }
@@ -51,7 +51,7 @@ void CoroTestServerHandler::OnHttpRequestMessage(HttpMessage* message) {
   msg->InitReply(message, 200, false);
   msg->http_info.headers.insert(
     std::pair<std::string, std::string>("Content-Type", "text/html"));
-  msg->http_info.body = "http protocol,response hello world---------";
+  msg->http_info.body = "http response world.";
   service::GetIoService().Reply(msg);
   MessageFactory::Destroy(message);
 }

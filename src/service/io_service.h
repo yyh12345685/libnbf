@@ -66,6 +66,11 @@ public:
   const IoServiceConfig& GetIoServiceConfig(){
     return io_service_config_;
   }
+
+  Agents* GetAgents(){
+    return agents_;
+  }
+
 private:
   void SendToIoHandleInner(EventMessage* msg);
 

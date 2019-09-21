@@ -15,10 +15,14 @@ namespace bdf {
 LOGGER_CLASS_IMPL(logger_, AgentMaster);
 
 AgentMaster::AgentMaster() :
-  conf_(nullptr){
+  conf_(nullptr),
+  release_mgr_(new ServerConnectDelayReleaseMgr()){
 }
 
 AgentMaster::~AgentMaster() {
+  if (release_mgr_ != nullptr){
+    delete release_mgr_;
+  }
 }
 
 bool AgentMaster::Init(const IoServiceConfig* confs,const Agents* agents){
@@ -87,17 +91,20 @@ void AgentMaster::OnEvent(EventDriver *poll, int fd, short event){
       BDF_DELETE(svr_con);
       break;
     }
-    if (!ConnectManager::Instance().RegisterConnect((uint64_t)svr_con, svr_con)) {
-      //for debug,测试下是否有bug或者真的注册失败
-      Connecting* temp = ConnectManager::Instance().GetConnect((uint64_t)svr_con);
-      INFO(logger_, "get prt:" << temp << ",set failed ptr:" << svr_con);
-      //BDF_DELETE(svr_con);
-      //break;
-    }
-    
+    //if (!ConnectManager::Instance().RegisterConnect((uint64_t)svr_con, svr_con)) {
+    //  INFO(logger_, "RegisterConnect set failed ptr:" << svr_con);
+    //  //BDF_DELETE(svr_con);
+    //  //break;
+    //}
+    release_mgr_->AddConnect(svr_con);
+    poll->Wakeup();
     TRACE(logger_, "listen port:"<< listen_port <<",accept client ip:" << ip_str 
       << ",port:" << port << ",sock:" << sock << ",con's addr:" << svr_con);
   }
+}
+
+bool AgentMaster::AreaseReleasedConnect(ServerConnect* con){
+  return release_mgr_->SetRelease(con);
 }
 
 bool AgentMaster::Start() {

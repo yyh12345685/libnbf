@@ -13,9 +13,7 @@ public:
   ServerConnect();
   virtual ~ServerConnect();
 
-  virtual void Destroy() {
-    BDF_DELETE(this);
-  }
+  virtual void Destroy();
 
   virtual void OnClose();
   virtual void OnDecodeMessage(EventMessage* message);
@@ -23,8 +21,13 @@ public:
 
   virtual bool IsServer() { return true; }
 
+  int64_t GetConnectId() { return connect_id_; }
+  void SetConnectId(int64_t connect_id) { connect_id_ = connect_id; }
+
 private:
-  LOGGER_CLASS_DECL(logger);
+  LOGGER_CLASS_DECL(logger_);
+
+  int64_t connect_id_;
 };
 
 }

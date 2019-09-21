@@ -3,5 +3,5 @@
 
 int main(int argc, char *argv[]) {
   bdf::Application<bdf::testserver::CoroTestServerHandler> app;
-  return app.Run(argc, argv);
+  return app.AppRun(argc, argv);
 }

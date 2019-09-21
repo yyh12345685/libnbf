@@ -78,11 +78,11 @@ int ClientConnect::TryConnect(){
   }
 
   if (is_connecting){
-    if (IsConnected(20, 3)) {
+    if (IsConnected(20, 9)) {
       TRACE(logger_, "has connected...");
       SetStatus(kConnected);
     } else {
-      INFO(logger_, "wait 60 ms,but not conected,ip:" << GetIp() << ",port:" << GetPort());
+      INFO(logger_, "wait 180 ms,but not conected,ip:" << GetIp() << ",port:" << GetPort());
     }
   }
   

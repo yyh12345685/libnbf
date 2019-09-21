@@ -45,7 +45,7 @@ int Client::Start() {
   }
 
   connect_ = con;
-  ConnectManager::Instance().RegisterConnect((uint64_t)con, con);
+  //ConnectManager::Instance().RegisterConnect((uint64_t)con, con);
   return 0;
 }
 
@@ -81,7 +81,7 @@ int Client::Stop() {
     return 0;
   }
 
-  ConnectManager::Instance().UnRegisterConnect((uint64_t)connect_);
+  //ConnectManager::Instance().UnRegisterConnect((uint64_t)connect_);
   int ret = connect_->Stop();
   //may be a bug
   //connect_->Destroy();

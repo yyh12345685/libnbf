@@ -14,14 +14,12 @@ void TestClientServerHandler::OnHttpRequestMessage(HttpMessage* message){
   bdf::monitor::MatrixScope matrix_scope(
     "ServerTestOnHttpRequestMessage", bdf::monitor::MatrixScope::kModeAutoSuccess);
   TRACE(logger_, "OnHttpRequestMessage info:"<< *message);
-  //测试客户端不带接收功能，所以注释掉发送
-  //HttpMessage* msg = MessageFactory::Allocate<HttpMessage>();
   HttpMessage* msg = BDF_NEW(HttpMessage);
   msg->SetDescriptorId(message->GetDescriptorId());
   msg->InitReply(message, 200, false);
   msg->http_info.headers.insert(
     std::pair<std::string, std::string>("Content-Type", "text/html"));
-  msg->http_info.body = "http protocol,response hello world---------";
+  msg->http_info.body = "http response hello world.";
   service::GetIoService().Reply(msg);
   MessageFactory::Destroy(message);
 }
@@ -42,11 +40,10 @@ void TestClientServerHandler::OnRapidRequestMessage(RapidMessage* message){
   bdf::monitor::MatrixScope matrix_scope(
     "ServerTestOnRapidRequestMessage", bdf::monitor::MatrixScope::kModeAutoSuccess);
   TRACE(logger_, "OnRapidRequestMessage,body:" << message->body);
-  //测试客户端不带接收功能，所以注释掉发送
   RapidMessage* msg = MessageFactory::Allocate<RapidMessage>();
   msg->SetDescriptorId(message->GetDescriptorId());
   msg->sequence_id = message->sequence_id;
-  msg->body = "rapid protocol, response hello world...";
+  msg->body = "rapid response hello world.";
   service::GetIoService().Reply(msg);
   MessageFactory::Destroy(message);
 }

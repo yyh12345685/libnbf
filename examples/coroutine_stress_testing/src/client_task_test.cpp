@@ -15,7 +15,7 @@ void ClientTaskTest::RapidClientTestSigleSendOnly() {
 void ClientTaskTest::RapidClientTestSigle() {
   TRACE(logger_, "RapidTest SendRecieve.");
   bdf::RapidMessage* rapid_message_2 = bdf::MessageFactory::Allocate<bdf::RapidMessage>();
-  rapid_message_2->body = "test send recieve rapid";
+  rapid_message_2->body = "send recieve rapid.";
   bdf::EventMessage* msg2_resp =
     bdf::AppBase::Get()->GetClientMgr()->SendRecieve("rapid_test_client", rapid_message_2);
   if (nullptr == msg2_resp) {
@@ -39,7 +39,7 @@ void ClientTaskTest::HttpClientTestSigleSendOnly() {
     std::pair<std::string, std::string>("Content-Type", "text/html"));
   hmsg2->http_info.url = "/oy?a=xx&b=yy";
   hmsg2->http_info.body = "HttpTest send only:send only.";
-  bdf::AppBase::Get()->GetClientMgr()->SendRecieve("http_test_client", hmsg2);
+  bdf::AppBase::Get()->GetClientMgr()->Send("http_test_client", hmsg2);
 }
 
 void ClientTaskTest::HttpClientTestSigle() {
@@ -48,8 +48,8 @@ void ClientTaskTest::HttpClientTestSigle() {
   hmsg2->InitRequest("POST", true);
   hmsg2->http_info.headers.insert(
     std::pair<std::string, std::string>("Content-Type", "text/html"));
-  hmsg2->http_info.url = "/mm?a=xx&b=yy";
-  hmsg2->http_info.body = "HttpTest send receive:hello world.";
+  hmsg2->http_info.url = "/mm?a=xx";
+  hmsg2->http_info.body = "HttpTest send receive.";
   bdf::EventMessage* msg2_resp =
     bdf::AppBase::Get()->GetClientMgr()->SendRecieve("http_test_client", hmsg2);
   if (nullptr == msg2_resp) {

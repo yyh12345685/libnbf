@@ -96,9 +96,11 @@ void AsyncClientConnect::CleanSequenceQueue(){
   auto it = clear_list.begin();
   while (it != clear_list.end()) {
     EventMessage* msg = *it;
-    it++;
+    if (msg->timer_out_id > 0) {
+      async_sequence_.CancelTimer(msg->timer_out_id);
+    }
     DoSendBack(msg, EventMessage::kInternalFailure);
-    async_sequence_.CancelTimer(msg->timer_out_id);
+    it++;
   }
 }
 

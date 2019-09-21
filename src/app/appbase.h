@@ -30,10 +30,11 @@ public:
 
   ClientMgr* GetClientMgr() { return client_mgr_; }
 
-  int Run(int argc, char* argv[]);
-  int Start(int argc, char* argv[]);
-  int Wait();
-  int Stop();
+  int AppRun(int argc, char* argv[]);
+protected:
+  int AppStart(int argc, char* argv[]);
+  int AppWait();
+  int AppStop();
 
 protected:
   virtual int OnStart() = 0;
@@ -45,18 +46,18 @@ protected:
 private:
   LOGGER_CLASS_DECL(logger_);
 
-  int InitApplication();
+  int SetApplication();
 
   int StartLogger();
   int LoadConfig();
-  int StartIoService();
+  int StartService();
 
   int StartClientManager();
 
-  int WaitIoService();
+  int WaitService();
 
   int StopClientManager();
-  int StopIoService();
+  int StopService();
 
   void HandleSignal();
   static void StopApp(int signal);
