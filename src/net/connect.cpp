@@ -13,7 +13,8 @@ const static int max_send_buf_failed_size = 10 * 1024 * 1024+1;//10M
 Connecting::Connecting():
   fd_(-1),
   port_(-1),
-  protocol_(nullptr){
+  protocol_(nullptr),
+  connect_id_(-1){
 }
 
 Connecting::~Connecting(){

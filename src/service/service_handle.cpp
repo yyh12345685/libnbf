@@ -10,6 +10,7 @@ LOGGER_CLASS_IMPL(logger_, ServiceHandler);
 
 void ServiceHandler::Run( HandleData* data){
   prctl(PR_SET_NAME, "ServiceHandlerThread");
+  INFO(logger_, "ServiceHandler::Run start.");
   time_t now = time(NULL);
   while (data->is_run) {
     if (data->data_.empty()){

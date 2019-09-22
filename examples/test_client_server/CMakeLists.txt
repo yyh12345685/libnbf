@@ -20,8 +20,8 @@ add_executable(test_client_server
 target_link_libraries(test_client_server
   bdf
   ${LOG4CPLUS_LIBRARIES}
-	#${TCMALLOC_LIBRARIES}
-	#${UNWIND_LIBRARIES}
+  ${TCMALLOC_LIBRARIES}
+  ${UNWIND_LIBRARIES}
   pthread
   rt
 )

@@ -6,6 +6,7 @@
 #include <vector>
 #include <unordered_map>
 #include <mutex>
+#include <atomic>
 #include "matrix_item.h"
 #include "common/logger.h"
 //#include "common/spin_lock.h"
@@ -43,7 +44,7 @@ class MatrixItemMap {
   
   uint32_t bucket_count_;
   MatrixBucketItemMap* buckets_;
-  static thread_local uint32_t token_id_;
+  static thread_local std::atomic<uint32_t> token_id_;
 };
 
 }

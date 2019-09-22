@@ -30,11 +30,10 @@ MatrixCollector::MatrixCollector(
   for (auto& queue : queue_) {
     queue = new QueueType();
     queue->init(queue_size);
-    //queue->resize(queue_size);
   }
   //locks_.resize(queue_.size());
   //for (auto& lock : locks_){
-  //  lock = new SpinLock();
+  //  lock = new std::mutex();
   //}
 
   monitor_file_name_ = AppendData(monitor_file_name_pre_);
@@ -159,10 +158,10 @@ void MatrixCollector::ProcessQueueList(MatrixStatMapPtr stat_map){
 
 void MatrixCollector::ProcessQueue(QueueType* queue, MatrixStatMapPtr stat_map, uint32_t& idx) {
   //while (!queue->empty()) {
-    //locks_[idx]->Lock();
+    //locks_[idx]->lock();
     //const MatrixItem* item = queue->front();
     //queue->pop();
-    //locks_[idx]->UnLock();
+    //locks_[idx]->unlock();
   while (queue->size() > 0) {
     const MatrixItem* item = nullptr;
     queue->pop(item);

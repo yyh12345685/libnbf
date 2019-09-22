@@ -3,7 +3,9 @@
 
 #include <thread>
 #include <memory>
+#include <atomic>
 //#include <queue>
+//#include <mutex>
 #include "../common/lockfree_ringbuffer.h"
 #include "../common/logger.h"
 #include "../common/thread_id.h"
@@ -31,11 +33,11 @@ class MatrixCollector {
   int Stop();
 
   inline int Send(const MatrixItem* item) {
-    int idx = 0;
+    uint64_t idx = 0;
     QueueType* queue = GetQueue(idx);
-    //locks_[idx]->Lock();
+    //locks_[idx]->lock();
     queue->push(item);
-    //locks_[idx]->UnLock();
+    //locks_[idx]->unlock();
     return 0;
   }
 
@@ -48,10 +50,13 @@ class MatrixCollector {
   LOGGER_CLASS_DECL(collector_logger);
   LOGGER_CLASS_DECL(collector_logger_simple);
 
-  inline QueueType* GetQueue(int& idx) {
+  inline QueueType* GetQueue(uint64_t& idx) {
     //根据线程id来选，当线程比较少的时候，容易冲突，而且容易集中到某个bucket
     //idx = ThreadId::Get() & (bucket_count_ - 1);
-    idx = rand() % bucket_count_;
+    //idx = rand() % bucket_count_;
+    //经过测试rand()多线程并发比较消耗cpu,改为顺序分配,降低cpu，提高性能
+    static std::atomic<uint64_t> seq_id(0);
+    idx = (++seq_id)% bucket_count_;
     return queue_.at(idx);
   }
 
@@ -63,7 +68,9 @@ class MatrixCollector {
   bool GetFileName(std::string& new_name);
 
   std::vector<QueueType*> queue_;
-  //std::vector<SpinLock*>locks_;
+  //竞争激烈的时候一定不要用SpinLock,否则cpu消耗非常大,性能急剧下降
+  //用互斥锁加多个桶(32)的情况下和无锁队列效果差不多,或者略微差一点，这里最用就用了无所队列
+  //std::vector<std::mutex*>locks_;
   uint32_t bucket_count_;
   uint32_t queue_size_;
   std::thread* thread_;

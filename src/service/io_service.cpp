@@ -5,6 +5,7 @@
 #include "agents/agents.h"
 #include "service/service_handle.h"
 #include "net/io_handle.h"
+#include "net/connect.h"
 #include "message_base.h"
 #include "monitor/matrix.h"
 #include "monitor/matrix_stat_map.h"
@@ -157,7 +158,9 @@ void IoService::SendToIoHandleInner(EventMessage* msg){
   static thread_local std::atomic<uint32_t> id_io(0);
   uint32_t id = 0;
   if (0!= msg->descriptor_id){
-    id = msg->descriptor_id %handle_thread_.io_handle_data_.size();
+    Connecting* con = (Connecting*)((void*)(msg->descriptor_id));
+    //不能用con指针地址取模，回导致线程的队列分布非常不均匀，使用顺序id即可
+    id = con->GetConnectId() %handle_thread_.io_handle_data_.size();
   } else {
     id = (id_io++) % handle_thread_.io_handle_data_.size();
   }

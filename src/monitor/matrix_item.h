@@ -13,7 +13,11 @@ class MatrixItem {
  public:
   MatrixItem() = default;
 
-  MatrixItem(int8_t _operation, const std::string& _name, int64_t _val, bool _persistent = false)
+  MatrixItem(
+    int8_t _operation, 
+    const std::string& _name, 
+    uint64_t _val, 
+    bool _persistent = false)
       : persistent(_persistent)
       , operation(_operation)
       , val(_val)
@@ -22,7 +26,7 @@ class MatrixItem {
 
   bool persistent;
   int8_t operation;
-  int64_t val;
+  uint64_t val;
   std::string name;
   std::string result;
 

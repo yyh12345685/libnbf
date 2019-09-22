@@ -58,11 +58,12 @@ ClientConnect* Client::CreateClient(const std::string& address, uint32_t heartbe
     return nullptr;
   }
 
+  static std::atomic<int64_t> connect_id(0);
+
   ProtocolFactory protocol_factory;
   ProtocolBase* protocol = protocol_factory.Create(protocol_type);
 
   ClientConnect* client_connect = nullptr;
-
   if (protocol->IsSynchronous()) {
     client_connect = 
       BDF_NEW (SyncClientConnect,timeout_ms_, heartbeat_ms,sigle_send_sigle_recv_);
@@ -73,6 +74,8 @@ ClientConnect* Client::CreateClient(const std::string& address, uint32_t heartbe
   client_connect->SetIp(ip);
   client_connect->SetPort(port);
   client_connect->SetProtocol(protocol);
+  client_connect->SetConnectId(connect_id);
+  connect_id++;
   return client_connect;
 }
 

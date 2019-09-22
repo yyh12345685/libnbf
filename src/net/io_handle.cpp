@@ -15,7 +15,7 @@ thread_local IoHandler* IoHandler::io_handler_ = nullptr;
 
 void IoHandler::Run(HandleData* data){
   prctl(PR_SET_NAME, "IoHandler");
-  TRACE(logger_, "IoHandler::Run start.");
+  INFO(logger_, "IoHandler::Run start.");
   io_handler_ = this;
   time_t now = time(NULL);
   while (data->is_run) {

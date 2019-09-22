@@ -46,6 +46,9 @@ public:
   //用于客户端
   virtual bool IsServer() = 0;
 
+  int64_t GetConnectId() { return connect_id_; }
+  void SetConnectId(int64_t connect_id) { connect_id_ = connect_id; }
+
 protected:
   virtual int RegisterAddModrw(int fd, bool set);
   virtual int RegisterDel(int fd);
@@ -66,6 +69,8 @@ protected:
 
   ProtocolBase* protocol_;
   ProtocolFactory protocol_factory_;
+
+  int64_t connect_id_;
 
   LOGGER_CLASS_DECL(logger_);
 };

@@ -9,7 +9,7 @@ namespace bdf {
 namespace monitor {
 
 LOGGER_CLASS_IMPL(logger, MatrixItemMap);
-thread_local uint32_t MatrixItemMap::token_id_ = 0;
+thread_local std::atomic<uint32_t> MatrixItemMap::token_id_(0);
 
 int MatrixBucketItemMap::GenerateToken(uint64_t token, const std::string& name) {
   lock_.lock();

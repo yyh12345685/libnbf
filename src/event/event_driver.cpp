@@ -123,37 +123,40 @@ int EventDriver::Del(int fd){
   event_data_.fd2data_[fd] = nullptr;
 
   epoll_ctl(epfd_, EPOLL_CTL_DEL, fd, nullptr);
+  Wakeup();
   return 0;
 }
 
 int EventDriver::Modr(int fd, bool set){
   if (fd < 0 || fd > maxfd_ || nullptr == event_data_.fd2data_[fd]){
     TRACE(logger_, "fd is invalid or fd2data_ is nullptr, fd" << fd << ",maxfd" << maxfd_);
-	  return -1;
-	}
+    return -1;
+  }
 
-  if (set)
+  if (set) {
     event_data_.fd2data_[fd]->event_ |= EVENT_READ;
-  else
+  } else {
     event_data_.fd2data_[fd]->event_ &= ~EVENT_READ;
-
+  }
+  Wakeup();
   int ret = EventDriver::Mod(fd);
-	return ret;
+  return ret;
 }
 
 int EventDriver::Modw(int fd, bool set){
   if (fd < 0 || fd > maxfd_ || nullptr == event_data_.fd2data_[fd]){
 		TRACE(logger_,"fd2data_ is nullptr, fd"<<fd<<",maxfd"<<maxfd_);
-	  return -1;
-	}
+    return -1;
+  }
 
-  if (set)
+  if (set) {
     event_data_.fd2data_[fd]->event_ |= EVENT_WRITE;
-  else
+  } else {
     event_data_.fd2data_[fd]->event_ &= ~EVENT_WRITE;
-
+  }
+  Wakeup();
   int ret= EventDriver::Mod(fd);
-	return ret;
+  return ret;
 }
 
 int EventDriver::Modrw(int fd, bool set){
@@ -169,7 +172,7 @@ int EventDriver::Modrw(int fd, bool set){
     event_data_.fd2data_[fd]->event_ &= ~EVENT_WRITE;
     event_data_.fd2data_[fd]->event_ &= ~EVENT_READ;
   }
-
+  Wakeup();
   int ret = EventDriver::Mod(fd);
   return ret;
 }
@@ -177,7 +180,7 @@ int EventDriver::Modrw(int fd, bool set){
 int EventDriver::Poll(int timeout){
   //process timer
   timer_.ProcessTimer();
-  Wakeup();
+  //Wakeup();
   inloop_ = true;
   struct epoll_event events[4096];
   int numfd = epoll_wait(epfd_, events, 4096, timeout);
