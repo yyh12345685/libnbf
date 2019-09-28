@@ -68,6 +68,10 @@ int TimerMgr::DelTimer(timer_id id){
 }
 
 int TimerMgr::RunTimer(){
+  if (timer_map_.empty()){
+    return 0;
+  }
+
   uint64_t now = Time::GetCurrentClockTime();
   while (!timer_map_.empty()){
     TimerItem iter = timer_map_.begin();

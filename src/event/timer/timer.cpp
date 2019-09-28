@@ -29,6 +29,9 @@ int Timer::DelTimer(uint64_t id){
 }
 
 int Timer::ProcessTimer(){
+  if (0 == heap_timer_.Size()){
+    return 0;
+  }
   uint64_t cur_time_ms = Time::GetCurrentClockTime();
   TimerData* event_timeo = heap_timer_.Top();
   while (nullptr != event_timeo
@@ -42,6 +45,9 @@ int Timer::ProcessTimer(){
 }
 
 int Timer::ProcessTimerTest(std::list<size_t>& ids){
+  if (0 == heap_timer_.Size()) {
+    return 0;
+  }
   uint64_t cur_time_ms = Time::GetCurrentClockTime();
   TimerData* event_timeo = heap_timer_.Top();
   while (nullptr != event_timeo
@@ -58,6 +64,9 @@ int Timer::ProcessTimerTest(std::list<size_t>& ids){
 //改为取到top之后，先pop，发现还是不太对
 //所以后面协程里面的Timer改为了common目录下的TimerMgr
 int Timer::ProcessTimerCoro() {
+  if (0 == heap_timer_.Size()) {
+    return 0;
+  }
   uint64_t cur_time_ms = Time::GetCurrentClockTime();
   TimerData* event_timeo = heap_timer_.Top();
   while (nullptr != event_timeo

@@ -181,7 +181,8 @@ int YaceClientTest(void* data) {
   INFO(logger, "YaceClientTest start,time:" << time(NULL));
   int64_t req_times = 0;
   while (true) {
-    if (0 == req_times % 50) {
+    if (0 == req_times % 65) {
+      //65次sleep1毫秒，测试机器使用不到5个核心
       //假如1秒钟有一半时间sleep，那么一秒钟500次
       //实际情况1秒钟不止500次
       usleep(1000);

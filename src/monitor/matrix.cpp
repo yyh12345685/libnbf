@@ -9,8 +9,8 @@ namespace bdf {
 
 namespace monitor {
 
-LOGGER_CLASS_IMPL(logger, GlobalMatrix);
-LOGGER_CLASS_IMPL(logger, Matrix);
+LOGGER_CLASS_IMPL(logger_, GlobalMatrix);
+LOGGER_CLASS_IMPL(logger_, Matrix);
 
 Matrix* GlobalMatrix::global_matrix_ = nullptr;
 
@@ -21,17 +21,17 @@ int GlobalMatrix::Init(
   uint32_t queue_size) {
 
   if (item_map_bucket & (item_map_bucket - 1)) {
-    ERROR(logger, "GlobalMatrix::Init item_map_bucket error:" << item_map_bucket);
+    ERROR(logger_, "GlobalMatrix::Init item_map_bucket error:" << item_map_bucket);
     return -1;
   }
 
   if (queue_bucket & (queue_bucket - 1)) {
-    ERROR(logger, "GlobalMatrix::Init queue_bucket error:" << queue_bucket);
+    ERROR(logger_, "GlobalMatrix::Init queue_bucket error:" << queue_bucket);
     return -1;
   }
 
   if (queue_size & (queue_size - 1)) {
-    ERROR(logger, "GlobalMatrix::Init queue_size error:" << queue_size);
+    ERROR(logger_, "GlobalMatrix::Init queue_size error:" << queue_size);
     return -1;
   }
 
@@ -41,7 +41,7 @@ int GlobalMatrix::Init(
   Matrix* global_matrix = new Matrix(item_map, collector);
 
   if (0 != collector->Start()) {
-    ERROR(logger, "GlobalMatrix::Init Collector start fail");
+    ERROR(logger_, "GlobalMatrix::Init Collector start fail");
     delete item_map;
     delete collector;
     delete global_matrix;
@@ -53,13 +53,13 @@ int GlobalMatrix::Init(
 }
 
 int GlobalMatrix::Destroy() {
-  INFO(logger, "GlobalMatrix Stop start.");
+  INFO(logger_, "GlobalMatrix Stop start.");
   global_matrix_->Stop();
   if (global_matrix_) {
     delete global_matrix_;
     global_matrix_ = nullptr;
   }
-  INFO(logger, "GlobalMatrix Stop ok.");
+  INFO(logger_, "GlobalMatrix Stop ok.");
   return 0;
 }
 
@@ -131,8 +131,12 @@ int Matrix::MarkEnd(uint64_t token, const std::string& result) {
 }
 
 int Matrix::MarkEnd(uint64_t token, const bool succeed) {
-  MatrixItem* item;
+  MatrixItem* item = nullptr;
   if (0 != item_map_->FetchToken(token, &item)) {
+    WARN(logger_, "may memory leak,FetchToken fail:"<< token);
+    if (item != nullptr){
+      delete item;
+    }
     return -1;
   }
 
@@ -148,8 +152,10 @@ int Matrix::MarkEnd(uint64_t token, const bool succeed) {
 
 int Matrix::SendToCollector(const MatrixItem* item) {
   if (0 != collector_->Send(item)) {
-    WARN(logger, "Matrix::SendToCollector fail");
-    delete item;
+    WARN(logger_, "Matrix::SendToCollector fail");
+    if (item != nullptr) {
+      delete item;
+    }
     return -1;
   }
   return 0;

@@ -161,7 +161,7 @@ namespace bdf {
         } else{//switch to other thread
           yield_cnt = loop_count - YIELD_THRESHOLD;
           if ((yield_cnt & 63) == 63) {
-            usleep(1);
+            usleep(10);
           } else if ((yield_cnt & 3) == 3) {
             switch_thread();
           } else {
@@ -239,7 +239,7 @@ namespace bdf {
         } else{//switch to other thread
           yield_cnt = loop_count - YIELD_THRESHOLD;
           if ((yield_cnt & 63) == 63) {
-            usleep(1);
+            usleep(10);
           } else if ((yield_cnt & 3) == 3) {
             switch_thread();
           } else {

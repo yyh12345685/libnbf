@@ -6,6 +6,7 @@
 #include "net/connect.h"
 #include "service/io_service.h"
 #include "net/connect_manager.h"
+#include "common/thread_id.h"
 
 namespace bdf{
 
@@ -21,7 +22,8 @@ void IoHandler::Run(HandleData* data){
   while (data->is_run) {
     GetTimer().ProcessTimer();
     if (data->data_.empty()) {
-      usleep(1);
+      //实践证明usleep里面不要填1到10,否则循环里面浪费cpu,空转
+      usleep(100);
       continue;
     }
 
@@ -36,9 +38,9 @@ void IoHandler::Run(HandleData* data){
       Handle(msg);
       //for debug
       time_t cur_time = time(NULL);
-      if ((cur_time - now) > 300) {
-        INFO(logger_, "msg size:" << data->data_.size()
-          << ",handle size:" << temp.size());
+      if ((cur_time - now) > 180) {
+        INFO(logger_, "ThreadId:" << ThreadId::Get()<<",msg size:" 
+          << data->data_.size() << ",handle size:" << temp.size());
         now = cur_time;
       }
     }

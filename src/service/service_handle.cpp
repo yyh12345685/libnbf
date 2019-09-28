@@ -3,6 +3,7 @@
 #include "service/service_handle.h"
 #include "message.h"
 #include "handle_data.h"
+#include "common/thread_id.h"
 
 namespace bdf {
 
@@ -14,7 +15,7 @@ void ServiceHandler::Run( HandleData* data){
   time_t now = time(NULL);
   while (data->is_run) {
     if (data->data_.empty()){
-      usleep(1);
+      usleep(100);
       continue;
     }
 
@@ -28,9 +29,9 @@ void ServiceHandler::Run( HandleData* data){
       Handle(msg);
       //for debug
       time_t cur_time = time(NULL);
-      if ((cur_time- now)>300){
-        INFO(logger_, "msg size:" << data->data_.size()
-          <<",handle size:"<< temp.size());
+      if ((cur_time- now) > 120){
+        INFO(logger_, "ThreadId:" << ThreadId::Get()<<",msg size:" 
+          << data->data_.size()<<",handle size:"<< temp.size());
         now = cur_time;
       }
     }

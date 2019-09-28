@@ -36,7 +36,9 @@ class MatrixCollector {
     uint64_t idx = 0;
     QueueType* queue = GetQueue(idx);
     //locks_[idx]->lock();
-    queue->push(item);
+    if (!queue->push(item)){
+      return -1;
+    }
     //locks_[idx]->unlock();
     return 0;
   }

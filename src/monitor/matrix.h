@@ -35,7 +35,7 @@ class GlobalMatrix {
   static int Destroy();
 
  private:
-  LOGGER_CLASS_DECL(logger);
+  LOGGER_CLASS_DECL(logger_);
 
   static Matrix* global_matrix_;
 };
@@ -87,7 +87,7 @@ class Matrix {
 
   void Stop();
  private:
-  LOGGER_CLASS_DECL(logger);
+  LOGGER_CLASS_DECL(logger_);
 
   MatrixItemMap* item_map_;
   MatrixCollector* collector_;
