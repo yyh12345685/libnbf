@@ -5,6 +5,7 @@
 #include <string>
 #include <memory>
 #include "../common/logger.h"
+#include "../common/common.h"
 
 namespace bdf {
 
@@ -36,6 +37,8 @@ class GlobalMatrix {
 
  private:
   LOGGER_CLASS_DECL(logger_);
+
+  DISALLOW_COPY_ASSIGN_CONSTRUCTION(GlobalMatrix)
 
   static Matrix* global_matrix_;
 };

@@ -7,34 +7,7 @@
 
 namespace bdf {
 
-class Connecting;
 class ServerConnect;
-
-//为了减少锁的互斥，用53个桶吧，其实更好的办法是实现无锁的map
-#define CONNECT_BUCKET 53
-
-//其实只需要用于server端接收到的连接管理
-//只是不方便剥离，所以都管理了
-//对应只是server端可能回出现的问题，还有一种方式就是使用定时器延迟释放连接
-class ConnectManager{
-public:
-  static ConnectManager& Instance() {
-    static ConnectManager instance_;
-    return instance_;
-  }
-
-  bool RegisterConnect(uint64_t desc_id, Connecting* con);
-  bool UnRegisterConnect(uint64_t desc_id);
-  Connecting* GetConnect(uint64_t desc_id);
-
-private:
-  ConnectManager();
-
-  std::vector< std::unordered_map<uint64_t, Connecting*> > id_connect_map_;
-  SpinLock locks_[CONNECT_BUCKET];
-
-  LOGGER_CLASS_DECL(logger_);
-};
 
 class ServerConnectDelayReleaseMgr{
 public:

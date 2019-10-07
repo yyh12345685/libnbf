@@ -8,7 +8,8 @@ namespace bdf{
 
 //struct CoroSchedule;
 
-//from https://github.com/cloudwu/coroutine
+//change from githup
+//https://github.com/cloudwu/coroutine
 
 class CoroutineImpl {
 public:

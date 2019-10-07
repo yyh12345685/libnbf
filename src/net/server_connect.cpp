@@ -23,7 +23,6 @@ void ServerConnect::OnClose() {
   Clean();
   //if (ConnectManager::Instance().GetConnect((uint64_t)this)){
   //  ConnectManager::Instance().UnRegisterConnect((uint64_t)this);
-  //  //·ÀÖ¹ÖØ¸´Îö¹¹
     Destroy();
   //}
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <vector>
 #include <ucontext.h>
 
 #define STACK_SIZE (256*1024)

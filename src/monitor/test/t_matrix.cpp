@@ -21,6 +21,13 @@ int main(int argc, char** argv){
 TEST(TestMatrix, testInit) {
   int ret = GlobalMatrix::Init("log/test.monitor",32, 32, 1024 * 128);
   ASSERT_EQ(0, ret);
+
+  std::cout << "sizeof(MatrixItem):" << sizeof(MatrixItem) << std::endl;
+  MatrixItem it;
+  std::cout << "11sizeof(it):" << sizeof(it) << std::endl;
+  it.name = "aaaaaaaaaaaaaaaaaaaaaaa";
+  it.result = "xxxxxxxxxxxxxxxxxxxxxx";
+  std::cout << "22sizeof(it):" << sizeof(it) << std::endl;
 }
 
 TEST(TestMatrix, testSet) {

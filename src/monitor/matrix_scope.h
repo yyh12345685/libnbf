@@ -63,31 +63,46 @@ class MatrixScope {
 class MatrixCounter {
  public:
   inline static void Set(const std::string& name, uint32_t value) {
-    if (GlobalMatrix::Ready()) GlobalMatrix::Instance().Set(name, value);
+    if (GlobalMatrix::Ready()) {
+      GlobalMatrix::Instance().Set(name, value);
+    }
   }
 
   inline static void Add(const std::string& name, uint32_t value) {
-    if (GlobalMatrix::Ready()) GlobalMatrix::Instance().Add(name, value);
+    if (GlobalMatrix::Ready()) {
+      GlobalMatrix::Instance().Add(name, value);
+    }
   }
 
   inline static void Sub(const std::string& name, uint32_t value) {
-    if (GlobalMatrix::Ready()) GlobalMatrix::Instance().Sub(name, value);
+    if (GlobalMatrix::Ready()) {
+      GlobalMatrix::Instance().Sub(name, value);
+    }
   }
 
   inline static void Reset(const std::string& name) {
-    if (GlobalMatrix::Ready()) GlobalMatrix::Instance().Reset(name);
+    if (GlobalMatrix::Ready()){
+      GlobalMatrix::Instance().Reset(name);
+    }
   }
 
   inline static void Incr(const std::string& name) {
-    if (GlobalMatrix::Ready()) GlobalMatrix::Instance().Add(name, 1);
+    if (GlobalMatrix::Ready()) {
+      GlobalMatrix::Instance().Add(name, 1);
+    }
   }
 
   inline static void Decr(const std::string& name) {
-    if (GlobalMatrix::Ready()) GlobalMatrix::Instance().Sub(name, 1);
+    if (GlobalMatrix::Ready()) {
+      GlobalMatrix::Instance().Sub(name, 1);
+    }
   }
 
   inline static void Distribution(const std::string& name, uint32_t value) {
-    if (GlobalMatrix::Ready()) GlobalMatrix::Instance().SendToCollector(new MatrixItem(Matrix::kTimeDistribute, name, value));
+    if (GlobalMatrix::Ready()) {
+      GlobalMatrix::Instance().SendToCollector(
+        new MatrixItem(Matrix::kTimeDistribute, name, value));
+    }
   }
 };
 

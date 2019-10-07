@@ -68,6 +68,8 @@ private:
     is_test_(false){
   }
   bool is_test_;
+
+  DISALLOW_COPY_AND_ASSIGN(ForTest)
 };
 
 }

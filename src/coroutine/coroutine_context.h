@@ -56,6 +56,8 @@ struct CoroutineContext {
     }
   }
 
+  DISALLOW_COPY_AND_ASSIGN(CoroutineContext);
+
   CoroutineSchedule* scheduler_ = nullptr;
   int cur_coroutine_id_ = -1;
   CoroutineServiceHandler* service_handle_ = nullptr;
