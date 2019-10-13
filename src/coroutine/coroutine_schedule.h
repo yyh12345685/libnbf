@@ -46,6 +46,12 @@ protected:
   }
 
 private:
+  int AddNewCoroutine();
+  CoroutineFunc func_ = nullptr;
+  void* data_ = nullptr;
+  int max_coro_id_ = -1;
+
+private:
 
   std::vector<int> all_coro_list_;//È«²¿
 
@@ -80,7 +86,7 @@ public:
     }
   }
 
-  void InitAllIds(int max_coro_id);
+  void InitMaxIds(int max_coro_id);
 
   std::vector<int*>& GetAllCoroIds() { 
     return all_coro_ids_; 

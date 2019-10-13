@@ -32,8 +32,9 @@ CoroSchedule* CoroutineImpl::CoroutineInit(int coroutine_size) {
   corotine->nco = 0;
   corotine->cap = coroutine_size;
   corotine->running = -1;
-  corotine->coctxs = (CoroutineActor**)malloc(sizeof(CoroutineActor*) * corotine->cap);
-  memset(corotine->coctxs, 0, sizeof(CoroutineActor*) * corotine->cap);
+  //corotine->coctxs = (CoroutineActor**)malloc(sizeof(CoroutineActor*) * corotine->cap);
+  //memset(corotine->coctxs, 0, sizeof(CoroutineActor*) * corotine->cap);
+  corotine->coctxs.resize(corotine->cap);
   return corotine;
 }
 
@@ -44,8 +45,8 @@ void CoroutineImpl::CoroutineClose(CoroSchedule *corotine) {
       CoDelete(coctx);
     }
   }
-  free(corotine->coctxs);
-  corotine->coctxs = nullptr;
+  //free(corotine->coctxs);
+  //corotine->coctxs = nullptr;
   delete(corotine);
 }
 
@@ -53,10 +54,13 @@ int CoroutineImpl::CoroutineNew(CoroSchedule *corotine, CoroutineFunc func, void
   CoroutineActor *coctx = CoNew(corotine, func, ud);
   if (corotine->nco >= corotine->cap) {
     int id = corotine->cap;
-    corotine->coctxs = (CoroutineActor**)realloc(corotine->coctxs, corotine->cap * 2 * sizeof(CoroutineActor*));
-    memset(corotine->coctxs + corotine->cap, 0, sizeof(CoroutineActor *) * corotine->cap);
-    corotine->coctxs[corotine->cap] = coctx;
-    corotine->cap *= 2;
+    //corotine->coctxs = 
+    //  (CoroutineActor**)realloc(corotine->coctxs, corotine->cap * 2 * sizeof(CoroutineActor*));
+    //memset(corotine->coctxs + corotine->cap, 0, sizeof(CoroutineActor *) * corotine->cap);
+    //corotine->coctxs[corotine->cap] = coctx;
+    //corotine->cap *= 2;
+    corotine->coctxs.emplace_back(coctx);
+    corotine->cap++;
     ++corotine->nco;
     TRACE(logger_, "create coroutine_id_:" << id <<",ptr:"<< coctx);
     return id;
@@ -97,7 +101,7 @@ void CoroutineImpl::CoroutineResume(CoroSchedule* corotine, int id) {
   }
 
   CoroutineActor *coctx = corotine->coctxs[id];
-  if (coctx == nullptr)
+  if (nullptr == coctx)
     return;
   int status = coctx->status;
   TRACE(logger_, "status:" << status << ",running id:" << corotine->running);

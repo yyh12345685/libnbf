@@ -16,7 +16,7 @@ struct CoroSchedule {
   int nco;
   int cap;
   int running;
-  CoroutineActor **coctxs;
+  std::vector <CoroutineActor*> coctxs;
 };
 
 typedef void(*CoroutineFunc)(void*);
