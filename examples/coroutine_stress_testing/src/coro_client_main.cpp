@@ -14,6 +14,7 @@ int StartTaskThread(void* data) {
   ClientTaskTest client_test_task;
   while (true){
     bdf::service::GetIoService().SendTaskToServiceHandle(&client_test_task);
+    //这种发送方式很容易造成服务端过载,参考test_client_server的方式更佳
     if (0 == (send_times%60000)){
       sleep(1);
     }

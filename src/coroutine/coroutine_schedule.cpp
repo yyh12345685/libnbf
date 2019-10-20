@@ -3,6 +3,9 @@
 #include "coroutine_context.h"
 #include "common/thread_id.h"
 
+//上限暂时设置为10万
+#define MAX_CORO_IDS 100000
+
 namespace bdf {
 
 LOGGER_CLASS_IMPL(logger_, CoroutineSchedule);
@@ -30,11 +33,11 @@ int CoroutineSchedule::AddNewCoroutine(){
   int coroutine_id = coro_impl_.CoroutineNew(coro_sche_, func_, data_);
   all_coro_list_.emplace_back(coroutine_id);
   available_coro_list_.insert(coroutine_id);
-  if (coroutine_id > max_coro_id_) {
-    max_coro_id_ = coroutine_id;
-  }
+  //if (coroutine_id > max_coro_id_) {
+  //  max_coro_id_ = coroutine_id;
+  //}
 
-  CoroutineID::GetInst().InitMaxIds(max_coro_id_ + 1);
+  CoroutineID::GetInst().InitMaxIds(MAX_CORO_IDS);
   //yield_time_debug_.resize(max_coro_id+1);
 
   return coroutine_id;
@@ -187,16 +190,19 @@ void CoroutineSchedule::CoroutineYield() {
 }
 
 void CoroutineID::InitMaxIds(int max_coro_id){
-  if (max_coro_id <= (int)(all_coro_ids_.size())){
+  lock_.lock();
+
+  if (max_coro_id <= (int)(all_coro_ids_tmp_.size())){
+    lock_.unlock();
     return;
   }
 
   //因为这个版本的 coroutine id是从0依次递增
-  for (int idx = all_coro_ids_.size(); idx < max_coro_id; idx++) {
-    int* tmp_id = new int;
-    *tmp_id = idx;
-    all_coro_ids_.emplace_back(tmp_id);
+  for (int idx = all_coro_ids_tmp_.size(); idx < max_coro_id; idx++) {
+    all_coro_ids_tmp_.emplace_back(idx);
   }
+
+  lock_.unlock();
 }
 
 }

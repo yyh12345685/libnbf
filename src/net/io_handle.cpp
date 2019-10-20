@@ -7,6 +7,7 @@
 #include "service/io_service.h"
 #include "net/connect_manager.h"
 #include "common/thread_id.h"
+#include "common/time.h"
 
 namespace bdf{
 
@@ -32,17 +33,20 @@ void IoHandler::Run(HandleData* data){
     temp.swap(data->data_);
     data->lock_.unlock();
 
+    //如有必要这里也可以增加队列超过一定长度的过载保护
+    size_t handle_size = temp.size();
     while (!temp.empty()) {
-      EventMessage *msg = temp.front();
-      temp.pop();
-      Handle(msg);
       //for debug
       time_t cur_time = time(NULL);
-      if ((cur_time - now) > 180) {
-        INFO(logger_, "ThreadId:" << ThreadId::Get()<<",msg size:" 
+      if ((cur_time - now) > 60 && handle_size == temp.size()) {
+        INFO(logger_, "ThreadId:" << ThreadId::Get() << ",msg size:"
           << data->data_.size() << ",handle size:" << temp.size());
         now = cur_time;
       }
+
+      EventMessage *msg = temp.front();
+      temp.pop();
+      Handle(msg);
     }
   }
   INFO(logger_, "IoHandler::Run exit.");
@@ -80,6 +84,17 @@ void IoHandler::Handle(EventMessage* message){
 
 void IoHandler::HandleIoMessageEvent(EventMessage* message){
   TRACE(logger_, "HandleIoMessageEvent");
+  //客户端过载保护
+  if (message->direction == EventMessage::kOnlySend
+    || message->direction == EventMessage::kOutgoingRequest){
+    uint64_t birth_to_now = Time::GetCurrentClockTime() - message->birthtime;
+    if (birth_to_now > INNER_QUERY_SEND_PROTECT_TIME) {
+      //从发送到io handle处理超过100ms,过载保护
+      INFO(logger_, "birth_to_now:" << birth_to_now << ",msg:" << *message);
+      HandleIoMessageFailed(message);
+      return;//不返回结果
+    }
+  }
   //Connecting* reg_con = ConnectManager::Instance().GetConnect(message->descriptor_id);
   Connecting* con = (Connecting*)((void*)(message->descriptor_id));
   //if (!reg_con){

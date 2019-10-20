@@ -10,6 +10,7 @@
 #include "client/client_mgr.h"
 #include "net/connect_manager.h"
 #include "monitor/matrix.h"
+#include "common/time.h"
 
 namespace bdf{
 
@@ -189,6 +190,8 @@ void Client::DoSend(EventMessage* message){
     message->coroutine_id = CoroutineContext::GetCurCoroutineId();
   }
   
+  message->birthtime = Time::GetCurrentClockTime();
+
   TRACE(logger_, "SendToIoHandle,handle_id:" << message->handle_id);
   IoService::GetInstance().SendToIoHandle(message);
 }

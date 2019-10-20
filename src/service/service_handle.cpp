@@ -4,6 +4,7 @@
 #include "message.h"
 #include "handle_data.h"
 #include "common/thread_id.h"
+#include "common/time.h"
 
 namespace bdf {
 
@@ -23,17 +24,20 @@ void ServiceHandler::Run( HandleData* data){
     data->lock_.lock();
     temp.swap(data->data_);
     data->lock_.unlock();
+    //如有必要这里也可以增加队列超过一定长度的过载保护
+    size_t handle_size = temp.size();
     while (!temp.empty()){
+      //for debug
+      time_t cur_time = time(NULL);
+      if ((cur_time - now) > 60 && handle_size == temp.size()) {
+        INFO(logger_, "ThreadId:" << ThreadId::Get() << ",msg size:"
+          << data->data_.size() << ",handle size:" << temp.size());
+        now = cur_time;
+      }
+
       EventMessage *msg = temp.front();
       temp.pop();
       Handle(msg);
-      //for debug
-      time_t cur_time = time(NULL);
-      if ((cur_time- now) > 120){
-        INFO(logger_, "ThreadId:" << ThreadId::Get()<<",msg size:" 
-          << data->data_.size()<<",handle size:"<< temp.size());
-        now = cur_time;
-      }
     }
   }
   INFO(logger_, "ServiceHandler::Run exit.");
@@ -44,6 +48,18 @@ void ServiceHandler::Handle(EventMessage* message) {
   //  MessageFactory::Destroy(message);
   //  return;
   //}
+  //服务端过载保护
+  if (message->direction == MessageBase::kIncomingRequest) {
+    //处理服务端接收的消息
+    uint64_t birth_to_now = Time::GetCurrentClockTime() - message->birthtime;
+    if (birth_to_now > INNER_QUERY_SEND_PROTECT_TIME) {
+      //从io handle到service handle超过100ms,过载保护
+      INFO(logger_, "birth_to_now:" << birth_to_now << ",msg:" << *message);
+      MessageFactory::Destroy(message);
+      return;//不返回结果
+    }
+  }
+
   TRACE(logger_, "msg type:" << (int)(message->type_id) << ",direction:" 
     << (int)(message->direction) << ",status:" << (int)(message->status));
   switch (message->type_id) {

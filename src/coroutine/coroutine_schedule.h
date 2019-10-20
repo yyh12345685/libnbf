@@ -4,6 +4,7 @@
 //#include <set>
 #include <unordered_set>
 #include <queue>
+#include <mutex>
 #include "common/common.h"
 #include "coroutine/coroutine_impl.h"
 
@@ -49,7 +50,7 @@ private:
   int AddNewCoroutine();
   CoroutineFunc func_ = nullptr;
   void* data_ = nullptr;
-  int max_coro_id_ = -1;
+  //int max_coro_id_ = -1;
 
 private:
 
@@ -81,18 +82,17 @@ public:
     return inst;
   }
   ~CoroutineID(){
-    for (auto id: all_coro_ids_){
-      delete id;
-    }
   }
 
   void InitMaxIds(int max_coro_id);
 
-  std::vector<int*>& GetAllCoroIds() { 
-    return all_coro_ids_; 
+  std::vector<int>& GetAllCoroIds() { 
+    return all_coro_ids_tmp_;
   }
 private:
-  std::vector<int*> all_coro_ids_;
+  std::mutex lock_;
+
+  std::vector<int> all_coro_ids_tmp_;
   DISALLOW_COPY_AND_ASSIGN(CoroutineID)
   CoroutineID(){
   }

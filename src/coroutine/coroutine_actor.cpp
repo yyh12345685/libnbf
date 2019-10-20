@@ -35,7 +35,7 @@ EventMessage* CoroutineActor::RecieveMessage(EventMessage* message,uint32_t time
   if (msg_list_.empty()){
     CoroutineServiceHandler* hdl = CoroutineContext::Instance().GetServiceHandler();
     tim = BDF_NEW (CoroTimer,hdl);
-    tim->timer_data_ = (CoroutineID::GetInst().GetAllCoroIds()[cur_coro_id]);
+    tim->timer_data_ = &(CoroutineID::GetInst().GetAllCoroIds()[cur_coro_id]);
     //这里定时器增加1ms，因为在async_client_connect和sync_sequence也有个定时器，那个时间是标准的
     //理论上需要connect中的定时器先触发，如果协程中的定时器先触发
     //connect中定时器后触发会导致SendMessage中waiting_id_和message的sequence_id差异越大

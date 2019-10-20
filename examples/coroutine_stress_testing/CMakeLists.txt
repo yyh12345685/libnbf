@@ -21,8 +21,8 @@ add_executable(stress_client_test
 target_link_libraries(stress_client_test
   bdf
   ${LOG4CPLUS_LIBRARIES}
-	${TCMALLOC_LIBRARIES}
-	${UNWIND_LIBRARIES}
+  ${TCMALLOC_LIBRARIES}
+  ${UNWIND_LIBRARIES}
   pthread
   rt
 )
@@ -55,8 +55,8 @@ add_executable(stress_server_test
 target_link_libraries(stress_server_test
   bdf
   ${LOG4CPLUS_LIBRARIES}
-	${TCMALLOC_LIBRARIES}
-	${UNWIND_LIBRARIES}
+  ${TCMALLOC_LIBRARIES}
+  ${UNWIND_LIBRARIES}
   pthread
   rt
 )

@@ -16,6 +16,9 @@
 #define unlikely(x) __builtin_expect ((x), false)
 #endif
 
+//内部队列扭转过载保护时长 100ms
+#define INNER_QUERY_SEND_PROTECT_TIME 100
+
 #define DISALLOW_COPY_AND_ASSIGN(class_name)              \
 private:                                                  \
   class_name(const class_name&);                          \

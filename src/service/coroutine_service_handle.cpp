@@ -175,8 +175,8 @@ void CoroutineServiceHandler::ProcessMessageHandle(std::queue<EventMessage*>& ms
     if (msg->direction == MessageBase::kIncomingRequest){
       //处理服务端接收的消息
       uint64_t birth_to_now = Time::GetCurrentClockTime()- msg->birthtime;
-      if (birth_to_now > 500){
-        //从io handle到service handle超过500ms,过载保护
+      if (birth_to_now > INNER_QUERY_SEND_PROTECT_TIME){
+        //从io handle到service handle超过100ms,服务端过载保护
         INFO(logger_, "birth_to_now:"<< birth_to_now <<",msg:" << *msg);
         MessageFactory::Destroy(msg);
         continue;
