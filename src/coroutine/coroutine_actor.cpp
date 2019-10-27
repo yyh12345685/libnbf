@@ -32,15 +32,11 @@ EventMessage* CoroutineActor::RecieveMessage(EventMessage* message,uint32_t time
     return nullptr;
   }
   CoroTimer* tim = nullptr;
-  if (msg_list_.empty()){
+  if (likely(msg_list_.empty())){
     CoroutineServiceHandler* hdl = CoroutineContext::Instance().GetServiceHandler();
     tim = BDF_NEW (CoroTimer,hdl);
     tim->timer_data_ = &(CoroutineID::GetInst().GetAllCoroIds()[cur_coro_id]);
-    //这里定时器增加1ms，因为在async_client_connect和sync_sequence也有个定时器，那个时间是标准的
-    //理论上需要connect中的定时器先触发，如果协程中的定时器先触发
-    //connect中定时器后触发会导致SendMessage中waiting_id_和message的sequence_id差异越大
-    int real_time_out = timeout_ms + 3;
-    time_id = CoroutineContext::Instance().GetTimerMgr()->AddTimer(tim, real_time_out);
+    time_id = CoroutineContext::Instance().GetTimerMgr()->AddTimer(tim, timeout_ms);
     TRACE(logger_, "ThreadId:"<< ThreadId::Get()
       <<",RecieveMessage CoroutineYield:" << this<<",msg"<< *message);
     scheduler->CoroutineYield(cur_coro_id);
@@ -55,11 +51,11 @@ EventMessage* CoroutineActor::RecieveMessage(EventMessage* message,uint32_t time
     BDF_DELETE(tim);
   }
   
-  if (!msg_list_.empty()) {
+  if (likely(!msg_list_.empty())) {
     EventMessage* msg = msg_list_.front();
     msg_list_.pop_front();
     if (seq_id_send_tmp != msg->sequence_id) {
-      //服务端返回一条消息多次/超时了，然后又收到返回?
+      //异常情况，理论不存在
       WARN(logger_, "tid:" << ThreadId::Get() << ",ccoro id:"<< cur_coro_id
         << ",send message seq_id:" << seq_id_send_tmp << ",resp message:" << *msg);
       MessageFactory::Destroy(msg);
@@ -77,13 +73,14 @@ bool CoroutineActor::SendMessage(EventMessage* message){
   TRACE(logger_, "SendMessage,is_waiting_" << is_waiting_
     << ",sequence id:" << message->sequence_id << ",waiting_id:" << waiting_id_
     << ",msg_list_size:" << msg_list_.size());
-  if (is_waiting_ && message->sequence_id != waiting_id_) {
+  if (unlikely(!is_waiting_ || (is_waiting_ && message->sequence_id != waiting_id_))) {
     /*INFO*/TRACE(logger_, "sequence_id mismatch:" << waiting_id_
       << ",msg_list_size:"<< msg_list_ .size()<<",msg:" << *message);
     //同步的协议超时就关闭了连接，不会来到这里,到外面处理
     //rapid协议超时之后返回的，两个定时器的原因
     return false;
   }
+
   TRACE(logger_, "ThreadId:" << ThreadId::Get() << ",respose message:" << *message);
   msg_list_.emplace_back(message);
   waiting_id_ = -1;

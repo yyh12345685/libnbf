@@ -15,6 +15,10 @@ LOGGER_CLASS_IMPL(logger, MatrixCollector);
 LOGGER_CLASS_IMPL_NAME(collector_logger, MatrixCollector, "bdf.monitor");
 LOGGER_CLASS_IMPL_NAME(collector_logger_simple, MatrixCollector, "bdf.monitor.simple");
 
+//如果超过100次push失败，则暂停push 29秒，让monitor线程消费完
+#define MAX_PUSH_FAILED_TO_PAUSE 100
+#define PAUSE_TIMES_SECOND 29
+
 MatrixCollector::MatrixCollector(
   const std::string& monitor_file, 
   uint32_t bucket_count, 
@@ -24,7 +28,9 @@ MatrixCollector::MatrixCollector(
   , thread_(nullptr)
   , running_(false) 
   , monitor_file_name_pre_(monitor_file)
-  , stat_map_(new MatrixStatMap(time(nullptr))) {
+  , stat_map_(new MatrixStatMap(time(nullptr))) 
+  , queue_push_failed_times(0)
+  , pause_push_stop_times(0){
 
   queue_.resize(bucket_count_);
   for (auto& queue : queue_) {
@@ -71,6 +77,32 @@ int MatrixCollector::Stop() {
   thread_->join();
   delete thread_;
   thread_ = nullptr;
+  return 0;
+}
+
+int MatrixCollector::Send(const MatrixItem* item) {
+  //////////////////////过载保护逻辑
+  int64_t cur_time = time(nullptr);
+  if (cur_time < pause_push_stop_times) {
+    return -1;
+  }
+  ////////////////////////////////////////////////////
+
+  uint64_t idx = 0;
+  QueueType* queue = GetQueue(idx);
+  //locks_[idx]->lock();
+  if (!queue->push(item)) {
+    //////////////////////过载保护逻辑
+    queue_push_failed_times++;
+    if (queue_push_failed_times > MAX_PUSH_FAILED_TO_PAUSE) {
+      pause_push_stop_times.store(cur_time + PAUSE_TIMES_SECOND);
+      queue_push_failed_times.store(0);
+      INFO(logger, "will be send fail util:"<< pause_push_stop_times);
+    }
+    ////////////////////////////////////////////////////
+    return -2;
+  }
+  //locks_[idx]->unlock();
   return 0;
 }
 
@@ -130,7 +162,7 @@ void MatrixCollector::Run() {
     }
     ProcessQueueList(stat_map);
     
-    usleep(10*1000);
+    usleep(2*1000);
   }
   fclose(fp);
   INFO(logger, "MatrixCollector Exit");
@@ -143,7 +175,7 @@ void MatrixCollector::ProcessQueueList(MatrixStatMapPtr stat_map){
 
     //for debug
     time_t cur_time = time(NULL);
-    if ((cur_time - now) > 120) {
+    if ((cur_time - now) > 30) {
       INFO(logger, "idx:" << idx << ",queue size:" << queue->size());
       now = cur_time;
     }

@@ -74,7 +74,7 @@ int SyncClientConnect::EncodeMsg(EventMessage* message){
   }
 
   //test_lock1_.lock();
-  if (!GetProtocol()->Encode(message, &outbuf_)) {
+  if (unlikely(!GetProtocol()->Encode(message, &outbuf_))) {
     WARN(logger, "SyncClientConnect::Encode() encode fail");
     //test_lock1_.unlock();
     SetBuzy(false);

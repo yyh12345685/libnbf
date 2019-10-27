@@ -93,7 +93,7 @@ namespace bdf {
 
   template<typename Data>
   bool MPMCLockfreeRingbuffer<Data>::init(int size){
-    if (true == bool_cas(&first_init, true, false)){
+    if (bool_cas(&first_init, true, false)){
       int tmp_size = 1;
       while (tmp_size < size){
         tmp_size <<= 1;

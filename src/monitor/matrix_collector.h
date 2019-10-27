@@ -32,16 +32,7 @@ class MatrixCollector {
   int Start();
   int Stop();
 
-  inline int Send(const MatrixItem* item) {
-    uint64_t idx = 0;
-    QueueType* queue = GetQueue(idx);
-    //locks_[idx]->lock();
-    if (!queue->push(item)){
-      return -1;
-    }
-    //locks_[idx]->unlock();
-    return 0;
-  }
+  int Send(const MatrixItem* item);
 
   inline MatrixStatMapPtr GetMatrixStatMap() {
     return stat_map_;
@@ -80,6 +71,9 @@ class MatrixCollector {
   std::string monitor_file_name_pre_;
   std::string monitor_file_name_;
   MatrixStatMapPtr stat_map_;
+
+  std::atomic<int> queue_push_failed_times;
+  std::atomic<int64_t> pause_push_stop_times;
 };
 
 }

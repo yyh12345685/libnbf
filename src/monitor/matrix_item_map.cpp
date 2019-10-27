@@ -32,7 +32,7 @@ int MatrixBucketItemMap::FetchToken(uint64_t token, MatrixItem** item) {
     lock_.unlock();
     return 0;
   }
-  lock_.lock();
+  lock_.unlock();
   return -1;
 }
 

@@ -10,6 +10,7 @@ LOGGER_STATIC_DECL_IMPL(logger, "root");
 int StartTaskThread(void* data) {
   prctl(PR_SET_NAME, "StartTaskThread");
   INFO(logger, "Start TaskThread,time:" << time(NULL));
+  sleep(1);
   uint64_t send_times = 0;
   ClientTaskTest client_test_task;
   while (true){
