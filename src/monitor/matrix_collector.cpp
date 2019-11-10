@@ -162,7 +162,7 @@ void MatrixCollector::Run() {
     }
     ProcessQueueList(stat_map);
     
-    usleep(2*1000);
+    usleep(2*1000);//2ms
   }
   fclose(fp);
   INFO(logger, "MatrixCollector Exit");
@@ -199,7 +199,7 @@ void MatrixCollector::ProcessQueue(QueueType* queue, MatrixStatMapPtr stat_map, 
     queue->pop(item);
     if (item == nullptr){
       INFO(logger,"item == nullptr......");
-      break;
+      continue;
     }
     switch (item->operation) {
       case Matrix::kSet : 

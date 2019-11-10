@@ -92,7 +92,7 @@ void IoHandler::HandleIoMessageEvent(EventMessage* message){
       //从发送到io handle处理超过100ms,过载保护
       INFO(logger_, "birth_to_now:" << birth_to_now << ",msg:" << *message);
       HandleIoMessageFailed(message);
-      return;//不返回结果
+      return;
     }
   }
   //Connecting* reg_con = ConnectManager::Instance().GetConnect(message->descriptor_id);

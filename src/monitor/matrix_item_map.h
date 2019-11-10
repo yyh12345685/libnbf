@@ -23,9 +23,14 @@ class MatrixBucketItemMap {
   int GenerateToken(uint64_t token, const std::string& name);
   int FetchToken(uint64_t token, MatrixItem** item);
 
+  void SetBucketId(uint32_t bucket_id) {
+    bucket_id_ = bucket_id;
+  }
  private:
+  LOGGER_CLASS_DECL(logger_);
   ItemMap map_;
   LockType lock_;
+  uint32_t bucket_id_;
 };
 
 class MatrixItemMap {
@@ -40,7 +45,7 @@ class MatrixItemMap {
   }
 
  private:
-  LOGGER_CLASS_DECL(logger);
+  LOGGER_CLASS_DECL(logger_);
   
   uint32_t bucket_count_;
   MatrixBucketItemMap* buckets_;

@@ -30,6 +30,7 @@ namespace __detail__ {
 template<bool pod>
 struct alloc_triats {};
 
+//平凡类型，并且是标准布局
 template<>
 struct alloc_triats<true> {
   template<typename T>
@@ -44,8 +45,10 @@ struct alloc_triats<true> {
   static void destruct(T*) {}
 };
 
+//不平凡类型，不是标准布局
 template<>
 struct alloc_triats<false> {
+  //兼容构造函数无参
   template<typename T, typename... Args>
   static void construct(T* buffer, const Args&... args) {
     new (buffer) T(args...);
@@ -74,7 +77,6 @@ struct construct_traits {
 };
 
 } //namespace __detail__
-
 
 struct PerfHeader {
   const char* message;
