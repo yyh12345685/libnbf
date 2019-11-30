@@ -32,7 +32,7 @@ private:
   AsyncClientConnect* async_client_con_;
   uint32_t timeout_ms_;
 
-  std::unordered_map<uint32_t, EventMessage*> registery_;
+  std::unordered_map<uint64_t, EventMessage*> registery_;
   //如果这个类只和service handle的线程有关系，和io handle线程无关，则可无锁
   //应该可以优化
   std::mutex registery_lock_;
