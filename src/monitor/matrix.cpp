@@ -154,7 +154,7 @@ int Matrix::SendToCollector(const MatrixItem* item) {
   int ret = collector_->Send(item);
   if (0 != ret) {
     if (1 == (rand()%10)){
-      WARN(logger_, "Matrix::SendToCollector fail,ret:"<< ret);
+      INFO(logger_, "Matrix::SendToCollector fail,ret:"<< ret);
     }
     if (item != nullptr) {
       delete item;

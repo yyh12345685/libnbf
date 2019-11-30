@@ -7,6 +7,8 @@
 
 LOGGER_STATIC_DECL_IMPL(logger_, "root");
 
+static bool thread_exit = false;
+
 class TaskTest:public bdf::Task{
 public:
 
@@ -63,7 +65,7 @@ public:
   virtual void OnTask(void* function_data) {
     INFO(logger_, "on task.");
     int times = 1000000;
-    while (times-- > 0) {
+    while (!thread_exit && times-- > 0) {
       if (times % 2 == 0){
         HttpTest();
       }else{
@@ -81,7 +83,10 @@ int main(int argc, char *argv[]){
   TaskTest test_task;
 
   bdf::Application<bdf::testserver::AppTestServerHandler> app;
-
+  app.SetOnStop([]() {
+    thread_exit = true;
+    return 0;
+  });
   app.SetOnAfterStart([&]() {
     bdf::service::GetIoService().SendTaskToServiceHandle(&test_task);
     return 0;

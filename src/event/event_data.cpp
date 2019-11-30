@@ -52,6 +52,7 @@ bool EventData::ReInitClosed(int& fd){
     FdEvent **tmp = (FdEvent **)realloc(closed_, (closed_size_ + 1) * sizeof(*tmp));
     if (!tmp){
       lock_.UnLock();
+      WARN(logger_, "realloc failed, closed_size_:" << closed_size_);
       return false;
     }
     closed_ = tmp;

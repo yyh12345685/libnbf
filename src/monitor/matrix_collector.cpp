@@ -91,7 +91,7 @@ int MatrixCollector::Send(const MatrixItem* item) {
   uint64_t idx = 0;
   QueueType* queue = GetQueue(idx);
   //locks_[idx]->lock();
-  if (!queue->push(item)) {
+  if (!queue->push(item)/*queue->size() >= queue_size_*/) {
     //////////////////////¹ýÔØ±£»¤Âß¼­
     queue_push_failed_times++;
     if (queue_push_failed_times > MAX_PUSH_FAILED_TO_PAUSE) {
@@ -100,8 +100,10 @@ int MatrixCollector::Send(const MatrixItem* item) {
       INFO(logger, "will be send fail util:"<< pause_push_stop_times);
     }
     ////////////////////////////////////////////////////
+    //locks_[idx]->unlock();
     return -2;
   }
+  //queue->push(item);
   //locks_[idx]->unlock();
   return 0;
 }
@@ -190,10 +192,10 @@ void MatrixCollector::ProcessQueueList(MatrixStatMapPtr stat_map){
 
 void MatrixCollector::ProcessQueue(QueueType* queue, MatrixStatMapPtr stat_map, uint32_t& idx) {
   //while (!queue->empty()) {
-    //locks_[idx]->lock();
-    //const MatrixItem* item = queue->front();
-    //queue->pop();
-    //locks_[idx]->unlock();
+  //  locks_[idx]->lock();
+  //  const MatrixItem* item = queue->front();
+  //  queue->pop();
+  //  locks_[idx]->unlock();
   while (queue->size() > 0) {
     const MatrixItem* item = nullptr;
     queue->pop(item);

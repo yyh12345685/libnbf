@@ -180,7 +180,7 @@ int EventDriver::Modrw(int fd, bool set){
 int EventDriver::Poll(int timeout){
   //process timer
   timer_.ProcessTimer();
-  //Wakeup();
+  //process event
   inloop_ = true;
   struct epoll_event events[4096];
   int numfd = epoll_wait(epfd_, events, 4096, timeout);
@@ -190,7 +190,7 @@ int EventDriver::Poll(int timeout){
     FdEvent *data = (FdEvent *)events[i].data.ptr;
     EventFunctionBase *ezfd = data->ezfd_;
     bool expected_event = false;
-    short event = EVENT_NONE; // bugfix, double check, i have missed too!
+    short event = EVENT_NONE;
     if ((data->event_ & EVENT_READ) && (events[i].events & EPOLLIN)){
       event |= EVENT_READ;
       expected_event = true;

@@ -7,13 +7,15 @@
 
 LOGGER_STATIC_DECL_IMPL(logger, "root");
 
+static bool thread_exit = false;
+
 int StartTaskThread(void* data) {
   prctl(PR_SET_NAME, "StartTaskThread");
   INFO(logger, "Start TaskThread,time:" << time(NULL));
   sleep(1);
   uint64_t send_times = 0;
   ClientTaskTest client_test_task;
-  while (true){
+  while (!thread_exit){
     bdf::service::GetIoService().SendTaskToServiceHandle(&client_test_task);
     //这种发送方式很容易造成服务端过载,参考test_client_server的方式更佳
     if (0 == (send_times%60000)){
@@ -28,7 +30,10 @@ int StartTaskThread(void* data) {
 
 int main(int argc, char *argv[]){
   bdf::Application<bdf::testserver::CoroTestServerHandler> app;
-  
+  app.SetOnStop([]() {
+    thread_exit = true;
+    return 0;
+  });
   app.SetOnAfterStart([&]() {
     std::thread t1(&StartTaskThread, &app);
     t1.join();

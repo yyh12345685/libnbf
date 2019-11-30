@@ -10,6 +10,8 @@ LOGGER_STATIC_DECL_IMPL(logger, "root");
 
 //valgrind --tool=memcheck --leak-check=full --show-reachable=yes --log-file=test.log ./test_client_server -c ../conf/test_client_server.conf -l ../conf/logger.conf
 
+static bool thread_exit = false;
+
 void RapidClientTestCallBack(bdf::EventMessage* msg) {
   if (msg->status != bdf::MessageBase::kStatusOK){
     TRACE(logger, "call back rapid msg->status:" << (int)(msg->status));
@@ -180,7 +182,7 @@ int YaceClientTest(void* data) {
     (bdf::Application<bdf::testserver::TestClientServerHandler>*)data;
   INFO(logger, "YaceClientTest start,time:" << time(NULL));
   int64_t req_times = 0;
-  while (true) {
+  while (!thread_exit) {
     if (0 == req_times % 66) {
       //66次sleep1毫秒，测试机器使用不到5个核心
       //假如1秒钟有一半时间sleep，那么一秒钟500次
@@ -189,7 +191,9 @@ int YaceClientTest(void* data) {
     }
     //test
     HttpTestInvoke(app);
+    //sleep(1);
     RapidTestInvoe(app);
+    //sleep(1);
     req_times++;
   }
   INFO(logger, "YaceClientTest stop,time:" << time(NULL));
@@ -198,6 +202,10 @@ int YaceClientTest(void* data) {
 
 int main(int argc, char *argv[]){
   bdf::Application<bdf::testserver::TestClientServerHandler> app;
+  app.SetOnStop([]() {
+    thread_exit = true;
+    return 0;
+  });
   app.SetOnAfterStart([&](){
     sleep(1);
     //std::thread t1(&RapidClientTest, &app);
