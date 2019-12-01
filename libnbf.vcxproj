@@ -21,7 +21,7 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{32E472C4-4BB1-43F1-8DB1-563869675150}</ProjectGuid>
-    <RootNamespace>libbdf</RootNamespace>
+    <RootNamespace>libnbf</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
     <ProjectName>libnbf</ProjectName>
   </PropertyGroup>
@@ -85,7 +85,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>E:\work\open_source\libbdf\src;E:\githup\libbdf\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>E:\work\open_source\libnbf\src;E:\githup\libnbf\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <UndefinePreprocessorDefinitions>-DMEM_PROFILE=1;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
