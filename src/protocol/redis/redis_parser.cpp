@@ -1,6 +1,6 @@
 
-//  ²Î¿¼ÎÄµµ£ºhttp://doc.redisfans.com/topic/protocol.html
-//  ²Î¿¼ÎÄµµÎª¹Ù·½ÎÄµµ£¬Ğ­ÒéÒ»½Ú
+//  å‚è€ƒæ–‡æ¡£ï¼šhttp://doc.redisfans.com/topic/protocol.html
+//  å‚è€ƒæ–‡æ¡£ä¸ºå®˜æ–¹æ–‡æ¡£ï¼Œåè®®ä¸€èŠ‚
 //  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 #include <stdio.h>
@@ -122,7 +122,7 @@ bool RedisParser::ParseCmd(const std::string& in, std::string& out) {
   do{
     leader = in.find(kSep, follower);
     if (leader == follower)
-    {//Ìø¹ıÁ¬ĞøµÄ\1
+    {//è·³è¿‡è¿ç»­çš„\1
       //follower = leader + 1;
       //continue;
       return false;

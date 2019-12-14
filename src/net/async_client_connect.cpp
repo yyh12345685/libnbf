@@ -15,7 +15,7 @@ AsyncClientConnect::AsyncClientConnect(
 AsyncClientConnect::~AsyncClientConnect(){
 }
 
-//”…slaveœﬂ≥Ã¥•∑¢
+//Áî±slaveÁ∫øÁ®ãËß¶Âèë
 void AsyncClientConnect::OnDecodeMessage(EventMessage* message){
   EventMessage* keeper_message = async_sequence_.Get(message->sequence_id);
   TRACE(logger_, "OnDecodeMessage get sequence_id:" << message->sequence_id);
@@ -53,7 +53,7 @@ void AsyncClientConnect::OnDecodeMessage(EventMessage* message){
   IoService::GetInstance().SendToServiceHandle(message);
 }
 
-//”…io handleœﬂ≥Ã¥•∑¢
+//Áî±io handleÁ∫øÁ®ãËß¶Âèë
 int AsyncClientConnect::EncodeMsg(EventMessage* message){
   if (GetStatus() != kConnected) {
     DEBUG(logger, "AsyncClientConnect::EncodeMsg ChannelBroken:" << GetStatus());
@@ -67,7 +67,7 @@ int AsyncClientConnect::EncodeMsg(EventMessage* message){
     return -2;
   }
 
-  //»Áπ˚”–”¶¥–Ë“™Ω´œ˚œ¢±£¥Ê∆¿¥£¨kOnlySend Ù”⁄Œﬁ”¶¥
+  //Â¶ÇÊûúÊúâÂ∫îÁ≠îÈúÄË¶ÅÂ∞ÜÊ∂àÊÅØ‰øùÂ≠òËµ∑Êù•ÔºåkOnlySendÂ±û‰∫éÊó†Â∫îÁ≠î
   if (message->direction != EventMessage::kOnlySend) {
     TRACE(logger, "put sequence id:" << message->sequence_id);
     if (0 != async_sequence_.Put(message)) {

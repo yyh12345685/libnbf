@@ -8,7 +8,7 @@
 #include "common/common.h"
 
 namespace bdf{
-//启动一个线程，发送心跳包，并且进行客户端重连操作
+//鍚姩涓�涓嚎绋嬶紝鍙戦�佸績璺冲寘锛屽苟涓旇繘琛屽鎴风閲嶈繛鎿嶄綔
 
 class ClientReconnect{
 public:

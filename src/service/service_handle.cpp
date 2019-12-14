@@ -24,7 +24,7 @@ void ServiceHandler::Run( HandleData* data){
     data->lock_.lock();
     temp.swap(data->data_);
     data->lock_.unlock();
-    //ÈçÓĞ±ØÒªÕâÀïÒ²¿ÉÒÔÔö¼Ó¶ÓÁĞ³¬¹ıÒ»¶¨³¤¶ÈµÄ¹ıÔØ±£»¤
+    //å¦‚æœ‰å¿…è¦è¿™é‡Œä¹Ÿå¯ä»¥å¢åŠ é˜Ÿåˆ—è¶…è¿‡ä¸€å®šé•¿åº¦çš„è¿‡è½½ä¿æŠ¤
     size_t handle_size = temp.size();
     while (!temp.empty()){
       //for debug
@@ -48,15 +48,15 @@ void ServiceHandler::Handle(EventMessage* message) {
   //  MessageFactory::Destroy(message);
   //  return;
   //}
-  //·şÎñ¶Ë¹ıÔØ±£»¤
+  //æœåŠ¡ç«¯è¿‡è½½ä¿æŠ¤
   if (message->direction == MessageBase::kIncomingRequest) {
-    //´¦Àí·şÎñ¶Ë½ÓÊÕµÄÏûÏ¢
+    //å¤„ç†æœåŠ¡ç«¯æ¥æ”¶çš„æ¶ˆæ¯
     uint64_t birth_to_now = Time::GetCurrentClockTime() - message->birthtime;
     if (birth_to_now > INNER_QUERY_SEND_PROTECT_TIME) {
-      //´Óio handleµ½service handle³¬¹ı100ms,¹ıÔØ±£»¤
+      //ä»io handleåˆ°service handleè¶…è¿‡100ms,è¿‡è½½ä¿æŠ¤
       INFO(logger_, "birth_to_now:" << birth_to_now << ",msg:" << *message);
       MessageFactory::Destroy(message);
-      return;//²»·µ»Ø½á¹û
+      return;//ä¸è¿”å›ç»“æœ
     }
   }
 

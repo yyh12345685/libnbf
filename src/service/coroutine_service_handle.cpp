@@ -29,7 +29,7 @@ void CoroutineServiceHandler::Run(HandleData* data){
   scheduler->CoroutineResume(coro_id);
 
   while (data->is_run) {
-    //ÕâÀï¸ºÔğÇĞ»»µ½Ğ­³Ì£¬ËùÓĞÒµÎñ¶¼ÔÚĞ­³ÌÖĞ´¦Àí
+    //è¿™é‡Œè´Ÿè´£åˆ‡æ¢åˆ°åç¨‹ï¼Œæ‰€æœ‰ä¸šåŠ¡éƒ½åœ¨åç¨‹ä¸­å¤„ç†
     if (scheduler->CoroutineResumeActive()){
       continue;
     }
@@ -81,7 +81,7 @@ void CoroutineServiceHandler::OnTimerCoro(void* function_data, int& coro_id){
   TRACE(logger_, "CoroutineServiceHandler::OnTimer.");
   int coro_id_tmp = *(int*)(function_data);
   if (coro_id_tmp < 0) {
-    //not to here,·ñÔò»á¶ªÏûÏ¢
+    //not to here,å¦åˆ™ä¼šä¸¢æ¶ˆæ¯
     ERROR(logger_, "error coro_id:" << coro_id);
     return;
   }
@@ -91,7 +91,7 @@ void CoroutineServiceHandler::OnTimerCoro(void* function_data, int& coro_id){
   }
 
   CoroutineSchedule* scheduler = CoroutineContext::Instance().GetScheduler();
-  //±¾À´¾ÍÔÚĞ­³ÌÀïÃæ£¬»áÏÈÇĞ³öÀ´£¬È»ºóÇĞµ½ÁíÍâÒ»¸öĞ­³Ì
+  //æœ¬æ¥å°±åœ¨åç¨‹é‡Œé¢ï¼Œä¼šå…ˆåˆ‡å‡ºæ¥ï¼Œç„¶ååˆ‡åˆ°å¦å¤–ä¸€ä¸ªåç¨‹
   if (!scheduler->CoroutineYieldToActive(coro_id_tmp)) {
     TRACE(logger_, "yield failed, coro_id:" << coro_id_tmp);
   }
@@ -139,7 +139,7 @@ void CoroutineServiceHandler::Process(HandleData* data){
 void CoroutineServiceHandler::ProcessClientItem(EventMessage* msg){
   CoroutineSchedule* scheduler = CoroutineContext::Instance().GetScheduler();
   if (msg->coroutine_id <0){
-    //not to here,·ñÔò»á¶ªÏûÏ¢
+    //not to here,å¦åˆ™ä¼šä¸¢æ¶ˆæ¯
     ERROR(logger_, "error coro_id:" << msg->coroutine_id);
     scheduler->CoroutineYield();
     MessageFactory::Destroy(msg);
@@ -147,12 +147,12 @@ void CoroutineServiceHandler::ProcessClientItem(EventMessage* msg){
   }
   CoroutineActor* coroutine = scheduler->GetCoroutineCtx(msg->coroutine_id);
   if (coroutine->SendMessage(msg)){
-    //±¾À´¾ÍÔÚĞ­³ÌÀïÃæ£¬»áÏÈÇĞ³öÀ´£¬È»ºóÇĞµ½ÁíÍâÒ»¸öĞ­³Ì
+    //æœ¬æ¥å°±åœ¨åç¨‹é‡Œé¢ï¼Œä¼šå…ˆåˆ‡å‡ºæ¥ï¼Œç„¶ååˆ‡åˆ°å¦å¤–ä¸€ä¸ªåç¨‹
     if (!scheduler->CoroutineYieldToActive(msg->coroutine_id)) {
       WARN(logger_, "client yield failed, coro_id:" << msg->coroutine_id);
     }
   }else{
-    //³¬Ê±µÄ
+    //è¶…æ—¶çš„
     MessageFactory::Destroy(msg);
   }
 }
@@ -167,23 +167,23 @@ void CoroutineServiceHandler::ProcessMessageHandle(std::queue<EventMessage*>& ms
 
     TRACE(logger_, "message is:" << *msg);
     if (MessageBase::kStatusOK != msg->status){
-      //³¬Ê±»òÕßÁ¬½Ó±»¹Ø±ÕµÈÎŞĞ§ÏûÏ¢
+      //è¶…æ—¶æˆ–è€…è¿æ¥è¢«å…³é—­ç­‰æ— æ•ˆæ¶ˆæ¯
       scheduler->CoroutineYield();
       MessageFactory::Destroy(msg);
       continue;
     }
     if (msg->direction == MessageBase::kIncomingRequest){
-      //´¦Àí·şÎñ¶Ë½ÓÊÕµÄÏûÏ¢
+      //å¤„ç†æœåŠ¡ç«¯æ¥æ”¶çš„æ¶ˆæ¯
       uint64_t birth_to_now = Time::GetCurrentClockTime()- msg->birthtime;
       if (birth_to_now > INNER_QUERY_SEND_PROTECT_TIME){
-        //´Óio handleµ½service handle³¬¹ı100ms,·şÎñ¶Ë¹ıÔØ±£»¤
+        //ä»io handleåˆ°service handleè¶…è¿‡100ms,æœåŠ¡ç«¯è¿‡è½½ä¿æŠ¤
         INFO(logger_, "birth_to_now:"<< birth_to_now <<",msg:" << *msg);
         MessageFactory::Destroy(msg);
         continue;
       }
       Handle(msg);
     }else{
-      //´¦Àí¿Í»§¶Ë½ÓÊÕµÄÏûÏ¢
+      //å¤„ç†å®¢æˆ·ç«¯æ¥æ”¶çš„æ¶ˆæ¯
       ProcessClientItem(msg);
     }
   }

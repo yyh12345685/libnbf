@@ -23,7 +23,7 @@ void IoHandler::Run(HandleData* data){
   while (data->is_run) {
     GetTimer().ProcessTimer();
     if (data->data_.empty()) {
-      //Êµ¼ùÖ¤Ã÷usleepÀïÃæ²»ÒªÌî1µ½10,·ñÔòÑ­»·ÀïÃæÀË·Ñcpu,¿Õ×ª
+      //å®è·µè¯æ˜usleepé‡Œé¢ä¸è¦å¡«1åˆ°10,å¦åˆ™å¾ªç¯é‡Œé¢æµªè´¹cpu,ç©ºè½¬
       usleep(100);
       continue;
     }
@@ -33,7 +33,7 @@ void IoHandler::Run(HandleData* data){
     temp.swap(data->data_);
     data->lock_.unlock();
 
-    //ÈçÓĞ±ØÒªÕâÀïÒ²¿ÉÒÔÔö¼Ó¶ÓÁĞ³¬¹ıÒ»¶¨³¤¶ÈµÄ¹ıÔØ±£»¤
+    //å¦‚æœ‰å¿…è¦è¿™é‡Œä¹Ÿå¯ä»¥å¢åŠ é˜Ÿåˆ—è¶…è¿‡ä¸€å®šé•¿åº¦çš„è¿‡è½½ä¿æŠ¤
     size_t handle_size = temp.size();
     while (!temp.empty()) {
       //for debug
@@ -84,12 +84,12 @@ void IoHandler::Handle(EventMessage* message){
 
 void IoHandler::HandleIoMessageEvent(EventMessage* message){
   TRACE(logger_, "HandleIoMessageEvent");
-  //¿Í»§¶Ë¹ıÔØ±£»¤
+  //å®¢æˆ·ç«¯è¿‡è½½ä¿æŠ¤
   if (message->direction == EventMessage::kOnlySend
     || message->direction == EventMessage::kOutgoingRequest){
     uint64_t birth_to_now = Time::GetCurrentClockTime() - message->birthtime;
     if (birth_to_now > INNER_QUERY_SEND_PROTECT_TIME) {
-      //´Ó·¢ËÍµ½io handle´¦Àí³¬¹ı100ms,¹ıÔØ±£»¤
+      //ä»å‘é€åˆ°io handleå¤„ç†è¶…è¿‡100ms,è¿‡è½½ä¿æŠ¤
       INFO(logger_, "birth_to_now:" << birth_to_now << ",msg:" << *message);
       HandleIoMessageFailed(message);
       return;
@@ -114,8 +114,8 @@ void IoHandler::HandleIoMessageEvent(EventMessage* message){
     HandleIoMessageFailed(message);
     return;
   }
-  //µ¥ÏòÏûÏ¢encodeÖ®ºó¼´¿ÉÊÍ·Å£¬Ë«ÏòÏûÏ¢»áÔÚ·µ»Ø»òÕß³¬Ê±µÄÊ±ºòÊÍ·Å
-  //server´ğ¸´µÄÏûÏ¢ĞèÒªÔÚÕâÀïÊÍ·Åµô
+  //å•å‘æ¶ˆæ¯encodeä¹‹åå³å¯é‡Šæ”¾ï¼ŒåŒå‘æ¶ˆæ¯ä¼šåœ¨è¿”å›æˆ–è€…è¶…æ—¶çš„æ—¶å€™é‡Šæ”¾
+  //serverç­”å¤çš„æ¶ˆæ¯éœ€è¦åœ¨è¿™é‡Œé‡Šæ”¾æ‰
   if (message->direction == EventMessage::kOnlySend
     || message->direction == EventMessage::kOutgoingResponse) {
     MessageFactory::Destroy(message);

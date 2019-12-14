@@ -36,11 +36,11 @@ private:
   LOGGER_CLASS_DECL(logger_);
 
   std::string name_;
-  //¿ÉÒÔ¸ù¾İ·¢ËÍµÄmsgµÄÄ³¸öÖµhashµ½Ä³¸ö·şÎñÆ÷ºÍipÉÏ£¬ÔİÎ´ÊµÏÖ
+  //å¯ä»¥æ ¹æ®å‘é€çš„msgçš„æŸä¸ªå€¼hashåˆ°æŸä¸ªæœåŠ¡å™¨å’Œipä¸Šï¼Œæš‚æœªå®ç°
   std::string mapping_;
   std::vector<ClientRouter*> client_routers_;
   std::atomic<uint32_t> current_;
-  //Ö»ÓĞÒ»Ğ©Í¬²½µÄ¿Í»§¶ËºÍĞ­Òé²ÅÖ§³Ö
+  //åªæœ‰ä¸€äº›åŒæ­¥çš„å®¢æˆ·ç«¯å’Œåè®®æ‰æ”¯æŒ
   bool sigle_send_sigle_recv_;
 };
 

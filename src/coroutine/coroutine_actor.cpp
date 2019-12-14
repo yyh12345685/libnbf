@@ -53,7 +53,7 @@ EventMessage* CoroutineActor::RecieveMessage(EventMessage* message,uint32_t time
     EventMessage* msg = msg_list_.front();
     msg_list_.pop_front();
     if (seq_id_send_tmp != msg->sequence_id) {
-      //Òì³£Çé¿ö£¬ÀíÂÛ²»´æÔÚ
+      //å¼‚å¸¸æƒ…å†µï¼Œç†è®ºä¸å­˜åœ¨
       WARN(logger_, "tid:" << ThreadId::Get() << ",ccoro id:"<< cur_coro_id
         << ",send message seq_id:" << seq_id_send_tmp << ",resp message:" << *msg);
       MessageFactory::Destroy(msg);
@@ -74,8 +74,8 @@ bool CoroutineActor::SendMessage(EventMessage* message){
   if (unlikely(!is_waiting_ || (is_waiting_ && message->sequence_id != waiting_id_))) {
     /*INFO*/TRACE(logger_, "sequence_id mismatch:" << waiting_id_
       << ",msg_list_size:"<< msg_list_ .size()<<",msg:" << *message);
-    //Í¬²½µÄĞ­Òé³¬Ê±¾Í¹Ø±ÕÁËÁ¬½Ó£¬²»»áÀ´µ½ÕâÀï,µ½ÍâÃæ´¦Àí
-    //rapidĞ­Òé³¬Ê±Ö®ºó·µ»ØµÄ£¬Á½¸ö¶¨Ê±Æ÷µÄÔ­Òò
+    //åŒæ­¥çš„åè®®è¶…æ—¶å°±å…³é—­äº†è¿æ¥ï¼Œä¸ä¼šæ¥åˆ°è¿™é‡Œ,åˆ°å¤–é¢å¤„ç†
+    //rapidåè®®è¶…æ—¶ä¹‹åè¿”å›çš„ï¼Œä¸¤ä¸ªå®šæ—¶å™¨çš„åŸå› 
     return false;
   }
 

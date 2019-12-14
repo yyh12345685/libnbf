@@ -72,7 +72,7 @@ TEST(timer_test,test1){
 	std::cout<<"on timer 3 start---------"<<std::endl;
 	tmgr.ProcessTimer();
 	std::cout<<"on timer 3 end---------"<<std::endl;
-  //test not exist id,id±ØĞë´æÔÚ£¬·ñÔò±ÀÀ£ÁË
+  //test not exist id,idå¿…é¡»å­˜åœ¨ï¼Œå¦åˆ™å´©æºƒäº†
   //tmgr.DelTimer(123);
 }
 

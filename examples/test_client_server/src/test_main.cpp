@@ -69,7 +69,7 @@ int RapidClientTest(void* data) {
     //test2
     bdf::EventMessage* msg2_resp = RapidTestSendRecv(app);
     if (nullptr == msg2_resp){
-      //Òì²½Ã»ÊµÏÖSendRecv,Ò»Ö±·µ»Ønull
+      //å¼‚æ­¥æ²¡å®žçŽ°SendRecv,ä¸€ç›´è¿”å›žnull
       TRACE(logger, "msg2_resp is null.");
     }else{
       TRACE(logger, "receive msg:" << *msg2_resp);
@@ -158,7 +158,7 @@ int HttpClientTest(void* data) {
     //test2
     bdf::EventMessage* hmsg2_resp = HttpTestSendRecv(app);
     if (nullptr == hmsg2_resp) {
-      //Òì²½Ã»ÊµÏÖSendRecv,Ò»Ö±·µ»Ønull
+      //å¼‚æ­¥æ²¡å®žçŽ°SendRecv,ä¸€ç›´è¿”å›žnull
       TRACE(logger, "msg2_resp is null.");
     }else{
       TRACE(logger, "receive msg:" << *hmsg2_resp);
@@ -184,9 +184,9 @@ int YaceClientTest(void* data) {
   int64_t req_times = 0;
   while (!thread_exit) {
     if (0 == req_times % 66) {
-      //66´Îsleep1ºÁÃë£¬²âÊÔ»úÆ÷Ê¹ÓÃ²»µ½5¸öºËÐÄ
-      //¼ÙÈç1ÃëÖÓÓÐÒ»°ëÊ±¼äsleep£¬ÄÇÃ´Ò»ÃëÖÓ500´Î
-      //Êµ¼ÊÇé¿ö1ÃëÖÓ²»Ö¹500´Î
+      //66æ¬¡sleep1æ¯«ç§’ï¼Œæµ‹è¯•æœºå™¨ä½¿ç”¨ä¸åˆ°5ä¸ªæ ¸å¿ƒ
+      //å‡å¦‚1ç§’é’Ÿæœ‰ä¸€åŠæ—¶é—´sleepï¼Œé‚£ä¹ˆä¸€ç§’é’Ÿ500æ¬¡
+      //å®žé™…æƒ…å†µ1ç§’é’Ÿä¸æ­¢500æ¬¡
       usleep(1000);
     }
     //test

@@ -160,7 +160,7 @@ void Connecting::OnWrite(){
             << ",ret:" << ret << ",ip:" << GetIp() << ",port:" << GetPort()
             <<",is_server_:"<<IsServer()<< ",send capacity:" << outbuf_.GetCapacity()
             <<",fd:"<<fd_ << ",errno:" << strerror(errno)<<",ptr:"<<this);
-        //发现偶尔会触发两次，一次errno104，一次errno32
+        //鍙戠幇鍋跺皵浼氳Е鍙戜袱娆★紝涓�娆rrno104锛屼竴娆rrno32
         OnReadWriteClose();
         break;
       }

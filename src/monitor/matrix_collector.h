@@ -44,10 +44,10 @@ class MatrixCollector {
   LOGGER_CLASS_DECL(collector_logger_simple);
 
   inline QueueType* GetQueue(uint64_t& idx) {
-    //¸ù¾ÝÏß³ÌidÀ´Ñ¡£¬µ±Ïß³Ì±È½ÏÉÙµÄÊ±ºò£¬ÈÝÒ×³åÍ»£¬¶øÇÒÈÝÒ×¼¯ÖÐµ½Ä³¸öbucket
+    //æ ¹æ®çº¿ç¨‹idæ¥é€‰ï¼Œå½“çº¿ç¨‹æ¯”è¾ƒå°‘çš„æ—¶å€™ï¼Œå®¹æ˜“å†²çªï¼Œè€Œä¸”å®¹æ˜“é›†ä¸­åˆ°æŸä¸ªbucket
     //idx = ThreadId::Get() & (bucket_count_ - 1);
     //idx = rand() % bucket_count_;
-    //¾­¹ý²âÊÔrand()¶àÏß³Ì²¢·¢±È½ÏÏûºÄcpu,¸ÄÎªË³Ðò·ÖÅä,½µµÍcpu£¬Ìá¸ßÐÔÄÜ
+    //ç»è¿‡æµ‹è¯•rand()å¤šçº¿ç¨‹å¹¶å‘æ¯”è¾ƒæ¶ˆè€—cpu,æ”¹ä¸ºé¡ºåºåˆ†é…,é™ä½Žcpuï¼Œæé«˜æ€§èƒ½
     static std::atomic<uint64_t> seq_id(0);
     idx = (++seq_id)% bucket_count_;
     return queue_.at(idx);
@@ -61,8 +61,8 @@ class MatrixCollector {
   bool GetFileName(std::string& new_name);
 
   std::vector<QueueType*> queue_;
-  //¾ºÕù¼¤ÁÒµÄÊ±ºòÒ»¶¨²»ÒªÓÃSpinLock,·ñÔòcpuÏûºÄ·Ç³£´ó,ÐÔÄÜ¼±¾çÏÂ½µ
-  //ÓÃ»¥³âËø¼Ó¶à¸öÍ°(32)µÄÇé¿öÏÂºÍÎÞËø¶ÓÁÐÐ§¹û²î²»¶à,»òÕßÂÔÎ¢²îÒ»µã£¬ÕâÀï×îÓÃ¾ÍÓÃÁËÎÞËù¶ÓÁÐ
+  //ç«žäº‰æ¿€çƒˆçš„æ—¶å€™ä¸€å®šä¸è¦ç”¨SpinLock,å¦åˆ™cpuæ¶ˆè€—éžå¸¸å¤§,æ€§èƒ½æ€¥å‰§ä¸‹é™
+  //ç”¨äº’æ–¥é”åŠ å¤šä¸ªæ¡¶(32)çš„æƒ…å†µä¸‹å’Œæ— é”é˜Ÿåˆ—æ•ˆæžœå·®ä¸å¤š,æˆ–è€…ç•¥å¾®å·®ä¸€ç‚¹ï¼Œè¿™é‡Œæœ€ç”¨å°±ç”¨äº†æ— æ‰€é˜Ÿåˆ—
   //std::vector<std::mutex*>locks_;
   uint32_t bucket_count_;
   uint32_t queue_size_;

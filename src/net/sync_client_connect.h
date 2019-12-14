@@ -28,7 +28,7 @@ public:
   virtual bool IsServer() { return false; }
   void CleanSyncClient();
 
-  //仅仅用于单发单收
+  //浠呬粎鐢ㄤ簬鍗曞彂鍗曟敹
   virtual void SetBuzy(bool is_buzy) {
     if (!sigle_send_sigle_recv_) {
       return;

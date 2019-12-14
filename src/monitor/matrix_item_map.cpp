@@ -25,7 +25,7 @@ int MatrixBucketItemMap::GenerateToken(uint64_t token, const std::string& name) 
   return ret;
 }
 
-//Ó¦ÓÃ²ãÊ¹ÓÃµÄÊ±ºòÇĞÎğÓĞGenerateToken£¬¶øÃ»ÓĞFetchToken£¬ÄÚ´æĞ¹Â©
+//åº”ç”¨å±‚ä½¿ç”¨çš„æ—¶å€™åˆ‡å‹¿æœ‰GenerateTokenï¼Œè€Œæ²¡æœ‰FetchTokenï¼Œå†…å­˜æ³„æ¼
 int MatrixBucketItemMap::FetchToken(uint64_t token, MatrixItem** item) {
 
   //for debug

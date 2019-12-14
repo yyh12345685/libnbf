@@ -3,7 +3,7 @@
 #include "coroutine_context.h"
 #include "common/thread_id.h"
 
-//ÉÏÏŞÔİÊ±ÉèÖÃÎª10Íò
+//ä¸Šé™æš‚æ—¶è®¾ç½®ä¸º10ä¸‡
 #define MAX_CORO_IDS 100000
 
 namespace bdf {
@@ -48,7 +48,7 @@ int CoroutineSchedule::GetAvailableCoroId(){
     return id;
   }
 
-  //Ğ­³Ì²»¹»ÓÃ£¬¶¯Ì¬Ôö¼Ó
+  //åç¨‹ä¸å¤Ÿç”¨ï¼ŒåŠ¨æ€å¢åŠ 
   int id = AddNewCoroutine();
   if (id >= 0){
     INFO(logger_, "ThreadId:" << ThreadId::Get() << ",AddNewCoroutine id:" << id);
@@ -65,7 +65,7 @@ void CoroutineSchedule::ProcessDebug(){
   //static thread_local time_t now_1 = now;
   time_t cur_time = time(NULL);
   if ((cur_time - now) > 60) {
-    //60ÃëÒ»´Îtrace
+    //60ç§’ä¸€æ¬¡trace
     INFO(logger_, "ThreadId:" << ThreadId::Get()
       << ",all_coro_list size:" << all_coro_list_.size()
       << ",AvailableCoroId size:" << available_coro_list_.size());
@@ -95,26 +95,26 @@ void CoroutineSchedule::CoroutineYield(int coro_id){
   }
 }
 
-//¹ÒÆğµ±Ç°Ğ­³Ì£¬²¢½«ÊÕµ½ÏûÏ¢µÄĞ­³Ì¼¤»î£¬ÏÂ´ÎÓĞÏŞÇĞÈë
+//æŒ‚èµ·å½“å‰åç¨‹ï¼Œå¹¶å°†æ”¶åˆ°æ¶ˆæ¯çš„åç¨‹æ¿€æ´»ï¼Œä¸‹æ¬¡æœ‰é™åˆ‡å…¥
 bool CoroutineSchedule::CoroutineYieldToActive(int coro_id){
   if (coro_id < 0 || coro_id >= CoroutineSize()) {
     return false;
   }
 
   if (GetRunningId() == coro_id) {
-    //ÏÈ·µ»ØÁË£¬ÂíÉÏÓÖÊÕµ½ÁËtimeoutÃ´?
+    //å…ˆè¿”å›äº†ï¼Œé©¬ä¸Šåˆæ”¶åˆ°äº†timeoutä¹ˆ?
     WARN(logger_, "may be timeout,running id:"<< GetRunningId());
     return false;
   }
 
-  //ËµÃ÷ÒªÇĞ»»Ğ­³Ì£¬ÇĞ»»»ØÀ´Ö®ºó¿ÉÄÜÊÇÊÕµ½ÁË¿Í»§¶ËµÄÏûÏ¢»òÕß³¬Ê±
+  //è¯´æ˜è¦åˆ‡æ¢åç¨‹ï¼Œåˆ‡æ¢å›æ¥ä¹‹åå¯èƒ½æ˜¯æ”¶åˆ°äº†å®¢æˆ·ç«¯çš„æ¶ˆæ¯æˆ–è€…è¶…æ—¶
   active_coro_list_.emplace(coro_id);
   //if (!available_coro_list_.insert(coro_id).second) {
   //  INFO(logger_, "repeated resume coro id:" << coro_id);
   //  //return false;
   //}
   if (GetRunningId() >= 0) {
-    //µ±Ç°ÊÇÔÚĞ­³ÌÖĞ£¬ÇĞ³öÈ¥
+    //å½“å‰æ˜¯åœ¨åç¨‹ä¸­ï¼Œåˆ‡å‡ºå»
     TRACE(logger_, "cur coro id:" << GetRunningId() << ",change to coro id:" << coro_id);
     CoroutineYield();
     return true;
@@ -138,7 +138,7 @@ CoroutineActor* CoroutineSchedule::GetCoroutineCtx(int id){
   return coro_impl_.GetCoroutineCtx(coro_sche_,id);
 }
 
-//Æô¶¯Ğ­³Ì»òÕß»Ö¸´ÓĞ·µ»ØµÄĞ­³Ì,ÓĞÏûÏ¢·µ»Ø£¬ÓÅÏÈÇĞ»»Ïû·Ñ
+//å¯åŠ¨åç¨‹æˆ–è€…æ¢å¤æœ‰è¿”å›çš„åç¨‹,æœ‰æ¶ˆæ¯è¿”å›ï¼Œä¼˜å…ˆåˆ‡æ¢æ¶ˆè´¹
 bool CoroutineSchedule::CoroutineResumeActive(){
   if (GetRunningId() >= 0){
     INFO(logger_, "not to here,cur coro id:" << GetRunningId());
@@ -159,9 +159,9 @@ bool CoroutineSchedule::CoroutineResumeActive(){
 }
 
 void CoroutineSchedule::CoroutineResume(int id) {
-  //ÒµÎñÂß¼­¶¼ÔÚĞ­³ÌÖĞ´¦Àí£¬ËùÒÔµ÷ÓÃ¸Ãº¯ÊıÒ»¶¨²»ÔÚĞ­³ÌÀï
+  //ä¸šåŠ¡é€»è¾‘éƒ½åœ¨åç¨‹ä¸­å¤„ç†ï¼Œæ‰€ä»¥è°ƒç”¨è¯¥å‡½æ•°ä¸€å®šä¸åœ¨åç¨‹é‡Œ
   //if (GetRunningId() >= 0) {
-  //  //Èç¹ûµ±Ç°ÊÇÔÚĞ­³ÌÖĞ£¬ÏÈÇĞ³öÈ¥
+  //  //å¦‚æœå½“å‰æ˜¯åœ¨åç¨‹ä¸­ï¼Œå…ˆåˆ‡å‡ºå»
   //  INFO(logger_, "cur coro id:" << GetRunningId() << ",change to coro id:" << id);
   //  CoroutineContext::SetCurCoroutineId(-1);
   //  CoroutineYield();
@@ -197,7 +197,7 @@ void CoroutineID::InitMaxIds(int max_coro_id){
     return;
   }
 
-  //ÒòÎªÕâ¸ö°æ±¾µÄ coroutine idÊÇ´Ó0ÒÀ´ÎµİÔö
+  //å› ä¸ºè¿™ä¸ªç‰ˆæœ¬çš„ coroutine idæ˜¯ä»0ä¾æ¬¡é€’å¢
   for (int idx = all_coro_ids_tmp_.size(); idx < max_coro_id; idx++) {
     all_coro_ids_tmp_.emplace_back(idx);
   }

@@ -55,38 +55,38 @@ class Time {
      return 0;
    }
 
-  //²âÊÔÏÂÀ´£¬ÓĞÓÅ»¯µÄ°æ±¾Ã²ËÆ¼ÆËã²»ÊÇÌØ±ğ×¼È·
-  //ºÁÃë
+  //æµ‹è¯•ä¸‹æ¥ï¼Œæœ‰ä¼˜åŒ–çš„ç‰ˆæœ¬è²Œä¼¼è®¡ç®—ä¸æ˜¯ç‰¹åˆ«å‡†ç¡®
+  //æ¯«ç§’
   inline static uint64_t GetMillisecond() {
     struct timeval tv;
     GetTimeOfDay(&tv, NULL);
     return  (tv.tv_usec/1000 + tv.tv_sec*1000);
   }
 
-  //²âÊÔÏÂÀ´£¬ÓĞÓÅ»¯µÄ°æ±¾Ã²ËÆ¼ÆËã²»ÊÇÌØ±ğ×¼È·,ÓÅÏÈÊ¹ÓÃclock_gettime°É
-  //Î¢Ãë
+  //æµ‹è¯•ä¸‹æ¥ï¼Œæœ‰ä¼˜åŒ–çš„ç‰ˆæœ¬è²Œä¼¼è®¡ç®—ä¸æ˜¯ç‰¹åˆ«å‡†ç¡®,ä¼˜å…ˆä½¿ç”¨clock_gettimeå§
+  //å¾®ç§’
   inline static uint64_t GetMicrosecond() {
     struct timeval tv;
     GetTimeOfDay(&tv, NULL);
     return (tv.tv_usec + tv.tv_sec * 1000000);
   }
 
-  //ºÁÃë
+  //æ¯«ç§’
   inline static uint64_t GetMillisecondOri() {
     struct timeval tv;
     gettimeofday(&tv, NULL);
     return  (tv.tv_usec / 1000 + tv.tv_sec * 1000);
   }
 
-  //ÎŞÓÅ»¯µÄ°æ±¾Õ¼ÓÃÏµÍ³cpu½Ï¸ß£¬ÓÅÏÈÊ¹ÓÃclock_gettime°É
-  //Î¢Ãë
+  //æ— ä¼˜åŒ–çš„ç‰ˆæœ¬å ç”¨ç³»ç»Ÿcpuè¾ƒé«˜ï¼Œä¼˜å…ˆä½¿ç”¨clock_gettimeå§
+  //å¾®ç§’
   inline static uint64_t GetMicrosecondOri() {
     struct timeval tv;
     gettimeofday(&tv, NULL);
     return (tv.tv_usec + tv.tv_sec * 1000000);
   }
 
-  //ºÁÃë
+  //æ¯«ç§’
   inline static uint64_t GetCurrentClockTime(){
     struct timespec tp;
     clock_gettime(CLOCK_MONOTONIC, &tp);
@@ -94,7 +94,7 @@ class Time {
     return now;
   }
 
-  //Î¢Ãë
+  //å¾®ç§’
   inline static uint64_t GetCurrentClockTimeus() {
     struct timespec tp;
     clock_gettime(CLOCK_MONOTONIC, &tp);

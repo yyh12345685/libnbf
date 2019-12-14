@@ -65,10 +65,10 @@ public:
     kOutgoingRequest,//client send msg
     kIncomingResponse,//client response msg
     kOutgoingResponse,//server response msg
-    //1£ºÖ»ÊÇ¿Í»§¶Ëµ¥Ïî·¢ËÍ£¬·şÎñ¶Ë²»Ó¦´ğ
-    kOnlySend,//client only send£¬no response
-    //2:¿Í»§¶Ë·¢ËÍ£¬²»¹ØĞÄÊÇ·ñÓĞ·µ»Ø£¬·şÎñ¶Ë¿ÉÄÜ·µ»ØÒ²¿ÉÄÜ²»·µ»Ø(Ò»°ãÓĞ·µ»Ø)
-    //Ä¿Ç°µÄ´úÂëÀ´¿´£¬Í¬²½¿Í»§¶Ë»á³öÏÖ2µÄÇé¿ö(AsyncClientConnect)£¬Òì²½¿Í»§¶Ë»á³öÏÖ1µÄÇé¿ö(SyncClientConnect)
+    //1ï¼šåªæ˜¯å®¢æˆ·ç«¯å•é¡¹å‘é€ï¼ŒæœåŠ¡ç«¯ä¸åº”ç­”
+    kOnlySend,//client only sendï¼Œno response
+    //2:å®¢æˆ·ç«¯å‘é€ï¼Œä¸å…³å¿ƒæ˜¯å¦æœ‰è¿”å›ï¼ŒæœåŠ¡ç«¯å¯èƒ½è¿”å›ä¹Ÿå¯èƒ½ä¸è¿”å›(ä¸€èˆ¬æœ‰è¿”å›)
+    //ç›®å‰çš„ä»£ç æ¥çœ‹ï¼ŒåŒæ­¥å®¢æˆ·ç«¯ä¼šå‡ºç°2çš„æƒ…å†µ(AsyncClientConnect)ï¼Œå¼‚æ­¥å®¢æˆ·ç«¯ä¼šå‡ºç°1çš„æƒ…å†µ(SyncClientConnect)
     kSendNoCareResponse
   };
   enum{

@@ -6,9 +6,9 @@ namespace bdf {
 
 LOGGER_CLASS_IMPL(logger_, ServerConnectDelayReleaseMgr);
 
-//延迟时间
+//寤惰繜鏃堕棿
 const static int delay_delete_times = 50;//second
-//最小的删除执行间隔
+//鏈�灏忕殑鍒犻櫎鎵ц闂撮殧
 const static int delete_interval_times = 10;//second
 
 void ServerConnectDelayReleaseMgr::Release(){

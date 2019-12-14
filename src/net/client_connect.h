@@ -38,7 +38,7 @@ public:
 
   virtual void OnClose();
 
-  //Õâ¼¸¸ötimerÏà¹ØµÄÏß³Ì£¬Ö»ÓĞiohandle»Øµ÷µÄÊ±ºò²ÅÄÜµ÷ÓÃ
+  //è¿™å‡ ä¸ªtimerç›¸å…³çš„çº¿ç¨‹ï¼Œåªæœ‰iohandleå›è°ƒçš„æ—¶å€™æ‰èƒ½è°ƒç”¨
   int StartReconnectTimer();
   int StartHeartBeatTimer();
   void CancelTimer();

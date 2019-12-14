@@ -30,7 +30,7 @@ namespace __detail__ {
 template<bool pod>
 struct alloc_triats {};
 
-//Æ½·²ÀàĞÍ£¬²¢ÇÒÊÇ±ê×¼²¼¾Ö
+//å¹³å‡¡ç±»å‹ï¼Œå¹¶ä¸”æ˜¯æ ‡å‡†å¸ƒå±€
 template<>
 struct alloc_triats<true> {
   template<typename T>
@@ -45,10 +45,10 @@ struct alloc_triats<true> {
   static void destruct(T*) {}
 };
 
-//²»Æ½·²ÀàĞÍ£¬²»ÊÇ±ê×¼²¼¾Ö
+//ä¸å¹³å‡¡ç±»å‹ï¼Œä¸æ˜¯æ ‡å‡†å¸ƒå±€
 template<>
 struct alloc_triats<false> {
-  //¼æÈİ¹¹Ôìº¯ÊıÎŞ²Î
+  //å…¼å®¹æ„é€ å‡½æ•°æ— å‚
   template<typename T, typename... Args>
   static void construct(T* buffer, const Args&... args) {
     new (buffer) T(args...);

@@ -52,7 +52,7 @@ int ClientMgr::Stop(){
   return 0;
 }
 
-//µ¥Ïî·¢ËÍ£¬²»¹ØĞÄÊÇ·ñ·µ»Ø
+//å•é¡¹å‘é€ï¼Œä¸å…³å¿ƒæ˜¯å¦è¿”å›
 bool ClientMgr::Send(const std::string& router, EventMessage * message){
   ClientRouters* routers = GetClientRouters(router);
   if (nullptr == routers){
@@ -98,7 +98,7 @@ bool ClientMgr::Invoke(
   return routers->Invoke(message,cb, hash);
 }
 
-//Ö§³ÖĞ­³Ì
+//æ”¯æŒåç¨‹
 EventMessage* ClientMgr::SendRecieve(const std::string& router,EventMessage* message) {
   ClientRouters* routers = GetClientRouters(router);
   if (nullptr == routers) {

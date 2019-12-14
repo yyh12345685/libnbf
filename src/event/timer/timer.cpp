@@ -60,9 +60,9 @@ int Timer::ProcessTimerTest(std::list<size_t>& ids){
   return 0;
 }
 
-//Э������£�ʹ��ProcessTimerCoro��̫�ԣ���ʼ��Ϊ��ȡ��top֮���л�����һ��Э�̻���ȡ����ͬ��top
-//��Ϊȡ��top֮����pop�����ֻ��ǲ�̫��
-//���Ժ���Э�������Timer��Ϊ��commonĿ¼�µ�TimerMgr
+//协程情况下，使用ProcessTimerCoro不太对，开始认为是取到top之后切换，下一个协程还是取到相同的top
+//改为取到top之后，先pop，发现还是不太对
+//所以后面协程里面的Timer改为了common目录下的TimerMgr
 int Timer::ProcessTimerCoro() {
   if (0 == heap_timer_.Size()) {
     return 0;

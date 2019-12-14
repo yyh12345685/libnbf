@@ -36,8 +36,8 @@ public:
     const InvokerCallback& cb, 
     uint32_t hash);
 
-  //由于协程是放到service handle中的
-  //所以调用该函数的地方也需要是再service handle线程中，否则是不同的协程对象
+  //鐢变簬鍗忕▼鏄斁鍒皊ervice handle涓殑
+  //鎵�浠ヨ皟鐢ㄨ鍑芥暟鐨勫湴鏂逛篃闇�瑕佹槸鍐峴ervice handle绾跨▼涓紝鍚﹀垯鏄笉鍚岀殑鍗忕▼瀵硅薄
   EventMessage* SendRecieve(const std::string& router,EventMessage* message);
 
   EventMessage* SendRecieveHash(

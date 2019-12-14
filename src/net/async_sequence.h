@@ -33,13 +33,13 @@ private:
   uint32_t timeout_ms_;
 
   std::unordered_map<uint64_t, EventMessage*> registery_;
-  //Èç¹ûÕâ¸öÀàÖ»ºÍservice handleµÄÏß³ÌÓĞ¹ØÏµ£¬ºÍio handleÏß³ÌÎŞ¹Ø£¬Ôò¿ÉÎŞËø
-  //Ó¦¸Ã¿ÉÒÔÓÅ»¯
+  //å¦‚æœè¿™ä¸ªç±»åªå’Œservice handleçš„çº¿ç¨‹æœ‰å…³ç³»ï¼Œå’Œio handleçº¿ç¨‹æ— å…³ï¼Œåˆ™å¯æ— é”
+  //åº”è¯¥å¯ä»¥ä¼˜åŒ–
   std::mutex registery_lock_;
 
   std::list<EventMessage*> list_;
-  //Èç¹ûÕâ¸öÀàÖ»ºÍservice handleµÄÏß³ÌÓĞ¹ØÏµ£¬ºÍio handleÏß³ÌÎŞ¹Ø£¬Ôò¿ÉÎŞËø
-  //Ó¦¸Ã¿ÉÒÔÓÅ»¯
+  //å¦‚æœè¿™ä¸ªç±»åªå’Œservice handleçš„çº¿ç¨‹æœ‰å…³ç³»ï¼Œå’Œio handleçº¿ç¨‹æ— å…³ï¼Œåˆ™å¯æ— é”
+  //åº”è¯¥å¯ä»¥ä¼˜åŒ–
   std::mutex list_lock_;
 
   LOGGER_CLASS_DECL(logger);

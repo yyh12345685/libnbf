@@ -69,7 +69,7 @@ int SyncClientConnect::EncodeMsg(EventMessage* message){
     << ",direction:" << (int)(message->direction));
 
   if (sigle_send_sigle_recv_ && sync_sequence_.Size()>1) {
-    //¿ÉÄÜ»¹ÓĞÒ»¸öĞÄÌø°ü
+    //å¯èƒ½è¿˜æœ‰ä¸€ä¸ªå¿ƒè·³åŒ…
     INFO(logger, "22222222,size:"<<sync_sequence_.Size());
   }
 
@@ -82,8 +82,8 @@ int SyncClientConnect::EncodeMsg(EventMessage* message){
   }
   //test_lock1_.unlock();
 
-  //Í¬²½ÇëÇó²»´æÕæÕıonly sendµÄÇé¿ö£¬Ò»¶¨»ØÓĞÓ¦´ğ£¬±ÈÈçhttpĞ­ÒéºÍredisĞ­Òé
-  //ÓĞÓ¦´ğµÄÇé¿öĞèÒª½«ÏûÏ¢±£´æÆğÀ´£¬ÕâÀïÊôÓÚÓĞÓ¦´ğµÄÇé¿ö
+  //åŒæ­¥è¯·æ±‚ä¸å­˜çœŸæ­£only sendçš„æƒ…å†µï¼Œä¸€å®šå›æœ‰åº”ç­”ï¼Œæ¯”å¦‚httpåè®®å’Œredisåè®®
+  //æœ‰åº”ç­”çš„æƒ…å†µéœ€è¦å°†æ¶ˆæ¯ä¿å­˜èµ·æ¥ï¼Œè¿™é‡Œå±äºæœ‰åº”ç­”çš„æƒ…å†µ
   //if (message->direction != EventMessage::kSendNoCareResponse
   //  && message->direction != EventMessage::kOnlySend){
     if (0 != sync_sequence_.Put(message)) {

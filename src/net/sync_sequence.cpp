@@ -27,7 +27,7 @@ void SyncSequence::StartTimeCheck(){
   td.time_out_ms = 3;
   td.time_proc = this;
   td.function_data = (void*)(&check_timer_type);
-  //ÕâÀïÖ»ÊÇÓÃÀ´Çý¶¯³¬Ê±¼ì²â,3msÖ®ºóÖ´ÐÐOnTimer
+  //è¿™é‡Œåªæ˜¯ç”¨æ¥é©±åŠ¨è¶…æ—¶æ£€æµ‹,3msä¹‹åŽæ‰§è¡ŒOnTimer
   IoHandler::GetIoHandler()->StartTimer(td);
 }
 
@@ -45,7 +45,7 @@ int SyncSequence::Put(EventMessage* message) {
   //real_td.time_out_ms = timeout_ms_;
   real_td.time_proc = this;
   real_td.function_data = (void*)(&real_timer_type);
-  //ÕâÀï²ÅÊÇÕæÕýµÄÉèÖÃ³¬Ê±µÄµØ·½
+  //è¿™é‡Œæ‰æ˜¯çœŸæ­£çš„è®¾ç½®è¶…æ—¶çš„åœ°æ–¹
   time_lock_.lock();
   message->timer_out_id = timer_.AddTimer(timeout_ms_,real_td);
   time_lock_.unlock();
@@ -97,7 +97,7 @@ void SyncSequence::OnTimer(void* function_data){
     break;
   }
   case real_timer_type:
-    //³¬Ê±ÏÈ¹Ø±ÕÁ¬½Ó
+    //è¶…æ—¶å…ˆå…³é—­è¿žæŽ¥
     if (1 == rand() % 10)
       INFO(logger_, "SyncSequence::OnTimer,fd:"<< sync_client_con_->GetFd()
         <<",sync_client_con_:"<< sync_client_con_);

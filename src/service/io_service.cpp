@@ -159,7 +159,7 @@ void IoService::SendToIoHandleInner(EventMessage* msg){
   uint32_t id = 0;
   if (0!= msg->descriptor_id){
     Connecting* con = (Connecting*)((void*)(msg->descriptor_id));
-    //不能用con指针地址取模，回导致线程的队列分布非常不均匀，使用顺序id即可
+    //涓嶈兘鐢╟on鎸囬拡鍦板潃鍙栨ā锛屽洖瀵艰嚧绾跨▼鐨勯槦鍒楀垎甯冮潪甯镐笉鍧囧寑锛屼娇鐢ㄩ『搴廼d鍗冲彲
     id = con->GetConnectId() %handle_thread_.io_handle_data_.size();
   } else {
     id = (id_io++) % handle_thread_.io_handle_data_.size();

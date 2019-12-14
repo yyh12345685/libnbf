@@ -56,7 +56,7 @@ Client* ClientRouter::GetValidClient() {
 bool ClientRouter::Send(EventMessage * message){
   monitor::MatrixScope matrix_scope(name_, monitor::MatrixScope::kModeAutoSuccess);
   Client* cli = GetValidClient();
-  //µ±sigle_send_sigle_recv=1µÄÊ±ºò,Á¬½ÓÊýÐèÒª±È½Ï¶à£¬Èç¹û»ñÈ¡²»µ½cli£¬ÐèÖØÐÂsend
+  //å½“sigle_send_sigle_recv=1çš„æ—¶å€™,è¿žæŽ¥æ•°éœ€è¦æ¯”è¾ƒå¤šï¼Œå¦‚æžœèŽ·å–ä¸åˆ°cliï¼Œéœ€é‡æ–°send
   if (!cli) {
     matrix_scope.SetOkay(false);
     MessageFactory::Destroy(message);
@@ -67,7 +67,7 @@ bool ClientRouter::Send(EventMessage * message){
 
 bool ClientRouter::Invoke(EventMessage * message, const InvokerCallback& cb){
   Client* cli = GetValidClient();
-  //µ±sigle_send_sigle_recv=1µÄÊ±ºò,Á¬½ÓÊýÐèÒª±È½Ï¶à£¬Èç¹û»ñÈ¡²»µ½cli£¬ÐèÖØÐÂsend
+  //å½“sigle_send_sigle_recv=1çš„æ—¶å€™,è¿žæŽ¥æ•°éœ€è¦æ¯”è¾ƒå¤šï¼Œå¦‚æžœèŽ·å–ä¸åˆ°cliï¼Œéœ€é‡æ–°send
   if (!cli) {
     message->status = MessageBase::kInvokeError;
     cb(message);

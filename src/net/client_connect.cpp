@@ -55,7 +55,7 @@ int ClientConnect::TryConnect(){
   std::pair<int, bool>connet_info = Socket::Connect(GetIp().c_str(), GetPort());
   SetFd(connet_info.first > 0 ? connet_info.first : -1);
   if (errno == EINPROGRESS){
-    is_connecting = true;//ÕıÔÚÁ¬½Ó
+    is_connecting = true;//æ­£åœ¨è¿æ¥
   }else if (connet_info.first < 0 || (!connet_info.second && errno != EINPROGRESS)){
     //may be not conected
     WARN(logger_, "fd:" << connet_info.first << ",status:" << connet_info.second 
@@ -154,7 +154,7 @@ void ClientConnect::OnConnectWrite(){
     SetStatus(kConnected);
   } else {
     TRACE(logger_, "OnConnectWrite wait 60 ms,but not conected.");
-    //¶ÔÓÚÒ»°ã·şÎñºÍ·şÎñÆ÷90ms£¬Á¬½ÓÊ±¼ä¹»ÓÃ£¬Èç¹ûÊÇÍøÂçºÜ²î¿ÉÄÜ³öÏÖÒ»Ö±ÖØÁ¬£¬ÓÖÁ¬²»ÉÏµÄÇé¿ö
+    //å¯¹äºä¸€èˆ¬æœåŠ¡å’ŒæœåŠ¡å™¨90msï¼Œè¿æ¥æ—¶é—´å¤Ÿç”¨ï¼Œå¦‚æœæ˜¯ç½‘ç»œå¾ˆå·®å¯èƒ½å‡ºç°ä¸€ç›´é‡è¿ï¼Œåˆè¿ä¸ä¸Šçš„æƒ…å†µ
     CleanClient();
     StartHeartBeatTimer();
     return;

@@ -15,7 +15,7 @@ LOGGER_CLASS_IMPL(logger, MatrixCollector);
 LOGGER_CLASS_IMPL_NAME(collector_logger, MatrixCollector, "bdf.monitor");
 LOGGER_CLASS_IMPL_NAME(collector_logger_simple, MatrixCollector, "bdf.monitor.simple");
 
-//Èç¹û³¬¹ı100´ÎpushÊ§°Ü£¬ÔòÔİÍ£push 29Ãë£¬ÈÃmonitorÏß³ÌÏû·ÑÍê
+//å¦‚æœè¶…è¿‡100æ¬¡pushå¤±è´¥ï¼Œåˆ™æš‚åœpush 29ç§’ï¼Œè®©monitorçº¿ç¨‹æ¶ˆè´¹å®Œ
 #define MAX_PUSH_FAILED_TO_PAUSE 100
 #define PAUSE_TIMES_SECOND 29
 
@@ -81,7 +81,7 @@ int MatrixCollector::Stop() {
 }
 
 int MatrixCollector::Send(const MatrixItem* item) {
-  //////////////////////¹ıÔØ±£»¤Âß¼­
+  //////////////////////è¿‡è½½ä¿æŠ¤é€»è¾‘
   int64_t cur_time = time(nullptr);
   if (cur_time < pause_push_stop_times) {
     return -1;
@@ -92,7 +92,7 @@ int MatrixCollector::Send(const MatrixItem* item) {
   QueueType* queue = GetQueue(idx);
   //locks_[idx]->lock();
   if (!queue->push(item)/*queue->size() >= queue_size_*/) {
-    //////////////////////¹ıÔØ±£»¤Âß¼­
+    //////////////////////è¿‡è½½ä¿æŠ¤é€»è¾‘
     queue_push_failed_times++;
     if (queue_push_failed_times > MAX_PUSH_FAILED_TO_PAUSE) {
       pause_push_stop_times.store(cur_time + PAUSE_TIMES_SECOND);

@@ -5,7 +5,7 @@
 #include <memory>
 #include <unistd.h>
 
-/// spin_mutexµÄ×î´óspin_countÖµ, Ä¬ÈÏÖµÎª16, ½¨ÒéÉèÎª0»ò1,2, ¸ü¿ì! ÉèÎª0Ôò¸úUSE_SPIN_MUTEX_COUNTERÉèÎª0µÈ¼Û
+/// spin_mutexçš„æœ€å¤§spin_countå€¼, é»˜è®¤å€¼ä¸º16, å»ºè®®è®¾ä¸º0æˆ–1,2, æ›´å¿«! è®¾ä¸º0åˆ™è·ŸUSE_SPIN_MUTEX_COUNTERè®¾ä¸º0ç­‰ä»·
 #include <stdint.h>
 #include <string.h>
 #include <memory>
