@@ -1,6 +1,6 @@
 
 #include "net/sync_client_connect.h"
-#include "service/io_service.h"
+#include "service/service_manager.h"
 #include "common/time.h"
 
 namespace bdf {
@@ -55,7 +55,7 @@ void SyncClientConnect::OnDecodeMessage(EventMessage* message) {
   TRACE(logger, "SyncClientChannel::OnDecodeMessage " << *message);
 
   MessageFactory::Destroy(keeper_message);
-  IoService::GetInstance().SendToServiceHandle(message);
+  service::GetServiceManager().SendToServiceHandle(message);
 }
 
 int SyncClientConnect::EncodeMsg(EventMessage* message){

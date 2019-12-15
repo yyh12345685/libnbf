@@ -10,7 +10,7 @@
 #include "handle_data.h"
 #include "task.h"
 #include "net/connect.h"
-#include "service/io_service.h"
+#include "service/service_manager.h"
 #include "common/time.h"
 
 namespace bdf {
@@ -22,7 +22,7 @@ void CoroutineServiceHandler::Run(HandleData* data){
   INFO(logger_, "CoroutineServiceHandler::Run,thread id:"<< ThreadId::Get());
   CoroutineContext::Instance().Init(this,&time_mgr_);
   CoroutineSchedule* scheduler = CoroutineContext::Instance().GetScheduler();
-  int coroutine_size = IoService::GetInstance().GetIoServiceConfig().coroutine_size;
+  int coroutine_size = service::GetServiceManager().GetServiceConfig().coroutine_size;
   scheduler->InitCoroSchedule(
     &CoroutineServiceHandler::ProcessCoroutine, data, coroutine_size);
   int coro_id = scheduler->GetAvailableCoroId();

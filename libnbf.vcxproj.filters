@@ -178,9 +178,6 @@
     <ClCompile Include="src\service\service_handle.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\service\io_service.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="src\app\app_cmd_parser.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -248,6 +245,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="src\common\timer_mgr.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\service\service_manager.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -405,9 +405,6 @@
     <ClInclude Include="src\service\service_handle.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="src\service\io_service.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="src\handle_data.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -481,6 +478,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="src\common\timer_mgr.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\service\service_manager.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

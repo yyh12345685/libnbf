@@ -8,15 +8,14 @@
 
 namespace bdf {
 
-struct IoServiceConfig;
-class IoService;
+struct ServiceConfig;
 class AgentMaster;
 class AgentSlave;
 class EventFunctionBase;
 
 class Agents {
 public:
-  Agents(const IoServiceConfig* conf);
+  Agents(const ServiceConfig* conf);
 
   bool Init();
   bool Start();
@@ -36,7 +35,7 @@ private:
 
   LOGGER_CLASS_DECL(logger_);
 
-  const IoServiceConfig* conf_;
+  const ServiceConfig* conf_;
   AgentMaster* agent_master_;
   AgentSlave* agent_slaves_; 
 

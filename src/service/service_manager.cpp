@@ -1,7 +1,7 @@
 
 #include <functional>
 #include <atomic>
-#include "service/io_service.h"
+#include "service/service_manager.h"
 #include "agents/agents.h"
 #include "service/service_handle.h"
 #include "net/io_handle.h"
@@ -13,9 +13,9 @@
 
 namespace bdf{
 
-LOGGER_CLASS_IMPL(logger_, IoService);
+LOGGER_CLASS_IMPL(logger_, ServiceManager);
 
-int IoService::Init(const IoServiceConfig& config){
+int ServiceManager::Init(const ServiceConfig& config){
   agents_ = BDF_NEW(Agents,&config);
   if (!agents_->Init()){
     BDF_DELETE (agents_);
@@ -27,17 +27,17 @@ int IoService::Init(const IoServiceConfig& config){
     config.monitor_queue_bucket,
     config.monitor_queue_size);
 
-  io_service_config_ = config;
+  service_config_ = config;
   return 0;
 }
 
-int IoService::Start(ServiceHandler* handle){
+int ServiceManager::Start(ServiceHandler* handle){
   if (!agents_->Start()){
     delete handle;
     return -1;
   }
 
-  for (int cn = 0; cn < io_service_config_.service_handle_thread_count; cn++) {
+  for (int cn = 0; cn < service_config_.service_handle_thread_count; cn++) {
     HandleData* hd = new HandleData;
     hd->handle_ = handle->Clone();
     hd->is_run = true;
@@ -47,7 +47,7 @@ int IoService::Start(ServiceHandler* handle){
     handle_thread_.service_handle_thread_.push_back(thread);
   }
 
-  for (int cn = 0; cn < io_service_config_.io_handle_thread_count; cn++) {
+  for (int cn = 0; cn < service_config_.io_handle_thread_count; cn++) {
     HandleData* hd_io = new HandleData;
     hd_io->handle_ = new IoHandler();
     hd_io->is_run = true;
@@ -60,32 +60,32 @@ int IoService::Start(ServiceHandler* handle){
   return 0;
 }
 
-int IoService::ThreadWait(){
+int ServiceManager::ThreadWait(){
   INFO(logger_, "IoService::ThreadWait start.");
-  for (int cn = 0; cn < io_service_config_.service_handle_thread_count; cn++){
+  for (int cn = 0; cn < service_config_.service_handle_thread_count; cn++){
     handle_thread_.service_handle_thread_[cn]->join();
   }
 
-  for (int cn = 0; cn < io_service_config_.io_handle_thread_count; cn++) {
+  for (int cn = 0; cn < service_config_.io_handle_thread_count; cn++) {
     handle_thread_.io_handle_thread_[cn]->join();
   }
   INFO(logger_, "IoService::ThreadWait end.");
   return 0;
 }
 
-int IoService::ThreadStop(){
+int ServiceManager::ThreadStop(){
   INFO(logger_, "IoService::ThreadStop.");
-  for (int cn = 0; cn < io_service_config_.service_handle_thread_count; cn++){
+  for (int cn = 0; cn < service_config_.service_handle_thread_count; cn++){
     handle_thread_.service_handle_data_[cn]->is_run = false;
   }
-  for (int cn = 0; cn < io_service_config_.io_handle_thread_count; cn++) {
+  for (int cn = 0; cn < service_config_.io_handle_thread_count; cn++) {
     handle_thread_.io_handle_data_[cn]->is_run = false;
   }
   INFO(logger_, "IoService::Set Stope ok.");
   return 0;
 }
 
-int IoService::Stop(){
+int ServiceManager::Stop(){
   agents_->Stop();
 
   ThreadStop();
@@ -99,31 +99,31 @@ int IoService::Stop(){
   return 0;
 }
 
-int IoService::Wait(){
+int ServiceManager::Wait(){
   return ThreadWait();
 }
 
-void IoService::SendCloseToIoHandle(EventMessage* msg){
+void ServiceManager::SendCloseToIoHandle(EventMessage* msg){
   msg->type_io_event = MessageType::kIoActiveCloseEvent;
   SendToIoHandleInner(msg);
 }
 
-void IoService::Reply(EventMessage* message){
+void ServiceManager::Reply(EventMessage* message){
   message->direction = EventMessage::kOutgoingResponse;
   SendToIoHandle(message);
 }
 
-void IoService::SendToIoHandle(EventMessage* msg){
+void ServiceManager::SendToIoHandle(EventMessage* msg){
   msg->type_io_event = MessageType::kIoHandleEventMsg;
   SendToIoHandleInner(msg);
 }
 
-void IoService::SendEventToIoHandle(EventMessage* msg){
+void ServiceManager::SendEventToIoHandle(EventMessage* msg){
   msg->type_io_event = MessageType::kIoEvent;
   SendToIoHandleInner(msg);
 }
 
-uint32_t IoService::GetServiceHandleId(EventMessage* msg){
+uint32_t ServiceManager::GetServiceHandleId(EventMessage* msg){
   static thread_local std::atomic<uint32_t> id_hs(0);
   if (msg->handle_id >=0 && 
     msg->handle_id < (int32_t)(handle_thread_.service_handle_thread_.size())){
@@ -132,11 +132,11 @@ uint32_t IoService::GetServiceHandleId(EventMessage* msg){
   return (id_hs++) % handle_thread_.service_handle_data_.size();
 }
 
-uint32_t IoService::GetServiceHandleCount() {
+uint32_t ServiceManager::GetServiceHandleCount() {
   return handle_thread_.service_handle_thread_.size();
 }
 
-void IoService::SendToServiceHandle(EventMessage* msg){
+void ServiceManager::SendToServiceHandle(EventMessage* msg){
   uint32_t id = GetServiceHandleId(msg);
   TRACE(logger_, "handle id:" << msg->handle_id << ",Get id:" << id);
   HandleData* hd = handle_thread_.service_handle_data_.at(id);
@@ -145,7 +145,7 @@ void IoService::SendToServiceHandle(EventMessage* msg){
   hd->lock_.unlock();
 }
 
-void IoService::SendTaskToServiceHandle(Task* task){
+void ServiceManager::SendTaskToServiceHandle(Task* task){
   static thread_local std::atomic<uint32_t> id_task(0);
   uint32_t tid = (id_task++) % handle_thread_.service_handle_data_.size();
   HandleData* hd =handle_thread_.service_handle_data_.at(tid);
@@ -154,7 +154,7 @@ void IoService::SendTaskToServiceHandle(Task* task){
   hd->lock_task_.unlock();
 }
 
-void IoService::SendToIoHandleInner(EventMessage* msg){
+void ServiceManager::SendToIoHandleInner(EventMessage* msg){
   static thread_local std::atomic<uint32_t> id_io(0);
   uint32_t id = 0;
   if (0!= msg->descriptor_id){
@@ -172,7 +172,7 @@ void IoService::SendToIoHandleInner(EventMessage* msg){
   hd->lock_.unlock();
 }
 
-const std::string& IoService::GetMonitorReport(){
+const std::string& ServiceManager::GetMonitorReport(){
   const static std::string k_null = "Null";
 
   monitor::Matrix::MatrixStatMapPtr stat_map = 
@@ -184,21 +184,21 @@ const std::string& IoService::GetMonitorReport(){
   }
 }
 
-int IoService::AgentsAddModrw(EventFunctionBase* ezfd, int fd){
+int ServiceManager::AgentsAddModrw(EventFunctionBase* ezfd, int fd){
   return agents_->AddModrw(ezfd, fd, true);
 }
 
-int IoService::AgentsAddModr(EventFunctionBase* ezfd, int fd){
+int ServiceManager::AgentsAddModr(EventFunctionBase* ezfd, int fd){
   return agents_->AddModr(ezfd, fd,true);
 }
 
-int IoService::AgentsDel(EventFunctionBase* ezfd, int fd){
+int ServiceManager::AgentsDel(EventFunctionBase* ezfd, int fd){
   return agents_->Del(ezfd, fd);
 }
 
 namespace service {
-  IoService& GetIoService() {
-    return IoService::GetInstance();
+  ServiceManager& GetServiceManager() {
+    return ServiceManager::GetInstance();
   }
 }
 

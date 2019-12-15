@@ -1,6 +1,7 @@
 #include <unistd.h>
 #include "app/app.h"
 #include "client/client_mgr.h"
+#include "service/service_manager.h"
 #include "message.h"
 #include "app_test_server_handle.h"
 #include "task.h"
@@ -88,7 +89,7 @@ int main(int argc, char *argv[]){
     return 0;
   });
   app.SetOnAfterStart([&]() {
-    bdf::service::GetIoService().SendTaskToServiceHandle(&test_task);
+    bdf::service::GetServiceManager().SendTaskToServiceHandle(&test_task);
     return 0;
   });
   app.AppRun(argc,argv);

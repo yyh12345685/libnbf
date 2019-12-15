@@ -1,5 +1,6 @@
 #include <sys/prctl.h>
 #include <unistd.h>
+#include <thread>
 #include "app/app.h"
 #include "test_client_server_handle.h"
 #include "message.h"

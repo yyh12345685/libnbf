@@ -9,7 +9,7 @@ namespace bdf {
 
 LOGGER_CLASS_IMPL(logger_, Agents)
 
-Agents::Agents(const IoServiceConfig* conf) :
+Agents::Agents(const ServiceConfig* conf) :
   conf_(conf),
   agent_master_(nullptr),
   agent_slaves_(nullptr)

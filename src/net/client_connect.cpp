@@ -1,6 +1,6 @@
 #include <sys/epoll.h>
 #include "net/client_connect.h"
-#include "service/io_service.h"
+#include "service/service_manager.h"
 #include "net/socket.h"
 #include "net/io_handle.h"
 #include "net/client_reconnect_thread.h"
@@ -230,7 +230,7 @@ void ClientConnect::DoSendBack(EventMessage* message, int status) {
   }
 
   message->status = status;
-  IoService::GetInstance().SendToServiceHandle(message);
+  service::GetServiceManager().SendToServiceHandle(message);
 }
 
 void ClientConnect::CleanClient(){
@@ -241,23 +241,23 @@ void ClientConnect::CleanClient(){
 int ClientConnect::Stop(){
   EventMessage* msg = MessageFactory::Allocate<EventMessage>(0);
   msg->descriptor_id = (int64_t)((void*)this);
-  IoService::GetInstance().SendCloseToIoHandle(msg);
+  service::GetServiceManager().SendCloseToIoHandle(msg);
   return 0;
 }
 
 int ClientConnect::RegisterAddModrw(int fd){
-  return IoService::GetInstance().AgentsAddModrw(this, fd);
+  return service::GetServiceManager().AgentsAddModrw(this, fd);
 }
 
 int ClientConnect::RegisterAddModr(int fd) {
-  return IoService::GetInstance().AgentsAddModr(this, fd);
+  return service::GetServiceManager().AgentsAddModr(this, fd);
 }
 
 int ClientConnect::RegisterDel(int fd){
   if (fd <= 0) {
     return -1;
   }
-  return IoService::GetInstance().AgentsDel(this,fd);
+  return service::GetServiceManager().AgentsDel(this,fd);
 }
 
 }

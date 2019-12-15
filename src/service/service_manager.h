@@ -35,15 +35,15 @@ struct HandleThread{
   }
 };
 
-class IoService {
+class ServiceManager {
 public:
 
-  static IoService& GetInstance() {
-    static IoService inst;
+  static ServiceManager& GetInstance() {
+    static ServiceManager inst;
     return inst;
   }
 
-  int Init(const IoServiceConfig& config);
+  int Init(const ServiceConfig& config);
   int Start(ServiceHandler* handle);
   int Stop();
   int Wait();
@@ -63,8 +63,8 @@ public:
 
   uint32_t GetServiceHandleCount();
 
-  const IoServiceConfig& GetIoServiceConfig(){
-    return io_service_config_;
+  const ServiceConfig& GetServiceConfig(){
+    return service_config_;
   }
 
   Agents* GetAgents(){
@@ -80,17 +80,20 @@ private:
   int ThreadStop();
   LOGGER_CLASS_DECL(logger_);
 
-  IoServiceConfig io_service_config_;
+  ServiceConfig service_config_;
 
   HandleThread handle_thread_;
 
   Agents* agents_;
 
-  DISALLOW_COPY_ASSIGN_CONSTRUCTION(IoService)
+  DISALLOW_COPY_ASSIGN_CONSTRUCTION(ServiceManager)
 };
+//IoService改名ServiceManager
+//将io handle thread去掉，相关处理逻辑放到slave thread中
+//除了io handle thread相关内容，其他留在ServiceManager中
 
 namespace service {
-  IoService& GetIoService();
+  ServiceManager& GetServiceManager();
 }
 
 }

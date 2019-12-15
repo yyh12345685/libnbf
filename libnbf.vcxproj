@@ -218,8 +218,8 @@
     <ClCompile Include="src\protocol\redis\redis_parser.cpp" />
     <ClCompile Include="src\protocol\redis\redis_protocol.cpp" />
     <ClCompile Include="src\service\coroutine_service_handle.cpp" />
-    <ClCompile Include="src\service\io_service.cpp" />
     <ClCompile Include="src\service\service_handle.cpp" />
+    <ClCompile Include="src\service\service_manager.cpp" />
     <ClCompile Include="src\tester\t_timer.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -297,8 +297,8 @@
     <ClInclude Include="src\protocol\redis\redis_parser.h" />
     <ClInclude Include="src\protocol\redis\redis_protocol.h" />
     <ClInclude Include="src\service\coroutine_service_handle.h" />
-    <ClInclude Include="src\service\io_service.h" />
     <ClInclude Include="src\service\service_handle.h" />
+    <ClInclude Include="src\service\service_manager.h" />
     <ClInclude Include="src\task.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -2,7 +2,7 @@
 #include "net/socket.h"
 #include "event/event_driver.h"
 #include "protocol/protocol_base.h"
-#include "service/io_service.h"
+#include "service/service_manager.h"
 
 namespace bdf{
 
@@ -39,7 +39,7 @@ void Connecting::OnEvent(EventDriver *poll, int fd, short event){
   bdf::EventMessage* message = bdf::MessageFactory::Allocate<bdf::EventMessage>(0);
   message->descriptor_id = (int64_t)((void*)this);
   message->event_mask = event;
-  IoService::GetInstance().SendEventToIoHandle(message);
+  service::GetServiceManager().SendEventToIoHandle(message);
 }
 
 void Connecting::OnRead(){

@@ -4,7 +4,7 @@
 #include "message_base.h"
 #include "handle_data.h"
 #include "net/connect.h"
-#include "service/io_service.h"
+#include "service/service_manager.h"
 #include "net/connect_manager.h"
 #include "common/thread_id.h"
 #include "common/time.h"
@@ -127,7 +127,7 @@ void IoHandler::HandleIoMessageEvent(EventMessage* message){
 void IoHandler::HandleIoMessageFailed(EventMessage* message) {
   if (message->direction == EventMessage::kOutgoingRequest) {
     message->status = EventMessage::kInternalFailure;
-    IoService::GetInstance().SendToServiceHandle(message);
+    service::GetServiceManager().SendToServiceHandle(message);
   } else {
     MessageFactory::Destroy(message);
   }

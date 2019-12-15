@@ -8,8 +8,7 @@
 
 namespace bdf {
 
-struct IoServiceConfig;
-class IoService;
+struct ServiceConfig;
 class Agents;
 class ServerConnectDelayReleaseMgr;
 class ServerConnect;
@@ -19,7 +18,7 @@ public:
   AgentMaster();
   virtual ~AgentMaster();
 
-  bool Init(const IoServiceConfig* confs,const Agents* agents);
+  bool Init(const ServiceConfig* confs,const Agents* agents);
   bool Start();
   void Stop();
 
@@ -28,7 +27,7 @@ public:
   bool AreaseReleasedConnect(ServerConnect* con);
 private:
 
-  const IoServiceConfig* conf_;
+  const ServiceConfig* conf_;
   const Agents* agents_;
 
   EventLoopThread master_event_thread_;

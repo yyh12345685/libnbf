@@ -1,5 +1,5 @@
 #include "net/async_client_connect.h"
-#include "service/io_service.h"
+#include "service/service_manager.h"
 #include "common/time.h"
 
 namespace bdf{
@@ -50,7 +50,7 @@ void AsyncClientConnect::OnDecodeMessage(EventMessage* message){
   TRACE(logger, "AsyncClientConnect::OnDecodeMessage " << *message);
   MessageFactory::Destroy(keeper_message);
 
-  IoService::GetInstance().SendToServiceHandle(message);
+  service::GetServiceManager().SendToServiceHandle(message);
 }
 
 //由io handle线程触发

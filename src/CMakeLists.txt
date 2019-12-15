@@ -56,7 +56,7 @@ set(BDF_SRC
   coroutine/coroutine_impl.cpp
   coroutine/coroutine_schedule.cpp
 
-  service/io_service.cpp
+  service/service_manager.cpp
   service/service_handle.cpp
   service/coroutine_service_handle.cpp
 

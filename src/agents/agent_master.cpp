@@ -25,11 +25,11 @@ AgentMaster::~AgentMaster() {
   }
 }
 
-bool AgentMaster::Init(const IoServiceConfig* confs,const Agents* agents){
+bool AgentMaster::Init(const ServiceConfig* confs,const Agents* agents){
   conf_ = confs;
   agents_ = agents;
 
-  for (const auto& addr:conf_->services_config){
+  for (const auto& addr:conf_->server_config){
     char ip[1024];
     int port;
     int cate = ProtocolHelper::ParseSpecAddr(addr.address.c_str(), ip, &port);
