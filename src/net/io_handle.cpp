@@ -55,7 +55,7 @@ void IoHandler::Run(HandleData* data){
 void IoHandler::Handle(EventMessage* message){
   TRACE(logger_, "IoHandler::Handle msg:" << *message);
   switch (message->type_io_event) {
-  case MessageType::kIoEvent:{
+  /*case MessageType::kIoEvent:{
     if (message->event_mask & EVENT_READ) {
       HandleReadEvent(message);
     }
@@ -68,7 +68,7 @@ void IoHandler::Handle(EventMessage* message){
     }
     MessageFactory::Destroy(message);
     break; 
-  }
+  }*/
   case MessageType::kIoHandleEventMsg:
     HandleIoMessageEvent(message);
     break;

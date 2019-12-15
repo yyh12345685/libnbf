@@ -241,7 +241,7 @@ void ClientConnect::CleanClient(){
 int ClientConnect::Stop(){
   EventMessage* msg = MessageFactory::Allocate<EventMessage>(0);
   msg->descriptor_id = (int64_t)((void*)this);
-  service::GetServiceManager().SendCloseToIoHandle(msg);
+  service::GetServiceManager().SendCloseToSlaveThread(msg);
   return 0;
 }
 

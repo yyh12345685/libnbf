@@ -8,6 +8,7 @@
 #include <string.h>
 #include "net/socket.h"
 #include "event/event_driver.h"
+#include "thread_data_run.h"
 
 namespace bdf {
 
@@ -16,7 +17,8 @@ LOGGER_CLASS_IMPL(logger_, EventDriver);
 EventDriver::EventDriver() :
   event_in_(EPOLLIN | EPOLLHUP | EPOLLERR | EPOLLRDHUP),
   event_out_(EPOLLOUT | EPOLLHUP | EPOLLERR | EPOLLRDHUP),
-  event_notifier_(this){
+  event_notifier_(this),
+  thread_data_run_(nullptr){
   epfd_ = -1;
   sigset_t set;
   sigemptyset(&set);
@@ -35,9 +37,11 @@ EventDriver::~EventDriver(){
 
 int EventDriver::Run(){
   run_ = true;
-  while (run_)
-  {
+  while (run_){
     this->Poll(1);
+    if(thread_data_run_!=nullptr){
+      thread_data_run_->CallRun();
+    }
   }
   this->Poll(0); // clear unproc tasks
   return 0;

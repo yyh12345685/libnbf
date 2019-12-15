@@ -28,18 +28,21 @@ Connecting::~Connecting(){
 }
 
 void Connecting::OnEvent(EventDriver *poll, int fd, short event){
+  TRACE(logger_, "Connecting::OnEvent,event:"<< event);
   if ((event & EVENT_CONNECT_CLOSED) || (event & EVENT_ERROR)){
-    TRACE(logger_, "Connecting::OnEvent,OnError event:"<< event);
     //do not close socket ,error message allways hava read message for close
     if (IsServer()){
       RegisterDel(poll, fd);
     }
+    OnClose();
   }
 
-  bdf::EventMessage* message = bdf::MessageFactory::Allocate<bdf::EventMessage>(0);
-  message->descriptor_id = (int64_t)((void*)this);
-  message->event_mask = event;
-  service::GetServiceManager().SendEventToIoHandle(message);
+  if (event & EVENT_READ) {
+    OnRead();
+  }
+  if (event & EVENT_WRITE) {
+    OnWrite();
+  }
 }
 
 void Connecting::OnRead(){

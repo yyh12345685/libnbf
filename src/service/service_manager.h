@@ -49,9 +49,8 @@ public:
   int Wait();
 
   void Reply(EventMessage* message);
-  void SendToIoHandle(EventMessage* msg);
-  void SendCloseToIoHandle(EventMessage* msg);
-  void SendEventToIoHandle(EventMessage* msg);
+  void SendToSlaveThread(EventMessage* msg);
+  void SendCloseToSlaveThread(EventMessage* msg);
   void SendToServiceHandle(EventMessage* msg);
   void SendTaskToServiceHandle(Task* task);
 
@@ -72,7 +71,7 @@ public:
   }
 
 private:
-  void SendToIoHandleInner(EventMessage* msg);
+  void SendToSlaveThreadInner(EventMessage* msg);
 
   uint32_t GetServiceHandleId(EventMessage* msg);
 
@@ -88,8 +87,9 @@ private:
 
   DISALLOW_COPY_ASSIGN_CONSTRUCTION(ServiceManager)
 };
-//IoService改名ServiceManager
+
 //将io handle thread去掉，相关处理逻辑放到slave thread中
+//(slave thread 已支持添加和处理message，还有定时器也要罗过去)
 //除了io handle thread相关内容，其他留在ServiceManager中
 
 namespace service {

@@ -103,24 +103,19 @@ int ServiceManager::Wait(){
   return ThreadWait();
 }
 
-void ServiceManager::SendCloseToIoHandle(EventMessage* msg){
+void ServiceManager::SendCloseToSlaveThread(EventMessage* msg){
   msg->type_io_event = MessageType::kIoActiveCloseEvent;
-  SendToIoHandleInner(msg);
+  SendToSlaveThreadInner(msg);
 }
 
 void ServiceManager::Reply(EventMessage* message){
   message->direction = EventMessage::kOutgoingResponse;
-  SendToIoHandle(message);
+  SendToSlaveThread(message);
 }
 
-void ServiceManager::SendToIoHandle(EventMessage* msg){
+void ServiceManager::SendToSlaveThread(EventMessage* msg){
   msg->type_io_event = MessageType::kIoHandleEventMsg;
-  SendToIoHandleInner(msg);
-}
-
-void ServiceManager::SendEventToIoHandle(EventMessage* msg){
-  msg->type_io_event = MessageType::kIoEvent;
-  SendToIoHandleInner(msg);
+  SendToSlaveThreadInner(msg);
 }
 
 uint32_t ServiceManager::GetServiceHandleId(EventMessage* msg){
@@ -154,22 +149,8 @@ void ServiceManager::SendTaskToServiceHandle(Task* task){
   hd->lock_task_.unlock();
 }
 
-void ServiceManager::SendToIoHandleInner(EventMessage* msg){
-  static thread_local std::atomic<uint32_t> id_io(0);
-  uint32_t id = 0;
-  if (0!= msg->descriptor_id){
-    Connecting* con = (Connecting*)((void*)(msg->descriptor_id));
-    //不能用con指针地址取模，回导致线程的队列分布非常不均匀，使用顺序id即可
-    id = con->GetConnectId() %handle_thread_.io_handle_data_.size();
-  } else {
-    id = (id_io++) % handle_thread_.io_handle_data_.size();
-  }
-  
-  HandleData* hd =
-    handle_thread_.io_handle_data_.at(id);
-  hd->lock_.lock();
-  hd->data_.emplace(msg);
-  hd->lock_.unlock();
+void ServiceManager::SendToSlaveThreadInner(EventMessage* msg){
+  agents_->PutMessageToHandle(msg);
 }
 
 const std::string& ServiceManager::GetMonitorReport(){

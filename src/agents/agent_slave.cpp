@@ -2,6 +2,9 @@
 #include "agents/agent_slave.h"
 #include "agents/agents.h"
 #include "monitor/mem_profile.h"
+#include "handle_data.h"
+#include "message_base.h"
+#include "net/connect.h"
 
 namespace bdf {
 
@@ -16,19 +19,27 @@ AgentSlave::~AgentSlave() {
   for (auto& thread : slave_event_threads_) {
     BDF_DELETE(thread);
   }
+
+  for (auto& ssdr : slaves_service_data_run_) {
+    BDF_DELETE(ssdr);
+  }
 }
 
 bool AgentSlave::Init(int slave_thread_count){
   for (int ix = 0; ix < slave_thread_count;ix++) {
     EventLoopThread* evt = BDF_NEW(EventLoopThread);
     slave_event_threads_.push_back(evt);
+    HandleData* hd = new HandleData;
+    SlaveServiceDataRun* ssdr = BDF_NEW(SlaveServiceDataRun,hd);
+    slaves_service_data_run_.push_back(ssdr);
   }
+
   return true;
 }
 
 bool AgentSlave::Start() {
-  for (auto& thread: slave_event_threads_){
-    thread->Start();
+  for (size_t idx =0; idx<slave_event_threads_.size();idx++){
+    slave_event_threads_[idx]->Start(slaves_service_data_run_[idx]);
   }
   return true;
 }
@@ -82,6 +93,19 @@ int AgentSlave::Del(EventFunctionBase* ezfd, int fd){
     return -1;
   }
   return 0;
+}
+
+void AgentSlave::PutMessageToHandle(EventMessage* msg){
+  static thread_local std::atomic<uint32_t> id_io(0);
+  uint32_t id = 0;
+  if (0!= msg->descriptor_id){
+    Connecting* con = (Connecting*)((void*)(msg->descriptor_id));
+    //不能用con指针地址取模，回导致线程的队列分布非常不均匀，使用顺序id即可
+    id = con->GetConnectId() %slaves_service_data_run_.size();
+  } else {
+    id = (id_io++) % slaves_service_data_run_.size();
+  }
+  slaves_service_data_run_[id]->PutMessage(msg);
 }
 
 }

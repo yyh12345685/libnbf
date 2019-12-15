@@ -60,6 +60,10 @@ int Agents::Del(EventFunctionBase* ezfd, int fd){
   return agent_slaves_->Del(ezfd, fd);
 }
 
+void Agents::PutMessageToHandle(EventMessage* msg){
+    agent_slaves_->PutMessageToHandle(msg);
+  }
+
 Agents::~Agents() {
   //Stop();
 	

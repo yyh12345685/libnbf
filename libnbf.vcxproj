@@ -204,7 +204,6 @@
     <ClCompile Include="src\net\client_reconnect_thread.cpp" />
     <ClCompile Include="src\net\connect.cpp" />
     <ClCompile Include="src\net\connect_manager.cpp" />
-    <ClCompile Include="src\net\io_handle.cpp" />
     <ClCompile Include="src\net\server_connect.cpp" />
     <ClCompile Include="src\net\socket.cpp" />
     <ClCompile Include="src\net\sync_client_connect.cpp" />
@@ -281,7 +280,6 @@
     <ClInclude Include="src\net\client_reconnect_thread.h" />
     <ClInclude Include="src\net\connect.h" />
     <ClInclude Include="src\net\connect_manager.h" />
-    <ClInclude Include="src\net\io_handle.h" />
     <ClInclude Include="src\net\server_connect.h" />
     <ClInclude Include="src\net\socket.h" />
     <ClInclude Include="src\net\sync_client_connect.h" />

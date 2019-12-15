@@ -172,9 +172,6 @@
     <ClCompile Include="src\net\server_connect.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\net\io_handle.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="src\service\service_handle.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -397,9 +394,6 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="src\net\server_connect.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="src\net\io_handle.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="src\service\service_handle.h">

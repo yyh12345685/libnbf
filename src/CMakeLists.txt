@@ -35,6 +35,7 @@ set(BDF_SRC
   protocol/redis/redis_protocol.cpp
   protocol/protocol_base.cpp
 
+  agents/slave_service_data_run.cpp
   agents/agent_slave.cpp
   agents/agent_master.cpp
   agents/agents.cpp

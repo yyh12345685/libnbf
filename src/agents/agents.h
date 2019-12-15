@@ -12,6 +12,7 @@ struct ServiceConfig;
 class AgentMaster;
 class AgentSlave;
 class EventFunctionBase;
+class EventMessage;
 
 class Agents {
 public:
@@ -29,7 +30,7 @@ public:
   int AddModrw(EventFunctionBase *ezfd, int fd, bool set, bool lock = false);
   int AddModr(EventFunctionBase *ezfd, int fd, bool set, bool lock = false);
   int Del(EventFunctionBase* ezfd, int fd);
-
+  void PutMessageToHandle(EventMessage* msg);
 private:
   Agents();
 
