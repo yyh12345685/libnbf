@@ -17,21 +17,15 @@ struct HandleThread{
   std::vector<std::thread*>  service_handle_thread_;
   std::vector < HandleData*> service_handle_data_;
   
-  std::vector<std::thread*>  io_handle_thread_;
-  std::vector < HandleData*> io_handle_data_;
   ~HandleThread(){
     for (const auto& hd: service_handle_data_){
       delete hd;
     }
-    for (const auto& hd : io_handle_data_) {
-      delete hd;
-    }
+  
     for (const auto& thread : service_handle_thread_) {
       delete thread;
     }
-    for (const auto& thread : io_handle_thread_) {
-      delete thread;
-    }
+  
   }
 };
 
@@ -56,8 +50,8 @@ public:
 
   const std::string& GetMonitorReport();
 
-  int AgentsAddModrw(EventFunctionBase* ezfd, int fd);
-  int AgentsAddModr(EventFunctionBase* ezfd, int fd);
+  int AgentsAddModrw(EventFunctionBase* ezfd, int fd,int& register_thread_id);
+  int AgentsAddModr(EventFunctionBase* ezfd, int fd,int& register_thread_id);
   int AgentsDel(EventFunctionBase* ezfd, int fd);
 
   uint32_t GetServiceHandleCount();
@@ -87,10 +81,6 @@ private:
 
   DISALLOW_COPY_ASSIGN_CONSTRUCTION(ServiceManager)
 };
-
-//将io handle thread去掉，相关处理逻辑放到slave thread中
-//(slave thread 已支持添加和处理message，还有定时器也要罗过去)
-//除了io handle thread相关内容，其他留在ServiceManager中
 
 namespace service {
   ServiceManager& GetServiceManager();

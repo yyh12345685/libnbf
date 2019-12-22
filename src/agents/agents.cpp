@@ -48,12 +48,14 @@ void Agents::Stop(){
   INFO(logger_, "slave Stop ok.");
 }
 
-int Agents::AddModrw(EventFunctionBase *ezfd, int fd, bool set, bool lock){
-  return agent_slaves_->AddModrw(ezfd, fd, set, lock);
+int Agents::AddModrw(
+  EventFunctionBase *ezfd, int fd, bool set, bool lock,int& register_thread_id){
+  return agent_slaves_->AddModrw(ezfd, fd, set, lock,register_thread_id);
 }
 
-int Agents::AddModr(EventFunctionBase *ezfd, int fd, bool set, bool lock){
-  return agent_slaves_->AddModr(ezfd, fd, set, lock);
+int Agents::AddModr(
+  EventFunctionBase *ezfd, int fd, bool set, bool lock,int& register_thread_id){
+  return agent_slaves_->AddModr(ezfd, fd, set, lock,register_thread_id);
 }
 
 int Agents::Del(EventFunctionBase* ezfd, int fd){
@@ -61,8 +63,16 @@ int Agents::Del(EventFunctionBase* ezfd, int fd){
 }
 
 void Agents::PutMessageToHandle(EventMessage* msg){
-    agent_slaves_->PutMessageToHandle(msg);
-  }
+  agent_slaves_->PutMessageToHandle(msg);
+}
+
+uint64_t Agents::StartTimer(TimerData& data,int slave_thread_id){
+  return agent_slaves_->StartTimer(data,slave_thread_id);
+}
+
+void Agents::CancelTimer(uint64_t timer_id,int slave_thread_id){
+  return agent_slaves_->CancelTimer(timer_id,slave_thread_id);
+}
 
 Agents::~Agents() {
   //Stop();

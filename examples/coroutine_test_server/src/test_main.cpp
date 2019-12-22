@@ -64,6 +64,7 @@ public:
   }
 
   virtual void OnTask(void* function_data) {
+    sleep(1);
     INFO(logger_, "on task.");
     int times = 1000000;
     while (!thread_exit && times-- > 0) {

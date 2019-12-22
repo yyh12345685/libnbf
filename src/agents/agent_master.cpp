@@ -86,8 +86,10 @@ void AgentMaster::OnEvent(EventDriver *poll, int fd, short event){
     svr_con->SetFd(sock);
     svr_con->SetPort(port);
     svr_con->SetProtocol(cate);
-    if (0!= agents_->GetSlave()->AddModr(svr_con, sock, true)){
-      WARN(logger_, "AddModr faild,fd:"<<sock);
+    int register_thread_id = -1;
+    if (0!= agents_->GetSlave()->AddModr(
+      svr_con, sock, true,false,register_thread_id)){
+      WARN(logger_, "AddModr faild,fd:"<<sock<<",reg tid:"<<register_thread_id);
       BDF_DELETE(svr_con);
       break;
     }
@@ -99,7 +101,8 @@ void AgentMaster::OnEvent(EventDriver *poll, int fd, short event){
     release_mgr_->AddConnect(svr_con);
     poll->Wakeup();
     TRACE(logger_, "listen port:"<< listen_port <<",accept client ip:" << ip_str 
-      << ",port:" << port << ",sock:" << sock << ",con's addr:" << svr_con);
+      << ",port:" << port << ",sock:" << sock << ",con's addr:" << svr_con
+      << ",register_thread_id:"<<register_thread_id);
   }
 }
 

@@ -2,7 +2,8 @@
 #include "message.h"
 #include "common/time.h"
 #include "net/sync_client_connect.h"
-#include "net/io_handle.h"
+#include "service/service_manager.h"
+#include "agents/agents.h"
 #include "common/string_util.h"
 
 namespace bdf {
@@ -28,7 +29,8 @@ void SyncSequence::StartTimeCheck(){
   td.time_proc = this;
   td.function_data = (void*)(&check_timer_type);
   //这里只是用来驱动超时检测,3ms之后执行OnTimer
-  IoHandler::GetIoHandler()->StartTimer(td);
+  int thread_id = sync_client_con_->GetRegisterThreadId();
+  ServiceManager::GetInstance().GetAgents()->StartTimer(td,thread_id);
 }
 
 int SyncSequence::Put(EventMessage* message) {

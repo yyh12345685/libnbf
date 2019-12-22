@@ -2,7 +2,8 @@
 #include "net/client_connect.h"
 #include "service/service_manager.h"
 #include "net/socket.h"
-#include "net/io_handle.h"
+#include "service/service_manager.h"
+#include "agents/agents.h"
 #include "net/client_reconnect_thread.h"
 
 namespace bdf{
@@ -21,7 +22,8 @@ ClientConnect::ClientConnect(
   timeout_ms_(timeout_ms),
   heartbeat_ms_(heartbeat_ms),
   reconnect_timer_(0),
-  heartbeat_timer_(0){
+  heartbeat_timer_(0),
+  register_thread_id_(-1){
 }
 
 ClientConnect::~ClientConnect(){
@@ -68,7 +70,7 @@ int ClientConnect::TryConnect(){
       StartReconnectTimer();
     return -1;
   }
-  if (0 != RegisterAddModr(connet_info.first)) {
+  if (0 != RegisterAddModr(connet_info.first,register_thread_id_)) {
     WARN(logger_, "RegisterAddModr failed,fd:" << connet_info.first);
     Socket::Close(connet_info.first);
     SetStatus(kBroken);
@@ -114,7 +116,9 @@ int ClientConnect::StartHeartBeatTimer() {
   td.time_proc = this;
   td.function_data = (void*)(&client_timer_type_heartbeat_);
 
-  heartbeat_timer_ = IoHandler::GetIoHandler()->StartTimer(td);
+  int thread_id = GetRegisterThreadId();
+  heartbeat_timer_ =
+    ServiceManager::GetInstance().GetAgents()->StartTimer(td,thread_id);
   return 0;
 }
 
@@ -125,7 +129,8 @@ void ClientConnect::CancelTimer() {
   }
 
   if (heartbeat_timer_ != 0) {
-    IoHandler::GetIoHandler()->CancelTimer(heartbeat_timer_);
+    int thread_id = GetRegisterThreadId();
+    ServiceManager::GetInstance().GetAgents()->CancelTimer(heartbeat_timer_,thread_id);
     heartbeat_timer_ = 0;
   }
 }
@@ -160,7 +165,7 @@ void ClientConnect::OnConnectWrite(){
     return;
   }
 
-  if (0 != RegisterAddModr(GetFd())) {
+  if (0 != RegisterAddModr(GetFd(),register_thread_id_)) {
     WARN(logger_, "RegisterAddModr failed,fd:" << GetFd());
     CleanClient();
     StartHeartBeatTimer();
@@ -245,12 +250,12 @@ int ClientConnect::Stop(){
   return 0;
 }
 
-int ClientConnect::RegisterAddModrw(int fd){
-  return service::GetServiceManager().AgentsAddModrw(this, fd);
+int ClientConnect::RegisterAddModrw(int fd,int& register_thread_id){
+  return service::GetServiceManager().AgentsAddModrw(this, fd,register_thread_id);
 }
 
-int ClientConnect::RegisterAddModr(int fd) {
-  return service::GetServiceManager().AgentsAddModr(this, fd);
+int ClientConnect::RegisterAddModr(int fd,int& register_thread_id) {
+  return service::GetServiceManager().AgentsAddModr(this, fd,register_thread_id);
 }
 
 int ClientConnect::RegisterDel(int fd){

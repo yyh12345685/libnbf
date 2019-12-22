@@ -51,8 +51,10 @@ void AgentSlave::Stop() {
   }
 }
 
-int AgentSlave::AddModrw(EventFunctionBase *ezfd, int fd, bool set, bool lock){
-  uint64_t idx = (uint64_t)((void*)ezfd) % slave_event_threads_.size();
+int AgentSlave::AddModrw(
+  EventFunctionBase *ezfd, int fd, bool set, bool lock,int& register_thread_id){
+  int idx = (uint64_t)((void*)ezfd) % slave_event_threads_.size();
+  register_thread_id = idx;
   if (0 != slave_event_threads_[idx]->Add(fd, ezfd, lock)) {
     WARN(logger_, "slave_event_threads_[idx].Add failed.");
     return -1;
@@ -71,8 +73,10 @@ int AgentSlave::AddModrw(EventFunctionBase *ezfd, int fd, bool set, bool lock){
   return slave_event_threads_[idx]->Wakeup();
 }
 
-int AgentSlave::AddModr(EventFunctionBase* ezfd,int fd,  bool set, bool lock){
-  uint64_t idx = (uint64_t)((void*)ezfd) % slave_event_threads_.size();
+int AgentSlave::AddModr(
+  EventFunctionBase* ezfd,int fd,  bool set, bool lock,int& register_thread_id){
+  int idx = (uint64_t)((void*)ezfd) % slave_event_threads_.size();
+  register_thread_id= idx;
   if (0!= slave_event_threads_[idx]->Add(fd, ezfd, lock)){
     WARN(logger_, "slave_event_threads_[idx].Add failed,fd:"<<fd);
     return -1;
@@ -106,6 +110,24 @@ void AgentSlave::PutMessageToHandle(EventMessage* msg){
     id = (id_io++) % slaves_service_data_run_.size();
   }
   slaves_service_data_run_[id]->PutMessage(msg);
+}
+
+uint64_t AgentSlave::StartTimer(TimerData& data,int slave_thread_id){
+  if(slave_thread_id < 0 || 
+    slave_thread_id >= (int)(slave_event_threads_.size())){
+    TRACE(logger_, "start,invalid slave thread id:"<<slave_thread_id);
+    return 0;
+  }
+  return slave_event_threads_[slave_thread_id]->StartTimer(data);
+}
+
+void AgentSlave::CancelTimer(uint64_t timer_id,int slave_thread_id){
+if(slave_thread_id < 0 || 
+    slave_thread_id >= (int)(slave_event_threads_.size())){
+    TRACE(logger_, "cancel, invalid slave thread id:"<<slave_thread_id);
+    return ;
+  }
+  return slave_event_threads_[slave_thread_id]->CancelTimer(timer_id);
 }
 
 }

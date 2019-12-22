@@ -4,7 +4,6 @@
 #include "service/service_manager.h"
 #include "agents/agents.h"
 #include "service/service_handle.h"
-#include "net/io_handle.h"
 #include "net/connect.h"
 #include "message_base.h"
 #include "monitor/matrix.h"
@@ -47,41 +46,27 @@ int ServiceManager::Start(ServiceHandler* handle){
     handle_thread_.service_handle_thread_.push_back(thread);
   }
 
-  for (int cn = 0; cn < service_config_.io_handle_thread_count; cn++) {
-    HandleData* hd_io = new HandleData;
-    hd_io->handle_ = new IoHandler();
-    hd_io->is_run = true;
-    hd_io->handle_->SetHandlerId(cn);
-    handle_thread_.io_handle_data_.push_back(hd_io);
-    std::thread* thread_io = new std::thread(std::bind(&Handler::Run, hd_io->handle_, hd_io));
-    handle_thread_.io_handle_thread_.push_back(thread_io);
-  }
   delete handle;
   return 0;
 }
 
 int ServiceManager::ThreadWait(){
-  INFO(logger_, "IoService::ThreadWait start.");
+  INFO(logger_, "ServiceManager::ThreadWait start.");
   for (int cn = 0; cn < service_config_.service_handle_thread_count; cn++){
     handle_thread_.service_handle_thread_[cn]->join();
   }
 
-  for (int cn = 0; cn < service_config_.io_handle_thread_count; cn++) {
-    handle_thread_.io_handle_thread_[cn]->join();
-  }
-  INFO(logger_, "IoService::ThreadWait end.");
+  INFO(logger_, "ServiceManager::ThreadWait end.");
   return 0;
 }
 
 int ServiceManager::ThreadStop(){
-  INFO(logger_, "IoService::ThreadStop.");
+  INFO(logger_, "ServiceManager::ThreadStop.");
   for (int cn = 0; cn < service_config_.service_handle_thread_count; cn++){
     handle_thread_.service_handle_data_[cn]->is_run = false;
   }
-  for (int cn = 0; cn < service_config_.io_handle_thread_count; cn++) {
-    handle_thread_.io_handle_data_[cn]->is_run = false;
-  }
-  INFO(logger_, "IoService::Set Stope ok.");
+
+  INFO(logger_, "ServiceManager::Set Stope ok.");
   return 0;
 }
 
@@ -165,12 +150,14 @@ const std::string& ServiceManager::GetMonitorReport(){
   }
 }
 
-int ServiceManager::AgentsAddModrw(EventFunctionBase* ezfd, int fd){
-  return agents_->AddModrw(ezfd, fd, true);
+int ServiceManager::AgentsAddModrw(
+  EventFunctionBase* ezfd, int fd,int& register_thread_id){
+  return agents_->AddModrw(ezfd, fd, true,false,register_thread_id);
 }
 
-int ServiceManager::AgentsAddModr(EventFunctionBase* ezfd, int fd){
-  return agents_->AddModr(ezfd, fd,true);
+int ServiceManager::AgentsAddModr(
+  EventFunctionBase* ezfd, int fd,int& register_thread_id){
+  return agents_->AddModr(ezfd, fd,true,false,register_thread_id);
 }
 
 int ServiceManager::AgentsDel(EventFunctionBase* ezfd, int fd){

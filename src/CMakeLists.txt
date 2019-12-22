@@ -50,7 +50,6 @@ set(BDF_SRC
   net/sync_sequence.cpp
   net/server_connect.cpp
   net/client_reconnect_thread.cpp
-  net/io_handle.cpp
 
   coroutine/coroutine_actor.cpp
   coroutine/coroutine_context.cpp

@@ -16,7 +16,6 @@ struct ServerConfig {
 struct ServiceConfig {
   ServiceConfig(): 
     slave_thread_count(2),
-    io_handle_thread_count(2),
     service_handle_thread_count(2),
     service_count(1),
     coroutine_size(256),
@@ -26,7 +25,6 @@ struct ServiceConfig {
   }
 
   int slave_thread_count;
-  int io_handle_thread_count;
   int service_handle_thread_count;
   int service_count;
   std::vector<ServerConfig> server_config;
