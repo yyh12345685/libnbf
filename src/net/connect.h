@@ -42,7 +42,6 @@ public:
 
   virtual void OnClose() = 0;
 
-  //���ڿͻ���
   virtual bool IsServer() = 0;
 
   int64_t GetConnectId() { return connect_id_; }

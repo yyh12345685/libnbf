@@ -9,6 +9,7 @@
 #include "monitor/matrix.h"
 #include "monitor/matrix_stat_map.h"
 #include "monitor/mem_profile.h"
+#include "common/thread_id.h"
 
 namespace bdf{
 
@@ -118,7 +119,8 @@ uint32_t ServiceManager::GetServiceHandleCount() {
 
 void ServiceManager::SendToServiceHandle(EventMessage* msg){
   uint32_t id = GetServiceHandleId(msg);
-  TRACE(logger_, "handle id:" << msg->handle_id << ",Get id:" << id);
+  TRACE(logger_, "ThreadId:" << ThreadId::Get()
+    <<",handle id:" << msg->handle_id << ",Get id:" << id);
   HandleData* hd = handle_thread_.service_handle_data_.at(id);
   hd->lock_.lock();
   hd->data_.emplace(msg);

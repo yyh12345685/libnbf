@@ -36,6 +36,8 @@ private:
 
   ServerConnectDelayReleaseMgr* release_mgr_;
 
+  int idle_fd_;
+  
   LOGGER_CLASS_DECL(logger_);
 
   DISALLOW_COPY_AND_ASSIGN(AgentMaster)

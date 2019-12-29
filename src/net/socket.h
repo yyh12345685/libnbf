@@ -20,6 +20,7 @@ class Socket{
   static int Listen(const char *addr, int port, size_t backlog = 2048);
   static int Accept(int listen_fd, char* ipbuf= nullptr, int* port= nullptr);
 
+  static int Accept4(int listen_fd, char* ipbuf= nullptr, int* port= nullptr);
   /*
    * @return: <fd, whether need event>
    */

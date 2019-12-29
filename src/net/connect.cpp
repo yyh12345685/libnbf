@@ -28,19 +28,21 @@ Connecting::~Connecting(){
 }
 
 void Connecting::OnEvent(EventDriver *poll, int fd, short event){
-  TRACE(logger_, "Connecting::OnEvent,event:"<< event);
+  TRACE(logger_, "Connecting::OnEvent,event:"<< event<<",fd"<<fd);
   if ((event & EVENT_CONNECT_CLOSED) || (event & EVENT_ERROR)){
     //do not close socket ,error message allways hava read message for close
-    if (IsServer()){
+    //if (IsServer()){
       RegisterDel(poll, fd);
-    }
-    OnClose();
+    //}
   }
 
   if (event & EVENT_READ) {
     OnRead();
   }
   if (event & EVENT_WRITE) {
+    OnWrite();
+  }
+  if ((event & EVENT_CONNECT_CLOSED) || (event & EVENT_ERROR)) {
     OnWrite();
   }
 }
@@ -247,7 +249,7 @@ void Connecting::Clean(){
 
 void Connecting::RegisterDel(EventDriver *poll, int fd){
   TRACE(logger_, "Connecting::RegisterDel,sock:" << fd_
-    << ",ip:" << ip_ << ",port:" << port_);
+    << ",ip:" << ip_ << ",port:" << port_<<",con id:"<<connect_id_);
   if (fd_ < 0 || nullptr == poll) {
     return;
   }

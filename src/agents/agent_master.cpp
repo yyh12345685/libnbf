@@ -16,13 +16,15 @@ LOGGER_CLASS_IMPL(logger_, AgentMaster);
 
 AgentMaster::AgentMaster() :
   conf_(nullptr),
-  release_mgr_(new ServerConnectDelayReleaseMgr()){
+  release_mgr_(new ServerConnectDelayReleaseMgr()),
+  idle_fd_(open("/dev/null", O_RDONLY | O_CLOEXEC)){
 }
 
 AgentMaster::~AgentMaster() {
   if (release_mgr_ != nullptr){
     delete release_mgr_;
   }
+  close(idle_fd_);
 }
 
 bool AgentMaster::Init(const ServiceConfig* confs,const Agents* agents){
@@ -75,34 +77,41 @@ void AgentMaster::OnEvent(EventDriver *poll, int fd, short event){
 
   int cate = listen_it->second.first;
   int listen_port = listen_it->second.second;
-  int sock = 0;
   char ip[256];
   int port;
-	while((sock = Socket::Accept(fd, ip, &port)) > 0){
-    ServerConnect* svr_con = BDF_NEW(ServerConnect);
-    std::string ip_str;
-    ip_str.assign(ip, strlen(ip));
-    svr_con->SetIp(ip_str);
-    svr_con->SetFd(sock);
-    svr_con->SetPort(port);
-    svr_con->SetProtocol(cate);
-    int register_thread_id = -1;
-    if (0!= agents_->GetSlave()->AddModr(
-      svr_con, sock, true,false,register_thread_id)){
-      WARN(logger_, "AddModr faild,fd:"<<sock<<",reg tid:"<<register_thread_id);
-      BDF_DELETE(svr_con);
-      break;
+  while(true){
+    int sock = Socket::Accept4(fd, ip, &port);
+    if(sock>0){
+      ServerConnect* svr_con = BDF_NEW(ServerConnect);
+      std::string ip_str;
+      ip_str.assign(ip, strlen(ip));
+      svr_con->SetIp(ip_str);
+      svr_con->SetFd(sock);
+      svr_con->SetPort(port);
+      svr_con->SetProtocol(cate);
+      int register_thread_id = -1;
+      if (0!= agents_->GetSlave()->AddModr(
+        svr_con, sock, true,false,register_thread_id)){
+        WARN(logger_, "AddModr faild,fd:"<<sock<<",reg tid:"<<register_thread_id);
+        BDF_DELETE(svr_con);
+        break;
+      }
+      release_mgr_->AddConnect(svr_con);
+      poll->Wakeup();
+      TRACE(logger_, "listen port:"<< listen_port <<",accept client ip:" << ip_str 
+        << ",port:" << port << ",sock:" << sock << ",con's addr:" << svr_con
+        << ",register_thread_id:"<<register_thread_id);
+    }{
+      if (errno == EMFILE) {
+        close(idle_fd_);
+        int fd_tmp = Socket::Accept4(fd);
+        close(fd_tmp);
+        idle_fd_ = ::open("/dev/null", O_RDONLY | O_CLOEXEC);
+        TRACE(logger_, "tmp fd:"<<fd_tmp<<",idle_file fd:"<< idle_fd_);
+      } else if (errno == EAGAIN) {
+        break;
+      }
     }
-    //if (!ConnectManager::Instance().RegisterConnect((uint64_t)svr_con, svr_con)) {
-    //  INFO(logger_, "RegisterConnect set failed ptr:" << svr_con);
-    //  //BDF_DELETE(svr_con);
-    //  //break;
-    //}
-    release_mgr_->AddConnect(svr_con);
-    poll->Wakeup();
-    TRACE(logger_, "listen port:"<< listen_port <<",accept client ip:" << ip_str 
-      << ",port:" << port << ",sock:" << sock << ",con's addr:" << svr_con
-      << ",register_thread_id:"<<register_thread_id);
   }
 }
 
