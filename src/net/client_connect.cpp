@@ -116,9 +116,8 @@ int ClientConnect::StartHeartBeatTimer() {
   td.time_proc = this;
   td.function_data = (void*)(&client_timer_type_heartbeat_);
 
-  int thread_id = GetRegisterThreadId();
-  heartbeat_timer_ =
-    ServiceManager::GetInstance().GetAgents()->StartTimer(td,thread_id);
+  //心跳包的timer复用重连线程的timer
+  ClientReconnect::GetInstance().StartTimer(td);
   return 0;
 }
 
@@ -129,8 +128,8 @@ void ClientConnect::CancelTimer() {
   }
 
   if (heartbeat_timer_ != 0) {
-    int thread_id = GetRegisterThreadId();
-    ServiceManager::GetInstance().GetAgents()->CancelTimer(heartbeat_timer_,thread_id);
+    //心跳包的timer复用重连线程的timer
+    ClientReconnect::GetInstance().CancelTimer(heartbeat_timer_);
     heartbeat_timer_ = 0;
   }
 }

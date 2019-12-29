@@ -86,6 +86,7 @@ class Time {
     return (tv.tv_usec + tv.tv_sec * 1000000);
   }
 
+  //系统启动那一刻到当前时间的毫秒数
   //毫秒
   inline static uint64_t GetCurrentClockTime(){
     struct timespec tp;
@@ -94,6 +95,7 @@ class Time {
     return now;
   }
 
+  //系统启动那一刻到当前时间的微秒数
   //微秒
   inline static uint64_t GetCurrentClockTimeus() {
     struct timespec tp;
