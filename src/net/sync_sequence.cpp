@@ -83,18 +83,9 @@ void SyncSequence::OnTimer(void* function_data){
   switch (timer_type)
   {
   case check_timer_type:{
-    //std::list<size_t> time_ids;
     time_lock_.lock();
     timer_.ProcessTimer();
-    //timer_.ProcessTimerTest(time_ids);
     time_lock_.unlock();
-    //std::string ids_str;
-    //for (const auto& id : time_ids) {
-    //  ids_str.append(common::ToString(id)).append("-");
-    //}
-    //if (!ids_str.empty()){
-    //  TRACE(logger_, "ProcessTimerTest,ids:" << ids_str);
-    //}
     StartTimeCheck();
     break;
   }
@@ -103,7 +94,6 @@ void SyncSequence::OnTimer(void* function_data){
     if (1 == rand() % 10)
       INFO(logger_, "SyncSequence::OnTimer,fd:"<< sync_client_con_->GetFd()
         <<",sync_client_con_:"<< sync_client_con_);
-    //sync_client_con_->OnTimeout(Fired());
     sync_client_con_->RegisterDel(sync_client_con_->GetFd());
     sync_client_con_->CleanSequenceQueue();
     sync_client_con_->CancelTimer();
