@@ -103,9 +103,11 @@ void AgentSlave::PutMessageToHandle(EventMessage* msg){
   static thread_local std::atomic<uint32_t> id_io(0);
   uint32_t id = 0;
   if (0!= msg->descriptor_id){
-    Connecting* con = (Connecting*)((void*)(msg->descriptor_id));
+    //Connecting* con = (Connecting*)((void*)(msg->descriptor_id));
     //不能用con指针地址取模，回导致线程的队列分布非常不均匀，使用顺序id即可
-    id = con->GetConnectId() %slaves_service_data_run_.size();
+    //id = con->GetConnectId() %slaves_service_data_run_.size();
+    //为了无锁，只能取摸,仔细看代码会发现id和GetRegisterThreadId()一致
+    id = msg->descriptor_id%slave_event_threads_.size();
   } else {
     id = (id_io++) % slaves_service_data_run_.size();
   }
@@ -115,7 +117,7 @@ void AgentSlave::PutMessageToHandle(EventMessage* msg){
 uint64_t AgentSlave::StartTimer(TimerData& data,int slave_thread_id){
   if(slave_thread_id < 0 || 
     slave_thread_id >= (int)(slave_event_threads_.size())){
-    TRACE(logger_, "start,invalid slave thread id:"<<slave_thread_id);
+    WARN(logger_, "start,invalid slave thread id:"<<slave_thread_id);
     return 0;
   }
   return slave_event_threads_[slave_thread_id]->StartTimer(data);
