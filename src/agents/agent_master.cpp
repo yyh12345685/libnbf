@@ -75,12 +75,57 @@ void AgentMaster::OnEvent(EventDriver *poll, int fd, short event){
     return;
   }
 
-  int cate = listen_it->second.first;
-  int listen_port = listen_it->second.second;
+  //AcceptClient(poll,fd,listen_it->second);
+  AcceptClient1(poll,fd,listen_it->second);
+}
+
+void AgentMaster::AcceptClient(
+  EventDriver *poll, int fd,std::pair<int,int>& server_cate_port){
+  int cate = server_cate_port.first;
+  int listen_port = server_cate_port.second;
   char ip[256];
   int port;
+  int sock = 0;
+  while((sock = Socket::Accept(fd, ip, &port)) > 0){
+    ServerConnect* svr_con = BDF_NEW(ServerConnect);
+    std::string ip_str;
+    ip_str.assign(ip, strlen(ip));
+    svr_con->SetIp(ip_str);
+    svr_con->SetFd(sock);
+    svr_con->SetPort(port);
+    svr_con->SetProtocol(cate);
+    int register_thread_id = -1;
+    if (0!= agents_->GetSlave()->AddModr(
+      svr_con, sock, true,false,register_thread_id)){
+      WARN(logger_, "AddModr faild,fd:"<<sock<<",reg tid:"<<register_thread_id);
+      BDF_DELETE(svr_con);
+      break;
+    }
+    release_mgr_->AddConnect(svr_con);
+    poll->Wakeup();
+    TRACE(logger_, "listen port:"<< listen_port <<",accept client ip:" << ip_str 
+      << ",port:" << port << ",sock:" << sock << ",con's addr:" << svr_con
+      << ",register_thread_id:"<<register_thread_id);
+  }
+  if(sock < 0 && errno == EMFILE){
+      close(idle_fd_);
+      int fd_tmp = Socket::Accept(fd);//优雅的关闭连接
+      close(fd_tmp);
+      idle_fd_ = ::open("/dev/null", O_RDONLY | O_CLOEXEC);
+      INFO(logger_, "tmp fd:"<<fd_tmp<<",idle_file fd:"<< idle_fd_);
+  }
+}
+
+void AgentMaster::AcceptClient1(
+  EventDriver *poll, int fd,std::pair<int,int>& server_cate_port){
+  //surport ipv6
+  int cate = server_cate_port.first;
+  int listen_port = server_cate_port.second;
+  char ip[256];
+  int port;
+  int sock = 0;
   while(true){
-    int sock = Socket::Accept4(fd, ip, &port);
+    sock = Socket::Accept4(fd, ip, &port);
     if(sock>0){
       ServerConnect* svr_con = BDF_NEW(ServerConnect);
       std::string ip_str;
@@ -107,8 +152,9 @@ void AgentMaster::OnEvent(EventDriver *poll, int fd, short event){
         int fd_tmp = Socket::Accept4(fd);
         close(fd_tmp);
         idle_fd_ = ::open("/dev/null", O_RDONLY | O_CLOEXEC);
-        TRACE(logger_, "tmp fd:"<<fd_tmp<<",idle_file fd:"<< idle_fd_);
-      } else if (errno == EAGAIN) {
+        INFO(logger_, "tmp fd:"<<fd_tmp<<",idle_file fd:"<< idle_fd_);
+      } //else if (errno == EAGAIN)
+      {
         break;
       }
     }

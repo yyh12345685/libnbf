@@ -118,7 +118,7 @@ int Socket::Accept4(int listen_fd, char* ipbuf, int* port){
   int fd = -1;
   struct sockaddr addr;
   socklen_t len = static_cast<socklen_t>(sizeof(addr));
-  while ((fd = ::accept4(listen_fd, &addr, &len, SOCK_NONBLOCK | SOCK_CLOEXEC)) < 0 && errno == EINTR) {
+  while ((fd = accept4(listen_fd, &addr, &len, SOCK_NONBLOCK | SOCK_CLOEXEC)) < 0 && errno == EINTR) {
     //TRACE(logger_, "test---------------------");
   }
 
