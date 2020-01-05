@@ -82,4 +82,11 @@ std::list<EventMessage*> SyncSequence::Clear(){
   return std::move(tmp);
 }
 
+void SyncSequence::CancelTimer(uint64_t timer_id){
+  int thread_id = sync_client_con_->GetRegisterThreadId();
+  if(timer_id > 0 && thread_id >= 0){
+    ServiceManager::GetInstance().GetNetThreadManager()->CancelTimer(timer_id,thread_id);
+  } 
+}
+
 }

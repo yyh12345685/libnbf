@@ -24,7 +24,8 @@ public:
 
   virtual void OnTimer(void* function_data);
   std::list<EventMessage*> Clear();
-
+  void CancelTimer(uint64_t timer_id);
+  
 private:
   SyncClientConnect* sync_client_con_;
   uint32_t timeout_ms_;

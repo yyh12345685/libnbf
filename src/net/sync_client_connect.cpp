@@ -1,6 +1,7 @@
 
 #include "net/sync_client_connect.h"
 #include "service/service_manager.h"
+#include "net_thread_mgr/net_thread_mgr.h"
 #include "common/time.h"
 
 namespace bdf {
@@ -107,6 +108,9 @@ void SyncClientConnect::CleanSequenceQueue(){
   std::list<EventMessage*> clear_list = sync_sequence_.Clear();
   EventMessage* message = clear_list.front();
   while (!clear_list.empty() && message) {
+    if(message->timer_out_id > 0){
+      sync_sequence_.CancelTimer(message->timer_out_id);
+    }
     clear_list.pop_front();
     DoSendBack(message, EventMessage::kInternalFailure);
     message = clear_list.front();
