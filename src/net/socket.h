@@ -65,6 +65,7 @@ class Socket{
 
   static sockaddr_in GenerateAddr(const char *ip, const unsigned short port);
 
+  static int SetCloseWait(int fd,int delay);
 private:
 	LOGGER_CLASS_DECL(logger_);
 };

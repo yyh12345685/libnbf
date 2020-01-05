@@ -39,7 +39,15 @@ int Socket::CreateSocket(bool is_non_block) {
 	if(!SetNoDelay(fd,1)){
     Close(fd);
 		WARN(logger_, "set nodelay error: %s" << strerror(errno));
+    return -4;
 	}
+
+  ret = SetCloseWait(fd, 0);
+  if (0 != ret){
+		WARN(logger_, "SetCloseWait errno: %s" << strerror(errno));
+    Close(fd);
+    return -5;
+  }
   return fd;
 
 }
@@ -59,7 +67,7 @@ int Socket::Listen(const char *addr, int port, size_t backlog){
 int Socket::Listen(const sockaddr_in& addr, size_t backlog) {
   int ret;
   int fd = CreateSocket();
-  if (fd<0){
+  if (fd < 0){
     return -2;
   }
 
@@ -81,7 +89,6 @@ int Socket::Listen(const sockaddr_in& addr, size_t backlog) {
     return -4;
   }
   return fd;
-
 }
 
 int Socket::Accept(int listen_fd, char* ipbuf, int* port){
@@ -122,7 +129,7 @@ int Socket::Accept4(int listen_fd, char* ipbuf, int* port){
     //TRACE(logger_, "test---------------------");
   }
 
-  if(fd >0 && nullptr != ipbuf && nullptr != port){
+  if(-1 != fd && nullptr != ipbuf && nullptr != port){
     bool ret = SetNonBlock(fd);
     if (!ret) 
       return -2;
@@ -338,6 +345,20 @@ sockaddr_in Socket::GenerateAddr(const char *ip, const unsigned short port) {
   sa.sin_addr.s_addr = htonl(INADDR_ANY);
   inet_aton(ip, &sa.sin_addr);
   return sa;
+}
+
+int Socket::SetCloseWait(int fd,int delay){
+  struct linger ling;
+  //在close socket调用后, 但是还有数据没发送完毕的时候容许逗留
+  ling.l_onoff = 1;
+  if(delay <=0 ){
+    ling.l_linger = 0;//容许逗留的时间为0秒
+  }else{
+    ling.l_linger = delay;  //容许逗留的时间为delay秒
+  }
+  
+  int ret = setsockopt(fd, SOL_SOCKET, SO_LINGER, (&ling), (sizeof(linger)));
+  return ret;
 }
 
 }
