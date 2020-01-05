@@ -9,7 +9,8 @@
 namespace bdf{
 
 class EventMessage;
-class Agents;
+class NetThreadManager;
+class ServerConnect;
 class ServiceHandler;
 class EventFunctionBase;
 
@@ -43,16 +44,16 @@ public:
   int Wait();
 
   void Reply(EventMessage* message);
-  void SendToSlaveThread(EventMessage* msg);
-  void SendCloseToSlaveThread(EventMessage* msg);
+  void SendToNetThread(EventMessage* msg);
+  void SendCloseToNetThread(EventMessage* msg);
   void SendToServiceHandle(EventMessage* msg);
   void SendTaskToServiceHandle(Task* task);
 
   const std::string& GetMonitorReport();
 
-  int AgentsAddModrw(EventFunctionBase* ezfd, int fd,int& register_thread_id);
-  int AgentsAddModr(EventFunctionBase* ezfd, int fd,int& register_thread_id);
-  int AgentsDel(EventFunctionBase* ezfd, int fd);
+  int EventAddModrw(EventFunctionBase* ezfd, int fd,int& register_thread_id);
+  int EventAddModr(EventFunctionBase* ezfd, int fd,int& register_thread_id);
+  int EventDel(EventFunctionBase* ezfd, int fd);
 
   uint32_t GetServiceHandleCount();
 
@@ -60,12 +61,14 @@ public:
     return service_config_;
   }
 
-  Agents* GetAgents(){
-    return agents_;
+  NetThreadManager* GetNetThreadManager(){
+    return net_thread_mgr_;
   }
 
+  void ReleaseServerCon(ServerConnect* svr_con);
+
 private:
-  void SendToSlaveThreadInner(EventMessage* msg);
+  void SendToNetThreadInner(EventMessage* msg);
 
   uint32_t GetServiceHandleId(EventMessage* msg);
 
@@ -77,7 +80,7 @@ private:
 
   HandleThread handle_thread_;
 
-  Agents* agents_;
+  NetThreadManager* net_thread_mgr_;
 
   DISALLOW_COPY_ASSIGN_CONSTRUCTION(ServiceManager)
 };

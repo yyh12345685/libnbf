@@ -8,7 +8,7 @@ LOGGER_CLASS_IMPL(logger_, ConfigInfo)
 
 void ServiceConfig::Dump(std::ostream& os) const {
   os << "{\"type\": \"ServiceConfig\""
-    << ", \"slave_thread_count\": " << slave_thread_count
+    << ", \"io_thread_count\": " << io_thread_count
     << ", \"service_handle_thread_count\": " << service_handle_thread_count
     << ", \"service_count\": " << service_count
     << ", \"coroutine_size\": " << coroutine_size
@@ -90,7 +90,7 @@ int ConfigInfo::LoadConfig(const std::string& config_path){
 }
 
 int ConfigInfo::LoadServiceConfig(CIniFileS& ini, ServiceConfig* config){
-  config->slave_thread_count = ini.GetValueInt("io_service", "slave_thread_count", 2);
+  config->io_thread_count = ini.GetValueInt("io_service", "io_thread_count", 2);
   config->service_handle_thread_count = ini.GetValueInt("io_service", "service_handle_thread_count", 2);
   config->service_count = ini.GetValueInt("io_service", "services_count", 1);
 

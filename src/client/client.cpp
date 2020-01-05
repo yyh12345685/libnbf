@@ -192,8 +192,8 @@ void Client::DoSend(EventMessage* message){
   
   message->birthtime = Time::GetCurrentClockTime();
 
-  TRACE(logger_, "SendToSlaveThread,handle_id:" << message->handle_id);
-  service::GetServiceManager().SendToSlaveThread(message);
+  TRACE(logger_, "SendToNetThread,handle_id:" << message->handle_id);
+  service::GetServiceManager().SendToNetThread(message);
 }
 
 EventMessage* Client::DoRecieve(EventMessage* message){

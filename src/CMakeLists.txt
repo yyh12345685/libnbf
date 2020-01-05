@@ -35,10 +35,10 @@ set(BDF_SRC
   protocol/redis/redis_protocol.cpp
   protocol/protocol_base.cpp
 
-  agents/slave_service_data_run.cpp
-  agents/agent_slave.cpp
-  agents/agent_master.cpp
-  agents/agents.cpp
+  net_thread_mgr/io_thread_data_run.cpp
+  net_thread_mgr/io_threads.cpp
+  net_thread_mgr/acceptor_thread.cpp
+  net_thread_mgr/net_thread_mgr.cpp
 
   net/socket.cpp
   net/connect.cpp

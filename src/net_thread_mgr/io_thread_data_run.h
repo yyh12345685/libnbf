@@ -9,12 +9,12 @@ namespace bdf{
 struct HandleData;
 class EventMessage;
 
-class SlaveServiceDataRun:public ThreadDataRun{
+class IoThreadDataRun:public ThreadDataRun{
 public:
-  SlaveServiceDataRun(HandleData* hd_data){
+  IoThreadDataRun(HandleData* hd_data){
       hd_data_ = hd_data;
   }
-  ~SlaveServiceDataRun();
+  ~IoThreadDataRun();
 
   virtual void CallRun();
   void PutMessage(EventMessage* message);

@@ -15,7 +15,7 @@ AsyncClientConnect::AsyncClientConnect(
 AsyncClientConnect::~AsyncClientConnect(){
 }
 
-//由slave线程触发
+//由io线程触发
 void AsyncClientConnect::OnDecodeMessage(EventMessage* message){
   EventMessage* keeper_message = async_sequence_.Get(message->sequence_id);
   TRACE(logger_, "OnDecodeMessage get sequence_id:" << message->sequence_id);

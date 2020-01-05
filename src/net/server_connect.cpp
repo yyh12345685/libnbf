@@ -3,8 +3,7 @@
 #include "common/time.h"
 #include "service/service_manager.h"
 #include "net/connect_manager.h"
-#include "agents/agents.h"
-#include "agents/agent_master.h"
+#include "net_thread_mgr/net_thread_mgr.h"
 
 namespace bdf {
 
@@ -28,7 +27,7 @@ void ServerConnect::OnClose() {
 }
 
 void ServerConnect::Destroy(){
-  service::GetServiceManager().GetAgents()->GetMaster()->AreaseReleasedConnect(this);
+  service::GetServiceManager().ReleaseServerCon(this);
   //BDF_DELETE(this);
 }
 
@@ -53,7 +52,7 @@ int ServerConnect::RegisterDel(int fd){
   if (fd <= 0){
     return -1;
   }
-  return service::GetServiceManager().AgentsDel(this, fd);
+  return service::GetServiceManager().EventDel(this, fd);
 }
 
 }

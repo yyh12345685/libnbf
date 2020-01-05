@@ -1,7 +1,7 @@
 #include "net/async_sequence.h"
 #include "message.h"
 #include "service/service_manager.h"
-#include "agents/agents.h"
+#include "net_thread_mgr/net_thread_mgr.h"
 #include "net/async_client_connect.h"
 
 namespace bdf{
@@ -84,12 +84,12 @@ uint64_t AsyncSequence::StartTimer(void* data){
   td.function_data = data ;
 
   int thread_id = async_client_con_->GetRegisterThreadId();
-  return ServiceManager::GetInstance().GetAgents()->StartTimer(td,thread_id);
+  return ServiceManager::GetInstance().GetNetThreadManager()->StartTimer(td,thread_id);
 }
 
 void AsyncSequence::CancelTimer(uint64_t timer_id){
   int thread_id = async_client_con_->GetRegisterThreadId();
-  ServiceManager::GetInstance().GetAgents()->CancelTimer(timer_id,thread_id);
+  ServiceManager::GetInstance().GetNetThreadManager()->CancelTimer(timer_id,thread_id);
 }
 
 }

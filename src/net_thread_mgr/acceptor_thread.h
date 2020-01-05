@@ -9,16 +9,16 @@
 namespace bdf {
 
 struct ServiceConfig;
-class Agents;
+class NetThreadManager;
 class ServerConnectDelayReleaseMgr;
 class ServerConnect;
 
-class AgentMaster:public EventFunctionBase {
+class AcceptorThread:public EventFunctionBase {
 public:
-  AgentMaster();
-  virtual ~AgentMaster();
+  AcceptorThread();
+  virtual ~AcceptorThread();
 
-  bool Init(const ServiceConfig* confs,const Agents* agents);
+  bool Init(const ServiceConfig* confs,const NetThreadManager* net_thread_mgr);
   bool Start();
   void Stop();
 
@@ -27,13 +27,13 @@ public:
   bool AreaseReleasedConnect(ServerConnect* con);
 protected:
   void AcceptClient(EventDriver *poll,int fd,std::pair<int,int>& server_cate_port);
-  void AcceptClient1(EventDriver *poll,int fd,std::pair<int,int>& server_cate_port);
+  void AcceptClientV1(EventDriver *poll,int fd,std::pair<int,int>& server_cate_port);
 private:
 
   const ServiceConfig* conf_;
-  const Agents* agents_;
+  const NetThreadManager* net_thread_mgr_;
 
-  EventLoopThread master_event_thread_;
+  EventLoopThread event_thread_;
 
   std::unordered_map<int,std::pair<int,int> > listened_fd_list_;
 
@@ -43,7 +43,7 @@ private:
   
   LOGGER_CLASS_DECL(logger_);
 
-  DISALLOW_COPY_AND_ASSIGN(AgentMaster)
+  DISALLOW_COPY_AND_ASSIGN(AcceptorThread)
 };
 
 }

@@ -1,6 +1,6 @@
 #include <time.h>
 #include <queue>
-#include "slave_service_data_run.h"
+#include "io_thread_data_run.h"
 #include "handle_data.h"
 #include "message_base.h"
 #include "service/service_manager.h"
@@ -10,21 +10,21 @@
 
 namespace bdf{
 
-LOGGER_CLASS_IMPL(logger_, SlaveServiceDataRun);
+LOGGER_CLASS_IMPL(logger_, IoThreadDataRun);
 
-SlaveServiceDataRun::~SlaveServiceDataRun(){
+IoThreadDataRun::~IoThreadDataRun(){
   if(nullptr  != hd_data_){
     delete hd_data_;
   }
 }
 
-void SlaveServiceDataRun::PutMessage(EventMessage* message){
+void IoThreadDataRun::PutMessage(EventMessage* message){
   hd_data_->lock_.lock();
   hd_data_->data_.emplace(message);
   hd_data_->lock_.unlock();
 }
 
-void SlaveServiceDataRun::CallRun(){
+void IoThreadDataRun::CallRun(){
   if (hd_data_->data_.empty()){
     return;
   }
@@ -52,8 +52,8 @@ void SlaveServiceDataRun::CallRun(){
   }
 }
 
-void SlaveServiceDataRun::Handle(EventMessage* message){
-  TRACE(logger_, "SlaveServiceDataRun::Handle msg:" << *message);
+void IoThreadDataRun::Handle(EventMessage* message){
+  TRACE(logger_, "IoThreadDataRun::Handle msg:" << *message);
   switch (message->type_io_event) {
   case MessageType::kIoHandleEventMsg:
     HandleIoMessageEvent(message);
@@ -63,12 +63,12 @@ void SlaveServiceDataRun::Handle(EventMessage* message){
     break;
   default:
     MessageFactory::Destroy(message);
-    WARN(logger_, "SlaveServiceDataRun unknown message:" << message->type_id);
+    WARN(logger_, "IoThreadDataRun unknown message:" << message->type_id);
     break;
   }
 }
 
-void SlaveServiceDataRun::HandleIoMessageEvent(EventMessage* message){
+void IoThreadDataRun::HandleIoMessageEvent(EventMessage* message){
   TRACE(logger_, "HandleIoMessageEvent");
   //客户端过载保护
   if (message->direction == EventMessage::kOnlySend
@@ -103,7 +103,7 @@ void SlaveServiceDataRun::HandleIoMessageEvent(EventMessage* message){
   con->OnWrite();
 }
 
-void SlaveServiceDataRun::HandleIoMessageFailed(EventMessage* message) {
+void IoThreadDataRun::HandleIoMessageFailed(EventMessage* message) {
   if (message->direction == EventMessage::kOutgoingRequest) {
     message->status = EventMessage::kInternalFailure;
     service::GetServiceManager().SendToServiceHandle(message);
@@ -112,7 +112,7 @@ void SlaveServiceDataRun::HandleIoMessageFailed(EventMessage* message) {
   }
 }
 
-void SlaveServiceDataRun::HandleIoActiveCloseEvent(EventMessage* message){
+void IoThreadDataRun::HandleIoActiveCloseEvent(EventMessage* message){
   TRACE(logger_, "HandleIoActiveCloseEvent");
 
   Connecting* con = (Connecting*)((void*)(message->descriptor_id));

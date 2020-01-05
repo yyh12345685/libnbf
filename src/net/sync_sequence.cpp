@@ -3,7 +3,7 @@
 #include "common/time.h"
 #include "net/sync_client_connect.h"
 #include "service/service_manager.h"
-#include "agents/agents.h"
+#include "net_thread_mgr/net_thread_mgr.h"
 #include "common/string_util.h"
 
 namespace bdf {
@@ -26,7 +26,7 @@ uint64_t SyncSequence::StartTimer(){
   td.function_data = nullptr;
   //这里只是用来驱动超时检测,3ms之后执行OnTimer
   int thread_id = sync_client_con_->GetRegisterThreadId();
-  return ServiceManager::GetInstance().GetAgents()->StartTimer(td,thread_id);
+  return ServiceManager::GetInstance().GetNetThreadManager()->StartTimer(td,thread_id);
 }
 
 int SyncSequence::Put(EventMessage* message) {
@@ -51,7 +51,8 @@ EventMessage* SyncSequence::Get() {
 
   if (nullptr != fired && fired->timer_out_id > 0) {
     int thread_id = sync_client_con_->GetRegisterThreadId();
-    ServiceManager::GetInstance().GetAgents()->CancelTimer(fired->timer_out_id,thread_id);
+    ServiceManager::GetInstance().GetNetThreadManager()->CancelTimer(
+      fired->timer_out_id,thread_id);
     TRACE(logger_, "have response cancel timer id:" << fired->timer_out_id);
   }else{
     WARN(logger_, "fired:" << fired << ",not cancel timer id:" << fired->timer_out_id);

@@ -4,23 +4,23 @@
 #include <vector>
 #include "event/event_loop_thread.h"
 #include "common/common.h"
-#include "slave_service_data_run.h"
 
 namespace bdf {
 
-class Agents;
+class NetThreadManager;
+class IoThreadDataRun;
 class EventFunctionBase;
 class EventMessage;
 
-class AgentSlave {
+class IoThreads {
 
 public:
-  AgentSlave();
-  bool Init(int slave_thread_count);
+  IoThreads();
+  bool Init(int io_thread_count);
   bool Start();
 
   void Stop();
-  virtual ~AgentSlave();
+  virtual ~IoThreads();
 
   int AddModrw(
     EventFunctionBase *ezfd, int fd, bool set, bool lock,int& register_thread_id);
@@ -31,16 +31,16 @@ public:
 
   void PutMessageToHandle(EventMessage* msg);
 
-  uint64_t StartTimer(TimerData& data,int slave_thread_id);
-  void CancelTimer(uint64_t timer_id,int slave_thread_id);
+  uint64_t StartTimer(TimerData& data,int io_thread_id);
+  void CancelTimer(uint64_t timer_id,int io_thread_id);
 private:
 
   LOGGER_CLASS_DECL(logger_);
 private:
-  std::vector<EventLoopThread*> slave_event_threads_;
-  std::vector<SlaveServiceDataRun*>slaves_service_data_run_;
+  std::vector<EventLoopThread*> event_threads_;
+  std::vector<IoThreadDataRun*>io_thread_data_run_;
 
-  DISALLOW_COPY_AND_ASSIGN(AgentSlave)
+  DISALLOW_COPY_AND_ASSIGN(IoThreads)
 };
 
 }

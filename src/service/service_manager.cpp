@@ -2,7 +2,7 @@
 #include <functional>
 #include <atomic>
 #include "service/service_manager.h"
-#include "agents/agents.h"
+#include "net_thread_mgr/net_thread_mgr.h"
 #include "service/service_handle.h"
 #include "net/connect.h"
 #include "message_base.h"
@@ -16,9 +16,9 @@ namespace bdf{
 LOGGER_CLASS_IMPL(logger_, ServiceManager);
 
 int ServiceManager::Init(const ServiceConfig& config){
-  agents_ = BDF_NEW(Agents,&config);
-  if (!agents_->Init()){
-    BDF_DELETE (agents_);
+  net_thread_mgr_ = BDF_NEW(NetThreadManager,&config);
+  if (!net_thread_mgr_->Init()){
+    BDF_DELETE (net_thread_mgr_);
     return -1;
   }
 
@@ -32,7 +32,7 @@ int ServiceManager::Init(const ServiceConfig& config){
 }
 
 int ServiceManager::Start(ServiceHandler* handle){
-  if (!agents_->Start()){
+  if (!net_thread_mgr_->Start()){
     delete handle;
     return -1;
   }
@@ -72,13 +72,13 @@ int ServiceManager::ThreadStop(){
 }
 
 int ServiceManager::Stop(){
-  agents_->Stop();
+  net_thread_mgr_->Stop();
 
   ThreadStop();
   ThreadWait();
 
-  if (agents_ != nullptr) {
-    BDF_DELETE(agents_);
+  if (net_thread_mgr_ != nullptr) {
+    BDF_DELETE(net_thread_mgr_);
   }
 
   monitor::GlobalMatrix::Destroy();
@@ -89,19 +89,19 @@ int ServiceManager::Wait(){
   return ThreadWait();
 }
 
-void ServiceManager::SendCloseToSlaveThread(EventMessage* msg){
+void ServiceManager::SendCloseToNetThread(EventMessage* msg){
   msg->type_io_event = MessageType::kIoActiveCloseEvent;
-  SendToSlaveThreadInner(msg);
+  SendToNetThreadInner(msg);
 }
 
 void ServiceManager::Reply(EventMessage* message){
   message->direction = EventMessage::kOutgoingResponse;
-  SendToSlaveThread(message);
+  SendToNetThread(message);
 }
 
-void ServiceManager::SendToSlaveThread(EventMessage* msg){
+void ServiceManager::SendToNetThread(EventMessage* msg){
   msg->type_io_event = MessageType::kIoHandleEventMsg;
-  SendToSlaveThreadInner(msg);
+  SendToNetThreadInner(msg);
 }
 
 uint32_t ServiceManager::GetServiceHandleId(EventMessage* msg){
@@ -136,8 +136,8 @@ void ServiceManager::SendTaskToServiceHandle(Task* task){
   hd->lock_task_.unlock();
 }
 
-void ServiceManager::SendToSlaveThreadInner(EventMessage* msg){
-  agents_->PutMessageToHandle(msg);
+void ServiceManager::SendToNetThreadInner(EventMessage* msg){
+  net_thread_mgr_->PutMessageToHandle(msg);
 }
 
 const std::string& ServiceManager::GetMonitorReport(){
@@ -152,18 +152,22 @@ const std::string& ServiceManager::GetMonitorReport(){
   }
 }
 
-int ServiceManager::AgentsAddModrw(
+int ServiceManager::EventAddModrw(
   EventFunctionBase* ezfd, int fd,int& register_thread_id){
-  return agents_->AddModrw(ezfd, fd, true,false,register_thread_id);
+  return net_thread_mgr_->AddModrw(ezfd, fd, true,false,register_thread_id);
 }
 
-int ServiceManager::AgentsAddModr(
+int ServiceManager::EventAddModr(
   EventFunctionBase* ezfd, int fd,int& register_thread_id){
-  return agents_->AddModr(ezfd, fd,true,false,register_thread_id);
+  return net_thread_mgr_->AddModr(ezfd, fd,true,false,register_thread_id);
 }
 
-int ServiceManager::AgentsDel(EventFunctionBase* ezfd, int fd){
-  return agents_->Del(ezfd, fd);
+int ServiceManager::EventDel(EventFunctionBase* ezfd, int fd){
+  return net_thread_mgr_->Del(ezfd, fd);
+}
+
+void ServiceManager::ReleaseServerCon(ServerConnect* svr_con){
+  net_thread_mgr_->ReleaseServerCon(svr_con);
 }
 
 namespace service {

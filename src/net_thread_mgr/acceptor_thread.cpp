@@ -1,7 +1,7 @@
 
-#include "agents/agent_master.h"
-#include "agents/agent_slave.h"
-#include "agents/agents.h"
+#include "net_thread_mgr/acceptor_thread.h"
+#include "net_thread_mgr/io_threads.h"
+#include "net_thread_mgr/net_thread_mgr.h"
 #include "protocol/protocol_helper.h"
 #include "protocol/protocol_base.h"
 #include "net/socket.h"
@@ -12,24 +12,25 @@
 
 namespace bdf {
 
-LOGGER_CLASS_IMPL(logger_, AgentMaster);
+LOGGER_CLASS_IMPL(logger_, AcceptorThread);
 
-AgentMaster::AgentMaster() :
+AcceptorThread::AcceptorThread() :
   conf_(nullptr),
   release_mgr_(new ServerConnectDelayReleaseMgr()),
   idle_fd_(open("/dev/null", O_RDONLY | O_CLOEXEC)){
 }
 
-AgentMaster::~AgentMaster() {
+AcceptorThread::~AcceptorThread() {
   if (release_mgr_ != nullptr){
     delete release_mgr_;
   }
   close(idle_fd_);
 }
 
-bool AgentMaster::Init(const ServiceConfig* confs,const Agents* agents){
+bool AcceptorThread::Init(
+  const ServiceConfig* confs,const NetThreadManager* net_thread_mgr){
   conf_ = confs;
-  agents_ = agents;
+  net_thread_mgr_ = net_thread_mgr;
 
   for (const auto& addr:conf_->server_config){
     char ip[1024];
@@ -42,14 +43,14 @@ bool AgentMaster::Init(const ServiceConfig* confs,const Agents* agents){
 
     int fd = Socket::Listen(ip, port, 20480);
     if (fd<0){
-      WARN(logger_, "AgentMaster::Init SocketHelper::Listen error, ip:"
+      WARN(logger_, "AcceptorThread::Init SocketHelper::Listen error, ip:"
 					<< ip <<"port:"<<port<<",fd,"<<fd << " errno:" << errno);
       continue;
     }
 
-    if (0!=master_event_thread_.Add(fd, this) 
-      || 0!= master_event_thread_.Modr(fd, true)){
-      WARN(logger_, "AgentMaster::Init Add or Modr error, ip:"
+    if (0!=event_thread_.Add(fd, this) 
+      || 0!= event_thread_.Modr(fd, true)){
+      WARN(logger_, "AcceptorThread::Init Add or Modr error, ip:"
 					<< ip << "port:" << port <<",fd:"<<fd);
       Socket::Close(fd);
       continue;
@@ -67,19 +68,19 @@ bool AgentMaster::Init(const ServiceConfig* confs,const Agents* agents){
   return true;
 }
 
-void AgentMaster::OnEvent(EventDriver *poll, int fd, short event){
+void AcceptorThread::OnEvent(EventDriver *poll, int fd, short event){
   const auto& listen_it = listened_fd_list_.find(fd);
 
   if (listen_it == listened_fd_list_.end()){
-    WARN(logger_, "AgentMaster::OnEvent error fd event fd:" << fd );
+    WARN(logger_, "AcceptorThread::OnEvent error fd event fd:" << fd );
     return;
   }
 
   //AcceptClient(poll,fd,listen_it->second);
-  AcceptClient1(poll,fd,listen_it->second);
+  AcceptClientV1(poll,fd,listen_it->second);
 }
 
-void AgentMaster::AcceptClient(
+void AcceptorThread::AcceptClient(
   EventDriver *poll, int fd,std::pair<int,int>& server_cate_port){
   int cate = server_cate_port.first;
   int listen_port = server_cate_port.second;
@@ -95,7 +96,7 @@ void AgentMaster::AcceptClient(
     svr_con->SetPort(port);
     svr_con->SetProtocol(cate);
     int register_thread_id = -1;
-    if (0!= agents_->GetSlave()->AddModr(
+    if (0!= net_thread_mgr_->GetIoThreads()->AddModr(
       svr_con, sock, true,false,register_thread_id)){
       WARN(logger_, "AddModr faild,fd:"<<sock<<",reg tid:"<<register_thread_id);
       BDF_DELETE(svr_con);
@@ -116,7 +117,7 @@ void AgentMaster::AcceptClient(
   }
 }
 
-void AgentMaster::AcceptClient1(
+void AcceptorThread::AcceptClientV1(
   EventDriver *poll, int fd,std::pair<int,int>& server_cate_port){
   //surport ipv6
   int cate = server_cate_port.first;
@@ -125,6 +126,7 @@ void AgentMaster::AcceptClient1(
   int port;
   int sock = 0;
   while(true){
+    //Accept4在容器中压测时看起来效率并不高
     sock = Socket::Accept4(fd, ip, &port);
     if(sock>0){
       ServerConnect* svr_con = BDF_NEW(ServerConnect);
@@ -135,7 +137,7 @@ void AgentMaster::AcceptClient1(
       svr_con->SetPort(port);
       svr_con->SetProtocol(cate);
       int register_thread_id = -1;
-      if (0!= agents_->GetSlave()->AddModr(
+      if (0!= net_thread_mgr_->GetIoThreads()->AddModr(
         svr_con, sock, true,false,register_thread_id)){
         WARN(logger_, "AddModr faild,fd:"<<sock<<",reg tid:"<<register_thread_id);
         BDF_DELETE(svr_con);
@@ -153,29 +155,28 @@ void AgentMaster::AcceptClient1(
         close(fd_tmp);
         idle_fd_ = ::open("/dev/null", O_RDONLY | O_CLOEXEC);
         INFO(logger_, "tmp fd:"<<fd_tmp<<",idle_file fd:"<< idle_fd_);
-      } //else if (errno == EAGAIN)
-      {
-        break;
-      }
+      } 
+      //else if (errno == EAGAIN)
+      break;
     }
   }
 }
 
-bool AgentMaster::AreaseReleasedConnect(ServerConnect* con){
+bool AcceptorThread::AreaseReleasedConnect(ServerConnect* con){
   return release_mgr_->SetRelease(con);
 }
 
-bool AgentMaster::Start() {
-  int ret = master_event_thread_.Start();
+bool AcceptorThread::Start() {
+  int ret = event_thread_.Start();
   if (0!=ret) {
     return false;
   }
   return true;
 }
 
-void AgentMaster::Stop() {
-  INFO(logger_, "AgentMaster::Stop.");
-  master_event_thread_.Stop();
+void AcceptorThread::Stop() {
+  INFO(logger_, "AcceptorThread::Stop.");
+  event_thread_.Stop();
 }
 
 }

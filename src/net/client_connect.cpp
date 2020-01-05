@@ -3,7 +3,7 @@
 #include "service/service_manager.h"
 #include "net/socket.h"
 #include "service/service_manager.h"
-#include "agents/agents.h"
+#include "net_thread_mgr/net_thread_mgr.h"
 #include "net/client_reconnect_thread.h"
 
 namespace bdf{
@@ -245,23 +245,23 @@ void ClientConnect::CleanClient(){
 int ClientConnect::Stop(){
   EventMessage* msg = MessageFactory::Allocate<EventMessage>(0);
   msg->descriptor_id = (int64_t)((void*)this);
-  service::GetServiceManager().SendCloseToSlaveThread(msg);
+  service::GetServiceManager().SendCloseToNetThread(msg);
   return 0;
 }
 
 int ClientConnect::RegisterAddModrw(int fd,int& register_thread_id){
-  return service::GetServiceManager().AgentsAddModrw(this, fd,register_thread_id);
+  return service::GetServiceManager().EventAddModrw(this, fd,register_thread_id);
 }
 
 int ClientConnect::RegisterAddModr(int fd,int& register_thread_id) {
-  return service::GetServiceManager().AgentsAddModr(this, fd,register_thread_id);
+  return service::GetServiceManager().EventAddModr(this, fd,register_thread_id);
 }
 
 int ClientConnect::RegisterDel(int fd){
   if (fd <= 0) {
     return -1;
   }
-  return service::GetServiceManager().AgentsDel(this,fd);
+  return service::GetServiceManager().EventDel(this,fd);
 }
 
 }

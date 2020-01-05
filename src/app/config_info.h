@@ -15,7 +15,7 @@ struct ServerConfig {
 
 struct ServiceConfig {
   ServiceConfig(): 
-    slave_thread_count(2),
+    io_thread_count(2),
     service_handle_thread_count(2),
     service_count(1),
     coroutine_size(256),
@@ -24,7 +24,7 @@ struct ServiceConfig {
     monitor_queue_size(1024 * 128) {
   }
 
-  int slave_thread_count;
+  int io_thread_count;
   int service_handle_thread_count;
   int service_count;
   std::vector<ServerConfig> server_config;
