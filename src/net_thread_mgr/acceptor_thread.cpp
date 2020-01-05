@@ -76,8 +76,8 @@ void AcceptorThread::OnEvent(EventDriver *poll, int fd, short event){
     return;
   }
 
-  //AcceptClient(poll,fd,listen_it->second);
-  AcceptClientV1(poll,fd,listen_it->second);
+  AcceptClient(poll,fd,listen_it->second);
+  //AcceptClientV1(poll,fd,listen_it->second);
 }
 
 void AcceptorThread::AcceptClient(
@@ -126,7 +126,7 @@ void AcceptorThread::AcceptClientV1(
   int port;
   int sock = 0;
   while(true){
-    //Accept4在容器中压测时看起来效率并不高
+    //Accept4压测的时候效率并不高?
     sock = Socket::Accept4(fd, ip, &port);
     if(sock>0){
       ServerConnect* svr_con = BDF_NEW(ServerConnect);
