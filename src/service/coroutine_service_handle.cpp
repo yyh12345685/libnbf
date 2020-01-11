@@ -36,7 +36,8 @@ void CoroutineServiceHandler::Run(HandleData* data){
 
     if (CoroutineContext::GetCurCoroutineId() < 0) {
       int coro_id = scheduler->GetAvailableCoroId();
-      TRACE(logger_, "CoroutineResume available coro id:"<< coro_id);
+      //想看详细日志可以打开
+      //TRACE(logger_, "CoroutineResume available coro id:"<< coro_id);
       if (coro_id < 0){
         continue;
       }

@@ -9,6 +9,7 @@
 #include "net/socket.h"
 #include "event/event_driver.h"
 #include "thread_data_run.h"
+#include "common/thread_id.h"
 
 namespace bdf {
 
@@ -36,6 +37,7 @@ EventDriver::~EventDriver(){
 }
 
 int EventDriver::Run(){
+  event_notifier_.SetEventThreadId(ThreadId::Get());
   run_ = true;
   while (run_){
     this->Poll(1);
