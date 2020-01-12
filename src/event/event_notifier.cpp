@@ -60,6 +60,7 @@ int EventNotifier::InitWakeup(){
 }
 
 int EventNotifier::Wakeup(){
+  //测试下来,做不做唤醒效率差异不大?
   TRACE(logger_, "EventDriver::Wakeup.");
   if(event_thread_id_ == ThreadId::Get()){
     TRACE(logger_, "event_thread_id_ == ThreadId::Get().");
