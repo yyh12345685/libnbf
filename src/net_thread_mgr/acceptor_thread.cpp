@@ -76,8 +76,8 @@ void AcceptorThread::OnEvent(EventDriver *poll, int fd, short event){
     return;
   }
 
-  AcceptClient(poll,fd,listen_it->second);
-  //AcceptClientV1(poll,fd,listen_it->second);
+  //AcceptClient(poll,fd,listen_it->second);
+  AcceptClientV1(poll,fd,listen_it->second);
 }
 
 void AcceptorThread::AcceptClient(

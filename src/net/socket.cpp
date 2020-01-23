@@ -122,21 +122,22 @@ int Socket::Accept(int listen_fd, char* ipbuf, int* port){
 }
 
 int Socket::Accept4(int listen_fd, char* ipbuf, int* port){
-  int fd = -1;
+  int new_fd = -1;
   struct sockaddr addr;
   socklen_t len = static_cast<socklen_t>(sizeof(addr));
-  while ((fd = accept4(listen_fd, &addr, &len, SOCK_NONBLOCK | SOCK_CLOEXEC)) < 0 && errno == EINTR) {
-    //TRACE(logger_, "test---------------------");
+  while (true) {
+    new_fd = accept4(listen_fd, &addr, &len, SOCK_NONBLOCK | SOCK_CLOEXEC);
+    if (new_fd < 0){
+      if (errno == EINTR){
+        continue;
+      }else{
+        return -1;
+      }
+    }
+    break;
   }
 
-  if(-1 != fd && nullptr != ipbuf && nullptr != port){
-    bool ret = SetNonBlock(fd);
-    if (!ret) 
-      return -2;
-
-    if(!SetNoDelay(fd,1)){
-      WARN(logger_, "set nodelay error %s" << strerror(errno));
-    }
+  if(-1 != new_fd && nullptr != ipbuf && nullptr != port){
     switch (addr.sa_family) {
     case AF_INET: {
       auto addrv4 = reinterpret_cast<sockaddr_in*>(&addr);
@@ -154,7 +155,7 @@ int Socket::Accept4(int listen_fd, char* ipbuf, int* port){
       break;
   }
   }
-  return fd;
+  return new_fd;
 }
 
 int Socket::WriteNonBlock(int fd, const void* buf, size_t count) {
