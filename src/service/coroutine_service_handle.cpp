@@ -28,6 +28,8 @@ void CoroutineServiceHandler::Run(HandleData* data){
   int coro_id = scheduler->GetAvailableCoroId();
   scheduler->CoroutineResume(coro_id);
 
+  debug_time_ = time(NULL);
+
   while (data->is_run) {
     //这里负责切换到协程，所有业务都在协程中处理
     if (scheduler->CoroutineResumeActive()){
@@ -162,7 +164,16 @@ void CoroutineServiceHandler::ProcessMessageHandle(std::queue<EventMessage*>& ms
   TRACE(logger_, "handle id:" << GetHandlerId()
     << ",ProcessMessage size:" << msg_list.size());
   CoroutineSchedule* scheduler = CoroutineContext::Instance().GetScheduler();
+  size_t handle_size = msg_list.size();
   while (!msg_list.empty()) {
+    //for debug begin-------------
+    time_t cur_time = time(NULL);
+    if ((cur_time - debug_time_) > 60 && handle_size == msg_list.size()) {
+      INFO(logger_, "ThreadId:" << ThreadId::Get()
+        << ",handle size:" << handle_size);
+      debug_time_ = cur_time;
+    }
+    //for debug end---------------
     EventMessage *msg = msg_list.front();
     msg_list.pop();
 

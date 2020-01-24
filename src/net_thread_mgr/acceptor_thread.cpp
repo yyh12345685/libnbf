@@ -126,7 +126,6 @@ void AcceptorThread::AcceptClientV1(
   int port;
   int sock = 0;
   while(true){
-    //Accept4压测的时候效率并不高?
     sock = Socket::Accept4(fd, ip, &port);
     if(sock>0){
       ServerConnect* svr_con = BDF_NEW(ServerConnect);

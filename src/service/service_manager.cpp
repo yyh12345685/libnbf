@@ -75,7 +75,7 @@ int ServiceManager::Stop(){
   net_thread_mgr_->Stop();
 
   ThreadStop();
-  ThreadWait();
+  //ThreadWait();
 
   if (net_thread_mgr_ != nullptr) {
     BDF_DELETE(net_thread_mgr_);
