@@ -123,7 +123,7 @@ void CoroutineServiceHandler::Process(HandleData* data){
   CoroutineSchedule* scheduler = CoroutineContext::Instance().GetScheduler();
   int static empty_times = 0;
   if (data->data_.empty()) {
-    usleep(100);
+    usleep(200);
     empty_times++;
     if (0 == empty_times % 10){
       scheduler->CoroutineYield();

@@ -12,9 +12,10 @@ namespace bdf {
 
 LOGGER_CLASS_IMPL(logger_, Socket);
 
-int Socket::CreateSocket(bool is_non_block) {
+int Socket::CreateSocket(bool is_non_block,bool ipv6) {
+  int domain = ipv6 ? AF_INET6 : AF_INET;
   int ret, on;
-  int fd = socket(AF_INET, SOCK_STREAM,0);
+  int fd = socket(domain, SOCK_STREAM,0);
   if (fd <= 0 ){
 		WARN(logger_, "creating socket: %s"<< strerror(errno));
     return -1;
@@ -52,7 +53,7 @@ int Socket::CreateSocket(bool is_non_block) {
 
 }
 
-int Socket::Listen(const char *addr, int port, size_t backlog){
+int Socket::Listen(const char *addr, int port, size_t backlog,bool ipv6){
   struct sockaddr_in sa;
   memset(&sa, 0, sizeof(sa));
   sa.sin_family = AF_INET;
@@ -64,14 +65,13 @@ int Socket::Listen(const char *addr, int port, size_t backlog){
   return Listen(sa, backlog);
 }
 
-int Socket::Listen(const sockaddr_in& addr, size_t backlog) {
-  int ret;
-  int fd = CreateSocket();
+int Socket::Listen(const sockaddr_in& addr, size_t backlog,bool ipv6) {
+  int fd = CreateSocket(true,ipv6);
   if (fd < 0){
     return -2;
   }
 
-  ret = bind(fd, reinterpret_cast<const sockaddr*>(&addr), sizeof(addr));
+  int ret = bind(fd, reinterpret_cast<const sockaddr*>(&addr), sizeof(addr));
   if (0 != ret){
 		WARN(logger_, "fd:"<<fd<<",bind: %s" << strerror(errno));
     if (fd>0){

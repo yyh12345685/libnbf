@@ -14,7 +14,7 @@ public:
   IoThreadDataRun(HandleData* hd_data){
       hd_data_ = hd_data;
   }
-  ~IoThreadDataRun();
+  virtual ~IoThreadDataRun();
 
   virtual void CallRun();
   void PutMessage(EventMessage* message);

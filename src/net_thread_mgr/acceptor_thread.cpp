@@ -41,7 +41,7 @@ bool AcceptorThread::Init(
       continue;
     }
 
-    int fd = Socket::Listen(ip, port, 20480);
+    int fd = Socket::Listen(ip, port, 20480,false);
     if (fd<0){
       WARN(logger_, "AcceptorThread::Init SocketHelper::Listen error, ip:"
 					<< ip <<"port:"<<port<<",fd,"<<fd << " errno:" << errno);
@@ -76,8 +76,8 @@ void AcceptorThread::OnEvent(EventDriver *poll, int fd, short event){
     return;
   }
 
-  //AcceptClient(poll,fd,listen_it->second);
-  AcceptClientV1(poll,fd,listen_it->second);
+  AcceptClient(poll,fd,listen_it->second);
+  //AcceptClientV1(poll,fd,listen_it->second);
 }
 
 void AcceptorThread::AcceptClient(
@@ -120,6 +120,7 @@ void AcceptorThread::AcceptClient(
 void AcceptorThread::AcceptClientV1(
   EventDriver *poll, int fd,std::pair<int,int>& server_cate_port){
   //surport ipv6
+  //如果时ip v6需配合Listen传入参数,该函数还有待验证
   int cate = server_cate_port.first;
   int listen_port = server_cate_port.second;
   char ip[256];
@@ -127,7 +128,7 @@ void AcceptorThread::AcceptClientV1(
   int sock = 0;
   while(true){
     sock = Socket::Accept4(fd, ip, &port);
-    if(sock>0){
+    if(sock>=0){
       ServerConnect* svr_con = BDF_NEW(ServerConnect);
       std::string ip_str;
       ip_str.assign(ip, strlen(ip));
@@ -154,9 +155,9 @@ void AcceptorThread::AcceptClientV1(
         close(fd_tmp);
         idle_fd_ = ::open("/dev/null", O_RDONLY | O_CLOEXEC);
         INFO(logger_, "tmp fd:"<<fd_tmp<<",idle_file fd:"<< idle_fd_);
-      } 
-      //else if (errno == EAGAIN)
-      break;
+      } else if (errno == EAGAIN){
+        break;
+      }
     }
   }
 }
