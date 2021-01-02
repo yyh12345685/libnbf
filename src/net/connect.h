@@ -9,7 +9,6 @@ namespace bdf{
 
 class EventDriver;
 class EventMessage;
-class IoService;
 
 class Connecting : public EventFunctionBase{
 public:
@@ -43,7 +42,6 @@ public:
 
   virtual void OnClose() = 0;
 
-  //用于客户端
   virtual bool IsServer() = 0;
 
   int64_t GetConnectId() { return connect_id_; }

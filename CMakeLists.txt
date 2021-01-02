@@ -1,4 +1,4 @@
-#Basic Development Framework
+#Basic Net Framework
 
 cmake_minimum_required(VERSION 3.4.3)
 

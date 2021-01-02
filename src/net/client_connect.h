@@ -29,9 +29,13 @@ public:
   int TryConnect();
   int Stop();
 
-  virtual int RegisterAddModrw(int fd);
-  virtual int RegisterAddModr(int fd);
-  virtual int RegisterDel(int fd);
+  int RegisterAddModrw(int fd,int& register_thread_id);
+  int RegisterAddModr(int fd,int& register_thread_id);
+  int RegisterDel(int fd);
+
+  int GetRegisterThreadId(){
+    return register_thread_id_;
+  }
 
   inline int GetStatus() const { return status_; }
   inline void SetStatus(int status) { status_ = status; }
@@ -74,8 +78,10 @@ private:
   uint32_t timeout_ms_;
   uint32_t heartbeat_ms_;
 
-  uint64_t reconnect_timer_ = 0;
-  uint64_t heartbeat_timer_= 0;
+  uint64_t reconnect_timer_;
+  uint64_t heartbeat_timer_;
+
+  int register_thread_id_;
 
   //HeartBeatTimer heart_beat_timer_;
 };

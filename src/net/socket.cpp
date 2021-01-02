@@ -12,9 +12,10 @@ namespace bdf {
 
 LOGGER_CLASS_IMPL(logger_, Socket);
 
-int Socket::CreateSocket(bool is_non_block) {
+int Socket::CreateSocket(bool is_non_block,bool ipv6) {
+  int domain = ipv6 ? AF_INET6 : AF_INET;
   int ret, on;
-  int fd = socket(AF_INET, SOCK_STREAM,0);
+  int fd = socket(domain, SOCK_STREAM,0);
   if (fd <= 0 ){
 		WARN(logger_, "creating socket: %s"<< strerror(errno));
     return -1;
@@ -39,12 +40,20 @@ int Socket::CreateSocket(bool is_non_block) {
 	if(!SetNoDelay(fd,1)){
     Close(fd);
 		WARN(logger_, "set nodelay error: %s" << strerror(errno));
+    return -4;
 	}
+
+  ret = SetCloseWait(fd, 0);
+  if (0 != ret){
+		WARN(logger_, "SetCloseWait errno: %s" << strerror(errno));
+    Close(fd);
+    return -5;
+  }
   return fd;
 
 }
 
-int Socket::Listen(const char *addr, int port, size_t backlog){
+int Socket::Listen(const char *addr, int port, size_t backlog,bool ipv6){
   struct sockaddr_in sa;
   memset(&sa, 0, sizeof(sa));
   sa.sin_family = AF_INET;
@@ -56,14 +65,13 @@ int Socket::Listen(const char *addr, int port, size_t backlog){
   return Listen(sa, backlog);
 }
 
-int Socket::Listen(const sockaddr_in& addr, size_t backlog) {
-  int ret;
-  int fd = CreateSocket();
-  if (fd<0){
+int Socket::Listen(const sockaddr_in& addr, size_t backlog,bool ipv6) {
+  int fd = CreateSocket(true,ipv6);
+  if (fd < 0){
     return -2;
   }
 
-  ret = bind(fd, reinterpret_cast<const sockaddr*>(&addr), sizeof(addr));
+  int ret = bind(fd, reinterpret_cast<const sockaddr*>(&addr), sizeof(addr));
   if (0 != ret){
 		WARN(logger_, "fd:"<<fd<<",bind: %s" << strerror(errno));
     if (fd>0){
@@ -81,7 +89,6 @@ int Socket::Listen(const sockaddr_in& addr, size_t backlog) {
     return -4;
   }
   return fd;
-
 }
 
 int Socket::Accept(int listen_fd, char* ipbuf, int* port){
@@ -110,6 +117,43 @@ int Socket::Accept(int listen_fd, char* ipbuf, int* port){
 
   if (nullptr !=port){
     *port = ntohs(addr.sin_port);
+  }
+  return new_fd;
+}
+
+int Socket::Accept4(int listen_fd, char* ipbuf, int* port){
+  int new_fd = -1;
+  struct sockaddr addr;
+  socklen_t len = static_cast<socklen_t>(sizeof(addr));
+  while (true) {
+    new_fd = accept4(listen_fd, &addr, &len, SOCK_NONBLOCK | SOCK_CLOEXEC);
+    if (new_fd < 0){
+      if (errno == EINTR){
+        continue;
+      }else{
+        return -1;
+      }
+    }
+    break;
+  }
+
+  if(-1 != new_fd && nullptr != ipbuf && nullptr != port){
+    switch (addr.sa_family) {
+    case AF_INET: {
+      auto addrv4 = reinterpret_cast<sockaddr_in*>(&addr);
+      inet_ntop(AF_INET, reinterpret_cast<const void *>(&addrv4->sin_addr), ipbuf, INET_ADDRSTRLEN);
+      *port = ntohs(addrv4->sin_port);
+      break;
+    }
+    case AF_INET6: {
+      auto addrv6 = reinterpret_cast<sockaddr_in6*>(&addr);
+      inet_ntop(AF_INET6, reinterpret_cast<const void *>(&addrv6->sin6_addr), ipbuf, INET6_ADDRSTRLEN);
+      *port = ntohs(addrv6->sin6_port);
+      break;
+    }
+    default:
+      break;
+  }
   }
   return new_fd;
 }
@@ -302,6 +346,20 @@ sockaddr_in Socket::GenerateAddr(const char *ip, const unsigned short port) {
   sa.sin_addr.s_addr = htonl(INADDR_ANY);
   inet_aton(ip, &sa.sin_addr);
   return sa;
+}
+
+int Socket::SetCloseWait(int fd,int delay){
+  struct linger ling;
+  //在close socket调用后, 但是还有数据没发送完毕的时候容许逗留
+  ling.l_onoff = 1;
+  if(delay <=0 ){
+    ling.l_linger = 0;//容许逗留的时间为0秒
+  }else{
+    ling.l_linger = delay;  //容许逗留的时间为delay秒
+  }
+  
+  int ret = setsockopt(fd, SOL_SOCKET, SO_LINGER, (&ling), (sizeof(linger)));
+  return ret;
 }
 
 }

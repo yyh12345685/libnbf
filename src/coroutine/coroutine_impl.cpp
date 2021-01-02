@@ -104,7 +104,8 @@ void CoroutineImpl::CoroutineResume(CoroSchedule* corotine, int id) {
   if (nullptr == coctx)
     return;
   int status = coctx->status;
-  TRACE(logger_, "status:" << status << ",running id:" << corotine->running);
+  //想看详细日志可以打开
+  //TRACE(logger_, "status:" << status << ",running id:" << corotine->running);
   switch (status) {
   case kCoroutineReady: {
     getcontext(&coctx->ctx);
@@ -128,7 +129,8 @@ void CoroutineImpl::CoroutineResume(CoroSchedule* corotine, int id) {
     WARN(logger_, "unkown status:" << status);
     break;
   }
-  TRACE(logger_, "changed status:" << status << ",running id:" << corotine->running);
+  //想看详细日志可以打开
+  //TRACE(logger_, "changed status:" << status << ",running id:" << corotine->running);
 }
 
 void CoroutineImpl::SaveStack(CoroutineActor* coctx, char *top){

@@ -28,8 +28,19 @@ find_library(GTEST_LIBRARIES libgtest.a /usr/local/lib NO_DEFAULT_PATH)
 message(STATUS "gtest include: " ${GTEST_INCLUDE_DIRS})
 message(STATUS "gtest library: " ${GTEST_LIBRARIES})
 
-#tc molloc
-find_library(TCMALLOC_LIBRARIES NAMES libtcmalloc.a tcmalloc)
-MESSAGE(STATUS "tcmalloce library:" ${TCMALLOC_LIBRARIES})
+#tcmalloc include libunwind and libtcmalloc
+#1:./configure
+#2:make
+#3:sudo make install
 find_library(UNWIND_LIBRARIES NAMES libunwind.a unwind)
 MESSAGE(STATUS "unwind library:" ${UNWIND_LIBRARIES})
+
+#1:unzip gperftools-2.7.zip
+#1:cd gperftools-gperftools-2.7
+#3:sh autogen.sh
+#4:./configure
+#5:make
+#6:sudo make install
+find_library(TCMALLOC_LIBRARIES NAMES libtcmalloc.a tcmalloc)
+MESSAGE(STATUS "tcmalloce library:" ${TCMALLOC_LIBRARIES})
+

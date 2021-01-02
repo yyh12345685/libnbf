@@ -20,7 +20,7 @@ public:
 
   void CoroutineYield(int coro_id);
 
-  //¹ÒÆğÔËĞĞÖĞµÄĞ­³Ì
+  //æŒ‚èµ·è¿è¡Œä¸­çš„åç¨‹
   void CoroutineYield();
 
   bool CoroutineYieldToActive(int coro_id);
@@ -31,11 +31,11 @@ public:
 
   CoroutineActor* GetCoroutineCtx(int id);
 
-  //Æô¶¯Ğ­³Ì»òÕß»Ö¸´ÓĞ·µ»ØµÄĞ­³Ì
+  //å¯åŠ¨åç¨‹æˆ–è€…æ¢å¤æœ‰è¿”å›çš„åç¨‹
   bool CoroutineResumeActive();
-  //Æô¶¯Ğ­³Ì»òÕß»Ö¸´¹ÒÆğµÄĞ­³Ì
+  //å¯åŠ¨åç¨‹æˆ–è€…æ¢å¤æŒ‚èµ·çš„åç¨‹
   void CoroutineResume(int id);
-  //»ñÈ¡ÕıÔÚÔËĞĞµÄĞ­³Ìid
+  //è·å–æ­£åœ¨è¿è¡Œçš„åç¨‹id
   int GetRunningId();
 
   void ProcessDebug();
@@ -54,11 +54,11 @@ private:
 
 private:
 
-  std::vector<int> all_coro_list_;//È«²¿
+  std::vector<int> all_coro_list_;//å…¨éƒ¨
 
-  std::unordered_set<int> available_coro_list_;//¿ÉÓÃµÄ
+  std::unordered_set<int> available_coro_list_;//å¯ç”¨çš„
 
-  //ÈÎÎñ½áÊøµÄĞ­³Ì£¬¿Í»§¶Ë´ğ¸´ÁË£¬»òÕß³¬Ê±ÁË
+  //ä»»åŠ¡ç»“æŸçš„åç¨‹ï¼Œå®¢æˆ·ç«¯ç­”å¤äº†ï¼Œæˆ–è€…è¶…æ—¶äº†
   std::queue<int> active_coro_list_;
 
   CoroutineImpl coro_impl_;

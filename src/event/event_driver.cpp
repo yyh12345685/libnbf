@@ -8,6 +8,8 @@
 #include <string.h>
 #include "net/socket.h"
 #include "event/event_driver.h"
+#include "thread_data_run.h"
+#include "common/thread_id.h"
 
 namespace bdf {
 
@@ -16,7 +18,8 @@ LOGGER_CLASS_IMPL(logger_, EventDriver);
 EventDriver::EventDriver() :
   event_in_(EPOLLIN | EPOLLHUP | EPOLLERR | EPOLLRDHUP),
   event_out_(EPOLLOUT | EPOLLHUP | EPOLLERR | EPOLLRDHUP),
-  event_notifier_(this){
+  event_notifier_(this),
+  thread_data_run_(nullptr){
   epfd_ = -1;
   sigset_t set;
   sigemptyset(&set);
@@ -34,10 +37,13 @@ EventDriver::~EventDriver(){
 }
 
 int EventDriver::Run(){
+  event_notifier_.SetEventThreadId(ThreadId::Get());
   run_ = true;
-  while (run_)
-  {
+  while (run_){
     this->Poll(1);
+    if(thread_data_run_!=nullptr){
+      thread_data_run_->CallRun();
+    }
   }
   this->Poll(0); // clear unproc tasks
   return 0;
@@ -79,7 +85,6 @@ int EventDriver::Add(int fd, EventFunctionBase *ezfd,bool lock){
   }
 
   TRACE(logger_, "fd:"<<fd<<",ezfd:"<<ezfd<<",epfd:"<<epfd_<<",maxfd_"<<maxfd_);
-
   FdEvent *data = new FdEvent();
   data->fd_ = fd;
   data->ezfd_ = ezfd;
@@ -188,6 +193,10 @@ int EventDriver::Poll(int timeout){
     return 0;
   for (int i = 0; i < numfd; ++i){
     FdEvent *data = (FdEvent *)events[i].data.ptr;
+    if(nullptr == data){
+      WARN(logger_, "nullptr == data...");
+      return -1;
+    }
     EventFunctionBase *ezfd = data->ezfd_;
     bool expected_event = false;
     short event = EVENT_NONE;
@@ -224,12 +233,16 @@ int EventDriver::Wakeup(){
 
 int EventDriver::Mod(int fd){
   FdEvent *data = event_data_.fd2data_[fd];
+  if(nullptr == data){
+    WARN(logger_, "nullptr == data...");
+    return -1;
+  }
   struct epoll_event event = {0};
   event.data.ptr = data;
   event.events = (data->event_ & EVENT_READ ? event_in_ : 0) 
     | (data->event_ & EVENT_WRITE ? event_out_ : 0);
   if ( 0!= epoll_ctl(epfd_, EPOLL_CTL_MOD, fd, &event)){
-    return -1;
+    return -2;
   }
   return 0;
 }
