@@ -1,7 +1,7 @@
 #include <unistd.h>
 #include "coro_test_server_handle.h"
 #include "message.h"
-#include "service/io_service.h"
+#include "service/service_manager.h"
 #include "monitor/matrix_scope.h"
 #include "client_task_test.h"
 
@@ -31,7 +31,7 @@ void CoroTestServerHandler::OnRapidRequestMessage(RapidMessage* message){
   msg->SetDescriptorId(message->GetDescriptorId());
   msg->sequence_id = message->sequence_id;
   msg->body = "rapid response hello .";
-  service::GetIoService().Reply(msg);
+  service::GetServiceManager().Reply(msg);
   MessageFactory::Destroy(message);
 }
 
@@ -52,7 +52,7 @@ void CoroTestServerHandler::OnHttpRequestMessage(HttpMessage* message) {
   msg->http_info.headers.insert(
     std::pair<std::string, std::string>("Content-Type", "text/html"));
   msg->http_info.body = "http response world.";
-  service::GetIoService().Reply(msg);
+  service::GetServiceManager().Reply(msg);
   MessageFactory::Destroy(message);
 }
 

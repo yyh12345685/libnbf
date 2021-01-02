@@ -1,5 +1,6 @@
 #include <sys/prctl.h>
 #include <unistd.h>
+#include <thread>
 #include "app/app.h"
 #include "test_client_server_handle.h"
 #include "message.h"
@@ -183,8 +184,8 @@ int YaceClientTest(void* data) {
   INFO(logger, "YaceClientTest start,time:" << time(NULL));
   int64_t req_times = 0;
   while (!thread_exit) {
-    if (0 == req_times % 66) {
-      //66次sleep1毫秒，测试机器使用不到5个核心
+    if (0 == req_times % 85) {
+      //85次sleep1毫秒，测试机器使用不到5个核心
       //假如1秒钟有一半时间sleep，那么一秒钟500次
       //实际情况1秒钟不止500次
       usleep(1000);

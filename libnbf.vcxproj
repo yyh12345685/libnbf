@@ -165,9 +165,10 @@
     <ClCompile Include="examples\test_client_server\src\test_client_server_handle.cpp" />
     <ClCompile Include="examples\test_server\src\test_main.cpp" />
     <ClCompile Include="examples\test_server\src\test_server_handle.cpp" />
-    <ClCompile Include="src\agents\agents.cpp" />
-    <ClCompile Include="src\agents\agent_master.cpp" />
-    <ClCompile Include="src\agents\agent_slave.cpp" />
+    <ClCompile Include="src\net_thread_mgr\io_thread_data_run.cpp" />
+    <ClCompile Include="src\net_thread_mgr\net_thread_mgr.cpp" />
+    <ClCompile Include="src\net_thread_mgr\acceptor_thread.cpp" />
+    <ClCompile Include="src\net_thread_mgr\io_threads.cpp" />
     <ClCompile Include="src\app\appbase.cpp" />
     <ClCompile Include="src\app\app_cmd_parser.cpp" />
     <ClCompile Include="src\app\config_info.cpp" />
@@ -204,7 +205,6 @@
     <ClCompile Include="src\net\client_reconnect_thread.cpp" />
     <ClCompile Include="src\net\connect.cpp" />
     <ClCompile Include="src\net\connect_manager.cpp" />
-    <ClCompile Include="src\net\io_handle.cpp" />
     <ClCompile Include="src\net\server_connect.cpp" />
     <ClCompile Include="src\net\socket.cpp" />
     <ClCompile Include="src\net\sync_client_connect.cpp" />
@@ -218,8 +218,8 @@
     <ClCompile Include="src\protocol\redis\redis_parser.cpp" />
     <ClCompile Include="src\protocol\redis\redis_protocol.cpp" />
     <ClCompile Include="src\service\coroutine_service_handle.cpp" />
-    <ClCompile Include="src\service\io_service.cpp" />
     <ClCompile Include="src\service\service_handle.cpp" />
+    <ClCompile Include="src\service\service_manager.cpp" />
     <ClCompile Include="src\tester\t_timer.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -228,9 +228,10 @@
     <ClInclude Include="examples\coroutine_test_server\src\app_test_server_handle.h" />
     <ClInclude Include="examples\test_client_server\src\test_client_server_handle.h" />
     <ClInclude Include="examples\test_server\src\test_server_handle.h" />
-    <ClInclude Include="src\agents\agents.h" />
-    <ClInclude Include="src\agents\agent_master.h" />
-    <ClInclude Include="src\agents\agent_slave.h" />
+    <ClInclude Include="src\event\thread_data_run.h" />
+    <ClInclude Include="src\net_thread_mgr\acceptor_thread.h" />
+    <ClInclude Include="src\net_thread_mgr\io_threads.h" />
+    <ClInclude Include="src\net_thread_mgr\io_thread_data_run.h" />
     <ClInclude Include="src\app\app.h" />
     <ClInclude Include="src\app\appbase.h" />
     <ClInclude Include="src\app\app_cmd_parser.h" />
@@ -281,11 +282,11 @@
     <ClInclude Include="src\net\client_reconnect_thread.h" />
     <ClInclude Include="src\net\connect.h" />
     <ClInclude Include="src\net\connect_manager.h" />
-    <ClInclude Include="src\net\io_handle.h" />
     <ClInclude Include="src\net\server_connect.h" />
     <ClInclude Include="src\net\socket.h" />
     <ClInclude Include="src\net\sync_client_connect.h" />
     <ClInclude Include="src\net\sync_sequence.h" />
+    <ClInclude Include="src\net_thread_mgr\net_thread_mgr.h" />
     <ClInclude Include="src\protocol\http\http_helper.h" />
     <ClInclude Include="src\protocol\http\http_info.h" />
     <ClInclude Include="src\protocol\http\http_protocol.h" />
@@ -297,8 +298,8 @@
     <ClInclude Include="src\protocol\redis\redis_parser.h" />
     <ClInclude Include="src\protocol\redis\redis_protocol.h" />
     <ClInclude Include="src\service\coroutine_service_handle.h" />
-    <ClInclude Include="src\service\io_service.h" />
     <ClInclude Include="src\service\service_handle.h" />
+    <ClInclude Include="src\service\service_manager.h" />
     <ClInclude Include="src\task.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

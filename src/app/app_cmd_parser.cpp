@@ -4,14 +4,14 @@
 #include "app/app_cmd_parser.h"
 
 #ifndef __APP_VERSION__
-#define __APP_VERSION__ "(date: 10:25:00 2019/3/10 +0800)"
+#define __APP_VERSION__ "(date: 22:25:00 2019/12/15 +0800)"
 #endif
 
 namespace bdf{
 
 static void UsageInner(const char *exe, bool help){
   std::cerr << "Copyright 2019 by yyh,"
-    << " Basic Development Framework Model" << std::endl;
+    << " Basic Net Framework Model" << std::endl;
   std::cerr << "libbdf: " << __APP_VERSION__ << std::endl;
   if (help) {
     std::cerr << "Usage: "

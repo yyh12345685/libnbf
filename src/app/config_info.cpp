@@ -6,15 +6,14 @@ namespace bdf{
 
 LOGGER_CLASS_IMPL(logger_, ConfigInfo)
 
-void IoServiceConfig::Dump(std::ostream& os) const {
-  os << "{\"type\": \"IoServiceConfig\""
-    << ", \"slave_thread_count\": " << slave_thread_count
-    << ", \"io_handle_thread_count\": " << io_handle_thread_count
+void ServiceConfig::Dump(std::ostream& os) const {
+  os << "{\"type\": \"ServiceConfig\""
+    << ", \"io_thread_count\": " << io_thread_count
     << ", \"service_handle_thread_count\": " << service_handle_thread_count
     << ", \"service_count\": " << service_count
     << ", \"coroutine_size\": " << coroutine_size
     << ", \"services_config\": ";
-    for(const auto& srv_conf:services_config){
+    for(const auto& srv_conf:server_config){
       os << "{\"name\":"<< srv_conf.name
         << ", \"address\": " << srv_conf.address
         << "}";
@@ -26,7 +25,7 @@ void IoServiceConfig::Dump(std::ostream& os) const {
     << "}";
 }
 
-std::ostream& operator << (std::ostream& os, const IoServiceConfig& config) {
+std::ostream& operator << (std::ostream& os, const ServiceConfig& config) {
   config.Dump(os);
   return os;
 }
@@ -69,16 +68,16 @@ int ConfigInfo::LoadConfig(const std::string& config_path){
     return -1;
   }
 
-  if (0 != LoadIoServiceConfig(ini_config, &io_service_config_)) {
+  if (0 != LoadServiceConfig(ini_config, &service_config_)) {
     return -2;
   }
   
   if (0 != LoadServicesConfig(
-    ini_config, io_service_config_.service_count,io_service_config_.services_config)) {
+    ini_config, service_config_.service_count,service_config_.server_config)) {
     return -3;
   }
 
-  if (0!= LoadRouterConfig(io_service_config_.router_file)){
+  if (0!= LoadRouterConfig(service_config_.router_file)){
     return -4;
   }
 
@@ -90,9 +89,8 @@ int ConfigInfo::LoadConfig(const std::string& config_path){
   return 0;
 }
 
-int ConfigInfo::LoadIoServiceConfig(CIniFileS& ini, IoServiceConfig* config){
-  config->slave_thread_count = ini.GetValueInt("io_service", "slave_thread_count", 2);
-  config->io_handle_thread_count = ini.GetValueInt("io_service", "io_handle_thread_count", 2);
+int ConfigInfo::LoadServiceConfig(CIniFileS& ini, ServiceConfig* config){
+  config->io_thread_count = ini.GetValueInt("io_service", "io_thread_count", 2);
   config->service_handle_thread_count = ini.GetValueInt("io_service", "service_handle_thread_count", 2);
   config->service_count = ini.GetValueInt("io_service", "services_count", 1);
 
@@ -108,13 +106,13 @@ int ConfigInfo::LoadIoServiceConfig(CIniFileS& ini, IoServiceConfig* config){
   return 0;
 }
 
-int ConfigInfo::LoadServicesConfig(CIniFileS& ini, int srv_cnt, std::vector<ServiceConfig>& config) {
+int ConfigInfo::LoadServicesConfig(CIniFileS& ini, int srv_cnt, std::vector<ServerConfig>& config) {
   if (srv_cnt < 1){
     return -1;
   }
 
   for (int idx = 0; idx < srv_cnt;idx++) {
-    ServiceConfig srv_config;
+    ServerConfig srv_config;
     std::string section("service");
     section.append(common::ToString(idx));
     srv_config.name = ini.GetValue(section.c_str(), "name", "");
@@ -168,7 +166,7 @@ int ConfigInfo::LoadApplicationConfig(CIniFileS& ini){
 }
 
 void ConfigInfo::Dump(std::ostream& os) const{
-  os << "IOServiceConfig:" << io_service_config_ << std::endl;
+  os << "ServiceConfig:" << service_config_ << std::endl;
   os << "ClientRouterConfig:" << client_routers_config_ << std::endl;
 }
 
