@@ -48,8 +48,6 @@ Client* ClientRouter::GetValidClient() {
     if (cli && cli->GetClientStatus() == Client::kWorking && cli->TrySetBusy()){
       return cli;
     }
-    TRACE(logger_, "status:" << cli->GetClientStatus()
-      <<",sigle_send_sigle_recv_:"<< sigle_send_sigle_recv_);
   }
   INFO(logger_, "no valid client,name:" << name_<<",loop times:"<< loop_cnt);
   return nullptr;

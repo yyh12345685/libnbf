@@ -7,7 +7,7 @@ namespace bdf {
 LOGGER_CLASS_IMPL(logger_, ServerConnectDelayReleaseMgr);
 
 //延迟时间
-const static int delay_delete_times = 90;//second
+const static int delay_delete_times = 50;//second
 //最小的删除执行间隔
 const static int delete_interval_times = 10;//second
 
@@ -65,8 +65,7 @@ void ServerConnectDelayReleaseMgr::DeleteDalayCon(){
     DelayDeleteListIt ls = delay_delete_connect_list_.begin();
     while (ls != delay_delete_connect_list_.end()){
       if ((cur_time - ls->second.first) > delay_delete_times) {
-        ServerConnect* s_con = ls->second.second; 
-        delete s_con;
+        delete ls->second.second;
         ls = delay_delete_connect_list_.erase(ls);
       } else {
         ls++;

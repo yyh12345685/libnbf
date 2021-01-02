@@ -1,5 +1,5 @@
 #include "client/client.h"
-#include "service/service_manager.h"
+#include "service/io_service.h"
 #include "app/config_info.h"
 #include "protocol/protocol_helper.h"
 #include "net/async_client_connect.h"
@@ -185,15 +185,15 @@ EventMessage* Client::DoSendRecieve(EventMessage* message) {
 
 void Client::DoSend(EventMessage* message){
   if (nullptr != CoroutineContext::Instance().GetServiceHandler()){
-    //ä½¿ç”¨åç¨‹handleçš„æ—¶å€™ä¸ä¸ºç©ºï¼Œéåç¨‹æ¡†æ¶ä½¿ç”¨å¼‚æ­¥è°ƒç”¨Invoke
+    //Ê¹ÓÃĞ­³ÌhandleµÄÊ±ºò²»Îª¿Õ£¬·ÇĞ­³Ì¿ò¼ÜÊ¹ÓÃÒì²½µ÷ÓÃInvoke
     message->handle_id = CoroutineContext::Instance().GetServiceHandler()->GetHandlerId();
     message->coroutine_id = CoroutineContext::GetCurCoroutineId();
   }
   
   message->birthtime = Time::GetCurrentClockTime();
 
-  TRACE(logger_, "SendToNetThread,handle_id:" << message->handle_id);
-  service::GetServiceManager().SendToNetThread(message);
+  TRACE(logger_, "SendToIoHandle,handle_id:" << message->handle_id);
+  IoService::GetInstance().SendToIoHandle(message);
 }
 
 EventMessage* Client::DoRecieve(EventMessage* message){
@@ -208,7 +208,7 @@ EventMessage* Client::DoRecieve(EventMessage* message){
     actor->SetWaitingId(message->sequence_id);
     return actor->RecieveMessage(message,timeout_ms_);
   }else{
-    //éåç¨‹ä½¿ç”¨å¼‚æ­¥è°ƒç”¨Invokeï¼Œä¸æ˜¯ç”¨è¯¥å‡½æ•°
+    //·ÇĞ­³ÌÊ¹ÓÃÒì²½µ÷ÓÃInvoke£¬²»ÊÇÓÃ¸Ãº¯Êı
     WARN(logger_, "use error,not should to here...");
     return nullptr;
   }

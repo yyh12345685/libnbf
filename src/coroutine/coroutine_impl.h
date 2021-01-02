@@ -23,15 +23,15 @@ public:
   CoroSchedule* CoroutineInit(int coroutine_size = DEFAULT_COROUTINE);
   void CoroutineClose(CoroSchedule* corotine);
 
-  //鍒涘缓鍗忕▼
+  //创建协程
   int CoroutineNew(CoroSchedule* corotine, CoroutineFunc, void *ud);
-  //鍚姩鎴栬�呮仮澶嶆寕璧风殑鍗忕▼
+  //启动或者恢复挂起的协程
   void CoroutineResume(CoroSchedule* corotine, int id);
 
   int CoroutineStatus(CoroSchedule* corotine, int id);
   int CoroutineRunning(CoroSchedule* corotine);
 
-  //鎸傝捣杩愯涓殑鍗忕▼
+  //挂起运行中的协程
   void CoroutineYield(CoroSchedule* corotine);
 
   CoroutineActor* GetCoroutineCtx(CoroSchedule * corotine,int id);

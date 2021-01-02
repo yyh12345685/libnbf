@@ -7,13 +7,12 @@
 namespace bdf {
 
 class EventFunctionBase;
-class ThreadDataRun;
 
 class EventLoopThread{
 public:
   EventLoopThread();
   ~EventLoopThread();
-  int Start(ThreadDataRun* thread_data_run=nullptr);
+  int Start();
   int Stop();
   void Main();
   static void *Run(void *arg);

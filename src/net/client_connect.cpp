@@ -1,9 +1,8 @@
 #include <sys/epoll.h>
 #include "net/client_connect.h"
-#include "service/service_manager.h"
+#include "service/io_service.h"
 #include "net/socket.h"
-#include "service/service_manager.h"
-#include "net_thread_mgr/net_thread_mgr.h"
+#include "net/io_handle.h"
 #include "net/client_reconnect_thread.h"
 
 namespace bdf{
@@ -22,8 +21,7 @@ ClientConnect::ClientConnect(
   timeout_ms_(timeout_ms),
   heartbeat_ms_(heartbeat_ms),
   reconnect_timer_(0),
-  heartbeat_timer_(0),
-  register_thread_id_(-1){
+  heartbeat_timer_(0){
 }
 
 ClientConnect::~ClientConnect(){
@@ -70,7 +68,7 @@ int ClientConnect::TryConnect(){
       StartReconnectTimer();
     return -1;
   }
-  if (0 != RegisterAddModr(connet_info.first,register_thread_id_)) {
+  if (0 != RegisterAddModr(connet_info.first)) {
     WARN(logger_, "RegisterAddModr failed,fd:" << connet_info.first);
     Socket::Close(connet_info.first);
     SetStatus(kBroken);
@@ -116,8 +114,7 @@ int ClientConnect::StartHeartBeatTimer() {
   td.time_proc = this;
   td.function_data = (void*)(&client_timer_type_heartbeat_);
 
-  //心跳包的timer复用重连线程的timer
-  ClientReconnect::GetInstance().StartTimer(td);
+  heartbeat_timer_ = IoHandler::GetIoHandler()->StartTimer(td);
   return 0;
 }
 
@@ -128,8 +125,7 @@ void ClientConnect::CancelTimer() {
   }
 
   if (heartbeat_timer_ != 0) {
-    //心跳包的timer复用重连线程的timer
-    ClientReconnect::GetInstance().CancelTimer(heartbeat_timer_);
+    IoHandler::GetIoHandler()->CancelTimer(heartbeat_timer_);
     heartbeat_timer_ = 0;
   }
 }
@@ -164,7 +160,7 @@ void ClientConnect::OnConnectWrite(){
     return;
   }
 
-  if (0 != RegisterAddModr(GetFd(),register_thread_id_)) {
+  if (0 != RegisterAddModr(GetFd())) {
     WARN(logger_, "RegisterAddModr failed,fd:" << GetFd());
     CleanClient();
     StartHeartBeatTimer();
@@ -234,7 +230,7 @@ void ClientConnect::DoSendBack(EventMessage* message, int status) {
   }
 
   message->status = status;
-  service::GetServiceManager().SendToServiceHandle(message);
+  IoService::GetInstance().SendToServiceHandle(message);
 }
 
 void ClientConnect::CleanClient(){
@@ -245,23 +241,23 @@ void ClientConnect::CleanClient(){
 int ClientConnect::Stop(){
   EventMessage* msg = MessageFactory::Allocate<EventMessage>(0);
   msg->descriptor_id = (int64_t)((void*)this);
-  service::GetServiceManager().SendCloseToNetThread(msg);
+  IoService::GetInstance().SendCloseToIoHandle(msg);
   return 0;
 }
 
-int ClientConnect::RegisterAddModrw(int fd,int& register_thread_id){
-  return service::GetServiceManager().EventAddModrw(this, fd,register_thread_id);
+int ClientConnect::RegisterAddModrw(int fd){
+  return IoService::GetInstance().AgentsAddModrw(this, fd);
 }
 
-int ClientConnect::RegisterAddModr(int fd,int& register_thread_id) {
-  return service::GetServiceManager().EventAddModr(this, fd,register_thread_id);
+int ClientConnect::RegisterAddModr(int fd) {
+  return IoService::GetInstance().AgentsAddModr(this, fd);
 }
 
 int ClientConnect::RegisterDel(int fd){
   if (fd <= 0) {
     return -1;
   }
-  return service::GetServiceManager().EventDel(this,fd);
+  return IoService::GetInstance().AgentsDel(this,fd);
 }
 
 }

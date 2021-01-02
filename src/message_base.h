@@ -20,6 +20,7 @@ class MessageType {
 
   enum {
     kIoUnknownEvent = 0,
+    kIoEvent,
     kIoHandleEventMsg,
     kIoActiveCloseEvent,
   };

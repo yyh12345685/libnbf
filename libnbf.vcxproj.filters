@@ -88,6 +88,15 @@
     <ClCompile Include="src\common\ini_files.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\agents\agent_master.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\agents\agent_slave.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\agents\agents.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="src\common\buffer.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -163,7 +172,13 @@
     <ClCompile Include="src\net\server_connect.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\net\io_handle.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="src\service\service_handle.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\service\io_service.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="src\app\app_cmd_parser.cpp">
@@ -235,21 +250,6 @@
     <ClCompile Include="src\common\timer_mgr.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\service\service_manager.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="src\net_thread_mgr\acceptor_thread.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="src\net_thread_mgr\io_threads.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="src\net_thread_mgr\io_thread_data_run.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="src\net_thread_mgr\net_thread_mgr.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\monitor\matrix.h">
@@ -301,6 +301,15 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="src\common\ini_files.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\agents\agent_master.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\agents\agent_slave.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\agents\agents.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="src\common\buffer.h">
@@ -390,7 +399,13 @@
     <ClInclude Include="src\net\server_connect.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="src\net\io_handle.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
     <ClInclude Include="src\service\service_handle.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\service\io_service.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="src\handle_data.h">
@@ -466,24 +481,6 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="src\common\timer_mgr.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="src\service\service_manager.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="src\net_thread_mgr\acceptor_thread.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="src\net_thread_mgr\io_thread_data_run.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="src\net_thread_mgr\io_threads.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="src\event\thread_data_run.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="src\net_thread_mgr\net_thread_mgr.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

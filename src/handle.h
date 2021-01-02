@@ -14,7 +14,7 @@ public:
 
   virtual void Run(HandleData* data) =0;
 private:
-  //å¤„ç†çš„çº¿ç¨‹çš„åºå·ï¼Œå‘é€å’Œæ¥æ”¶éœ€ä¸€è‡´
+  //´¦ÀíµÄÏß³ÌµÄĞòºÅ£¬·¢ËÍºÍ½ÓÊÕĞèÒ»ÖÂ
   int32_t handler_id_ = -1;
 };
 
