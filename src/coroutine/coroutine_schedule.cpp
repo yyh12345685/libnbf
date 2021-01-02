@@ -172,8 +172,7 @@ void CoroutineSchedule::CoroutineResume(int id) {
   }
 
   CoroutineContext::SetCurCoroutineId(id);
-  //想看详细日志可以打开
-  //TRACE(logger_, "will be resume coroutine:" << id);
+  TRACE(logger_, "will be resume coroutine:" << id);
   coro_impl_.CoroutineResume(coro_sche_, id);
 }
 

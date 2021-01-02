@@ -9,8 +9,6 @@
 
 namespace bdf{
 
-class ThreadDataRun;
-
 class EventDriver{
 public:
   EventDriver();
@@ -37,10 +35,6 @@ public:
   void CancelTimer(uint64_t timer_id) {
     timer_.DelTimer(timer_id);
   }
-
-  void SetThreadDataRun(ThreadDataRun* thread_data_run){
-    thread_data_run_ = thread_data_run;
-  }
 private:
 
   int Mod(int fd);
@@ -60,7 +54,6 @@ private:
   EventNotifier event_notifier_;
 
   Timer timer_;
-  ThreadDataRun* thread_data_run_;
 };
 
 }

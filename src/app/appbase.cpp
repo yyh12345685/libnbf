@@ -2,7 +2,6 @@
 #include <signal.h>
 #include "app/appbase.h"
 #include "client/client_mgr.h"
-#include "service/service_manager.h"
 
 namespace bdf{
 
@@ -126,7 +125,7 @@ int AppBase::LoadConfig() {
     delete config_info;
     return -1;
   }
-  io_service_config_ = config_info->GetServiceConfig();
+  io_service_config_ = config_info->GetIOServiceConfig();
   config_info_ = config_info;
 
   return 0;
@@ -134,13 +133,13 @@ int AppBase::LoadConfig() {
 
 int AppBase::StartService() {
   TRACE(logger_, "AppBase::StartService().");
-  if (0 != service::GetServiceManager().Init(io_service_config_)) {
+  if (0 != IoService::GetInstance().Init(io_service_config_)) {
     ERROR(logger_, "Application::StartService Init fail");
     return -1;
   }
 
   ServiceHandler* handle_tmp = CreateServiceHandler();
-  if (0 != service::GetServiceManager().Start(handle_tmp)) {
+  if (0 != IoService::GetInstance().Start(handle_tmp)) {
     ERROR(logger_, "Application::StartService Start fail");
     return -1;
   }
@@ -174,12 +173,12 @@ int AppBase::StopClientManager(){
 }
 
 int AppBase::WaitService() {
-  service::GetServiceManager().Wait();
+  IoService::GetInstance().Wait();
   return 0;
 }
 
 int AppBase::StopService() {
-  service::GetServiceManager().Stop();
+  IoService::GetInstance().Stop();
   return 0;
 }
 

@@ -17,10 +17,9 @@ class EventNotifier {
 public:
 
   EventNotifier(EventDriver* event_driver):
-    event_fd_(-1),
-    event_thread_id_(0),
-    wake_(nullptr),
     event_driver_(event_driver){
+    wake_ = nullptr;
+    wake_fd_[0] = wake_fd_[1] = -1;
   }
 
   ~EventNotifier();
@@ -28,14 +27,8 @@ public:
   int InitWakeup();
   int Wakeup();
 
-  void SetEventThreadId(uint32_t thread_id) {
-    event_thread_id_ = thread_id;
-  }
 private:
-
-  int event_fd_;
-  uint32_t event_thread_id_;
-
+  int wake_fd_[2];
   WakeUpFd *wake_;
 
   EventDriver* event_driver_;

@@ -1,7 +1,6 @@
 
 #include "net/sync_client_connect.h"
-#include "service/service_manager.h"
-#include "net_thread_mgr/net_thread_mgr.h"
+#include "service/io_service.h"
 #include "common/time.h"
 
 namespace bdf {
@@ -56,7 +55,7 @@ void SyncClientConnect::OnDecodeMessage(EventMessage* message) {
   TRACE(logger, "SyncClientChannel::OnDecodeMessage " << *message);
 
   MessageFactory::Destroy(keeper_message);
-  service::GetServiceManager().SendToServiceHandle(message);
+  IoService::GetInstance().SendToServiceHandle(message);
 }
 
 int SyncClientConnect::EncodeMsg(EventMessage* message){
@@ -108,14 +107,12 @@ void SyncClientConnect::CleanSequenceQueue(){
   std::list<EventMessage*> clear_list = sync_sequence_.Clear();
   EventMessage* message = clear_list.front();
   while (!clear_list.empty() && message) {
-    if(message->timer_out_id > 0){
-      sync_sequence_.CancelTimer(message->timer_out_id);
-    }
     clear_list.pop_front();
     DoSendBack(message, EventMessage::kInternalFailure);
     message = clear_list.front();
   }
 
+  sync_sequence_.ClearTimer();
 }
 
 int SyncClientConnect::DecodeMsg(){

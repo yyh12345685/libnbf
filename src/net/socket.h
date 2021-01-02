@@ -15,12 +15,11 @@ namespace bdf {
 class Socket{
  public:
   inline static bool IpToInt(const char* ipstr, uint32_t& ipint);
-  static int CreateSocket(bool is_non_block=true,bool ipv6 = false); 
-  static int Listen(const sockaddr_in& addr, size_t backlog = 2048,bool ipv6 = false);
-  static int Listen(const char *addr, int port, size_t backlog = 2048,bool ipv6 = false);
+  static int CreateSocket(bool is_non_block=true); 
+  static int Listen(const sockaddr_in& addr, size_t backlog = 2048);
+  static int Listen(const char *addr, int port, size_t backlog = 2048);
   static int Accept(int listen_fd, char* ipbuf= nullptr, int* port= nullptr);
 
-  static int Accept4(int listen_fd, char* ipbuf= nullptr, int* port= nullptr);
   /*
    * @return: <fd, whether need event>
    */
@@ -65,7 +64,6 @@ class Socket{
 
   static sockaddr_in GenerateAddr(const char *ip, const unsigned short port);
 
-  static int SetCloseWait(int fd,int delay);
 private:
 	LOGGER_CLASS_DECL(logger_);
 };

@@ -1,7 +1,6 @@
 #include "net/async_sequence.h"
 #include "message.h"
-#include "service/service_manager.h"
-#include "net_thread_mgr/net_thread_mgr.h"
+#include "net/io_handle.h"
 #include "net/async_client_connect.h"
 
 namespace bdf{
@@ -48,7 +47,7 @@ EventMessage* AsyncSequence::Get(uint64_t sequence_id){
   registery_.erase(it);
   registery_lock_.unlock();
 
-  CancelTimer(message->timer_out_id);
+  IoHandler::GetIoHandler()->CancelTimer(message->timer_out_id);
 
   list_lock_.lock();
   list_.remove(message);
@@ -83,15 +82,11 @@ uint64_t AsyncSequence::StartTimer(void* data){
   td.time_proc = this;
   td.function_data = data ;
 
-  int thread_id = async_client_con_->GetRegisterThreadId();
-  return ServiceManager::GetInstance().GetNetThreadManager()->StartTimer(td,thread_id);
+  return IoHandler::GetIoHandler()->StartTimer(td);
 }
 
 void AsyncSequence::CancelTimer(uint64_t timer_id){
-  int thread_id = async_client_con_->GetRegisterThreadId();
-  if(timer_id > 0 && thread_id >= 0){
-    ServiceManager::GetInstance().GetNetThreadManager()->CancelTimer(timer_id,thread_id);
-  }
+  IoHandler::GetIoHandler()->CancelTimer(timer_id);
 }
 
 }

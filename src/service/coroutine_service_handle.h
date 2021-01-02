@@ -12,7 +12,7 @@ class HandleData;
 class CoroutineServiceHandler : 
   public ServiceHandler{
 public:
-  CoroutineServiceHandler():debug_time_(0){
+  CoroutineServiceHandler(){
   }
   virtual ~CoroutineServiceHandler(){
   }
@@ -42,9 +42,6 @@ private:
   void ProcessClientItem(EventMessage* msg);
 
   TimerMgr time_mgr_;
-
-  //for debug
-  time_t debug_time_;
 };
 
 

@@ -16,7 +16,7 @@ void ServiceHandler::Run( HandleData* data){
   time_t now = time(NULL);
   while (data->is_run) {
     if (data->data_.empty()){
-      usleep(200);
+      usleep(100);
       continue;
     }
 

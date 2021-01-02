@@ -1,84 +1,67 @@
 
-#include <sys/eventfd.h>
 #include "event/event_notifier.h"
 #include "event/event_driver.h"
 #include "net/socket.h"
-#include "common/thread_id.h"
 
 namespace bdf {
 
 LOGGER_CLASS_IMPL(logger_, WakeUpFd);
 
 void WakeUpFd::OnEvent(EventDriver *poll, int fd, short event){
-  TRACE(logger_, "WakeUpFd::WakeUpFd::OnEvent.");
-  uint64_t value = 1;
-  int ret = read(fd, &value, sizeof(value));
-  if (ret != sizeof(value)){
-    WARN(logger_, "read failed, errno:" << errno << ",fd:" << fd <<",ret:" << ret);
+  //TRACE(logger_, "WakeUpFd::WakeUpFd::OnEvent.");
+  char buf[32];
+  if (-1 == read(fd, buf, sizeof(buf))){
+    WARN(logger_, "read is failed, errno:" << errno << ",fd:" << fd);
   }
 }
 
 LOGGER_CLASS_IMPL(logger_, EventNotifier);
 
 EventNotifier::~EventNotifier() {
-  if(-1 != event_fd_){
-    event_driver_->Del(event_fd_);
-    close(event_fd_);
-    event_fd_ = -1;
-  }
   if (wake_){
+    event_driver_->Del(wake_fd_[0]);
+    event_driver_->Del(wake_fd_[1]);
+    close(wake_fd_[0]);
+    close(wake_fd_[1]);
     delete wake_;
+    wake_fd_[0] = wake_fd_[1] = -1;
     wake_ = nullptr;
   }
 }
 
 int EventNotifier::InitWakeup(){
-  if (event_fd_ != -1) {
-    return 0;
-  }
 
-  int event_fd = -1;
-  if (-1 == (event_fd = eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK))) {
-    WARN(logger_, "EventNotifier::InitWakeup fail errno:" << errno);
+  if (pipe(wake_fd_) == -1)
+    return -1;
+
+  if (!Socket::SetNonBlock(wake_fd_[0])
+    || !Socket::SetNonBlock(wake_fd_[1])){
+    Socket::Close(wake_fd_[0]);
+    Socket::Close(wake_fd_[1]);
     return -1;
   }
 
   WakeUpFd *wfd = new WakeUpFd();
-  if (event_driver_->Add(event_fd, wfd, true) == -1){
-    WARN(logger_, "InitWakeup add failed,event_fd:"<< event_fd);
+  if (event_driver_->Add(wake_fd_[0], wfd, true) == -1){
     delete wfd;
-    Socket::Close(event_fd);
+    Socket::Close(wake_fd_[0]);
+    Socket::Close(wake_fd_[1]);
     return -1;
   }
   wake_ = wfd;
-  if (0 != event_driver_->Modr(event_fd, true)){
-    WARN(logger_, "InitWakeup modr failed,event_fd:"<< event_fd);
+  if (0 != event_driver_->Modr(wake_fd_[0], true)){
+    WARN(logger_, "InitWakeup failed,wake_fd_[0]:"<< wake_fd_[0]);
   }
-  event_fd_ = event_fd;
-  TRACE(logger_, "InitWakeup ok,event_fd_:"<<event_fd_);
   return 0;
 }
 
-int EventNotifier::Wakeup(){
-  //测试下来,做不做唤醒效率差异不大?
-  TRACE(logger_, "EventDriver::Wakeup.");
-  if(event_thread_id_ == ThreadId::Get()){
-    TRACE(logger_, "event_thread_id_ == ThreadId::Get().");
+int EventNotifier::Wakeup()
+{
+  //TRACE(logger_, "EventDriver::Wakeup.");
+  int ret = write(wake_fd_[1], "", 1);
+  if (ret == 1 || errno == EAGAIN)
     return 0;
-  }
-  if(-1 == event_fd_){
-    TRACE(logger_, "event_fd_ not inited.");
-    return -1;
-  }
-  
-  uint64_t value = 1;
-  int ret = write(event_fd_, &value, sizeof(uint64_t));
-  if(ret != sizeof(uint64_t)){
-    WARN(logger_, "EventNotifier::Wakeup fail errno:" 
-      << errno << ",ret:" << ret << ",fd"<< event_fd_);
-    return -2;
-  }
-  return 0;
+  return -1;
 }
 
 }

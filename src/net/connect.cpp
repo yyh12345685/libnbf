@@ -2,7 +2,7 @@
 #include "net/socket.h"
 #include "event/event_driver.h"
 #include "protocol/protocol_base.h"
-#include "service/service_manager.h"
+#include "service/io_service.h"
 
 namespace bdf{
 
@@ -28,23 +28,18 @@ Connecting::~Connecting(){
 }
 
 void Connecting::OnEvent(EventDriver *poll, int fd, short event){
-  TRACE(logger_, "Connecting::OnEvent,event:"<< event<<",fd"<<fd);
   if ((event & EVENT_CONNECT_CLOSED) || (event & EVENT_ERROR)){
+    TRACE(logger_, "Connecting::OnEvent,OnError event:"<< event);
     //do not close socket ,error message allways hava read message for close
-    //if (IsServer()){
+    if (IsServer()){
       RegisterDel(poll, fd);
-    //}
+    }
   }
 
-  if (event & EVENT_READ) {
-    OnRead();
-  }
-  if (event & EVENT_WRITE) {
-    OnWrite();
-  }
-  if ((event & EVENT_CONNECT_CLOSED) || (event & EVENT_ERROR)) {
-    OnWrite();
-  }
+  bdf::EventMessage* message = bdf::MessageFactory::Allocate<bdf::EventMessage>(0);
+  message->descriptor_id = (int64_t)((void*)this);
+  message->event_mask = event;
+  IoService::GetInstance().SendEventToIoHandle(message);
 }
 
 void Connecting::OnRead(){
@@ -249,7 +244,7 @@ void Connecting::Clean(){
 
 void Connecting::RegisterDel(EventDriver *poll, int fd){
   TRACE(logger_, "Connecting::RegisterDel,sock:" << fd_
-    << ",ip:" << ip_ << ",port:" << port_<<",con id:"<<connect_id_);
+    << ",ip:" << ip_ << ",port:" << port_);
   if (fd_ < 0 || nullptr == poll) {
     return;
   }

@@ -9,8 +9,7 @@
 namespace bdf{
 
 class EventMessage;
-class NetThreadManager;
-class ServerConnect;
+class Agents;
 class ServiceHandler;
 class EventFunctionBase;
 
@@ -18,57 +17,62 @@ struct HandleThread{
   std::vector<std::thread*>  service_handle_thread_;
   std::vector < HandleData*> service_handle_data_;
   
+  std::vector<std::thread*>  io_handle_thread_;
+  std::vector < HandleData*> io_handle_data_;
   ~HandleThread(){
     for (const auto& hd: service_handle_data_){
       delete hd;
     }
-  
+    for (const auto& hd : io_handle_data_) {
+      delete hd;
+    }
     for (const auto& thread : service_handle_thread_) {
       delete thread;
     }
-  
+    for (const auto& thread : io_handle_thread_) {
+      delete thread;
+    }
   }
 };
 
-class ServiceManager {
+class IoService {
 public:
 
-  static ServiceManager& GetInstance() {
-    static ServiceManager inst;
+  static IoService& GetInstance() {
+    static IoService inst;
     return inst;
   }
 
-  int Init(const ServiceConfig& config);
+  int Init(const IoServiceConfig& config);
   int Start(ServiceHandler* handle);
   int Stop();
   int Wait();
 
   void Reply(EventMessage* message);
-  void SendToNetThread(EventMessage* msg);
-  void SendCloseToNetThread(EventMessage* msg);
+  void SendToIoHandle(EventMessage* msg);
+  void SendCloseToIoHandle(EventMessage* msg);
+  void SendEventToIoHandle(EventMessage* msg);
   void SendToServiceHandle(EventMessage* msg);
   void SendTaskToServiceHandle(Task* task);
 
   const std::string& GetMonitorReport();
 
-  int EventAddModrw(EventFunctionBase* ezfd, int fd,int& register_thread_id);
-  int EventAddModr(EventFunctionBase* ezfd, int fd,int& register_thread_id);
-  int EventDel(EventFunctionBase* ezfd, int fd);
+  int AgentsAddModrw(EventFunctionBase* ezfd, int fd);
+  int AgentsAddModr(EventFunctionBase* ezfd, int fd);
+  int AgentsDel(EventFunctionBase* ezfd, int fd);
 
   uint32_t GetServiceHandleCount();
 
-  const ServiceConfig& GetServiceConfig(){
-    return service_config_;
+  const IoServiceConfig& GetIoServiceConfig(){
+    return io_service_config_;
   }
 
-  NetThreadManager* GetNetThreadManager(){
-    return net_thread_mgr_;
+  Agents* GetAgents(){
+    return agents_;
   }
-
-  void ReleaseServerCon(ServerConnect* svr_con);
 
 private:
-  void SendToNetThreadInner(EventMessage* msg);
+  void SendToIoHandleInner(EventMessage* msg);
 
   uint32_t GetServiceHandleId(EventMessage* msg);
 
@@ -76,17 +80,17 @@ private:
   int ThreadStop();
   LOGGER_CLASS_DECL(logger_);
 
-  ServiceConfig service_config_;
+  IoServiceConfig io_service_config_;
 
   HandleThread handle_thread_;
 
-  NetThreadManager* net_thread_mgr_;
+  Agents* agents_;
 
-  DISALLOW_COPY_ASSIGN_CONSTRUCTION(ServiceManager)
+  DISALLOW_COPY_ASSIGN_CONSTRUCTION(IoService)
 };
 
 namespace service {
-  ServiceManager& GetServiceManager();
+  IoService& GetIoService();
 }
 
 }

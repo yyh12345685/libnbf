@@ -3,6 +3,7 @@
 #include <functional>
 #include "app/config_info.h"
 #include "app/app_cmd_parser.h"
+#include "service/io_service.h"
 
 namespace bdf{
 
@@ -63,7 +64,7 @@ private:
 
   static AppBase* application_;
 
-  ServiceConfig io_service_config_;
+  IoServiceConfig io_service_config_;
 
   ConfigInfo* config_info_;
 

@@ -1,6 +1,6 @@
 #include "test_client_server_handle.h"
 #include "message.h"
-#include "service/service_manager.h"
+#include "service/io_service.h"
 #include "monitor/matrix_scope.h"
 
 namespace bdf {
@@ -20,7 +20,7 @@ void TestClientServerHandler::OnHttpRequestMessage(HttpMessage* message){
   msg->http_info.headers.insert(
     std::pair<std::string, std::string>("Content-Type", "text/html"));
   msg->http_info.body = "http response hello world.";
-  service::GetServiceManager().Reply(msg);
+  service::GetIoService().Reply(msg);
   MessageFactory::Destroy(message);
 }
 
@@ -44,7 +44,7 @@ void TestClientServerHandler::OnRapidRequestMessage(RapidMessage* message){
   msg->SetDescriptorId(message->GetDescriptorId());
   msg->sequence_id = message->sequence_id;
   msg->body = "rapid response hello world.";
-  service::GetServiceManager().Reply(msg);
+  service::GetIoService().Reply(msg);
   MessageFactory::Destroy(message);
 }
 

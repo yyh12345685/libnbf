@@ -8,14 +8,15 @@ namespace bdf{
 
 class CIniFileS;
 
-struct ServerConfig {
+struct ServiceConfig {
   std::string address;
   std::string name;
 };
 
-struct ServiceConfig {
-  ServiceConfig(): 
-    io_thread_count(2),
+struct IoServiceConfig {
+  IoServiceConfig(): 
+    slave_thread_count(2),
+    io_handle_thread_count(2),
     service_handle_thread_count(2),
     service_count(1),
     coroutine_size(256),
@@ -24,10 +25,11 @@ struct ServiceConfig {
     monitor_queue_size(1024 * 128) {
   }
 
-  int io_thread_count;
+  int slave_thread_count;
+  int io_handle_thread_count;
   int service_handle_thread_count;
   int service_count;
-  std::vector<ServerConfig> server_config;
+  std::vector<ServiceConfig> services_config;
 
   std::string router_file;
 
@@ -43,7 +45,7 @@ struct ServiceConfig {
   void Dump(std::ostream& os) const;
 };
 
-std::ostream& operator << (std::ostream& os, const ServiceConfig& config);
+std::ostream& operator << (std::ostream& os, const IoServiceConfig& config);
 
 struct ClientConfig {
   std::string address;
@@ -56,7 +58,7 @@ struct ClientRouterConfig {
   std::string name;
   std::string mapping;
   bool sigle_send_sigle_recv = false;
-  //姣忎釜ClientConfig鍙互鏈変笉涓�鏍风殑address
+  //每个ClientConfig可以有不一样的address
   std::vector<ClientConfig> clients;
 };
 
@@ -72,13 +74,13 @@ public:
 
   int LoadConfig(const std::string& config_path);
 
-  const ServiceConfig& GetServiceConfig() { return service_config_; }
+  const IoServiceConfig& GetIOServiceConfig() { return io_service_config_; }
   const ClientRoutersConfig& GetClientRoutersConfig() { return client_routers_config_; }
   virtual void Dump(std::ostream& os) const;
 
 protected:
-  virtual int LoadServiceConfig(CIniFileS& ini, ServiceConfig* config);
-  virtual int LoadServicesConfig(CIniFileS& ini, int srv_cnt,std::vector<ServerConfig>& config);
+  virtual int LoadIoServiceConfig(CIniFileS& ini, IoServiceConfig* config);
+  virtual int LoadServicesConfig(CIniFileS& ini, int srv_cnt,std::vector<ServiceConfig>& config);
   virtual int LoadRouterConfig(const std::string& file_path);
 
   virtual int LoadApplicationConfig(CIniFileS& ini);
@@ -86,7 +88,7 @@ protected:
 private:
   LOGGER_CLASS_DECL(logger_);
 
-  ServiceConfig service_config_;
+  IoServiceConfig io_service_config_;
   ClientRoutersConfig client_routers_config_;
 };
 

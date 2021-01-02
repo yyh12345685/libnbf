@@ -16,8 +16,7 @@ EventLoopThread::EventLoopThread() :
 EventLoopThread::~EventLoopThread(){
 }
 
-int EventLoopThread::Start(ThreadDataRun* thread_data_run){
-  poll_.SetThreadDataRun(thread_data_run);
+int EventLoopThread::Start(){
   thread_ = new std::thread(std::bind(&EventLoopThread::Run, this));
   is_run_ = true;
   return 0;

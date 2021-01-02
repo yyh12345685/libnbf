@@ -35,10 +35,9 @@ set(BDF_SRC
   protocol/redis/redis_protocol.cpp
   protocol/protocol_base.cpp
 
-  net_thread_mgr/io_thread_data_run.cpp
-  net_thread_mgr/io_threads.cpp
-  net_thread_mgr/acceptor_thread.cpp
-  net_thread_mgr/net_thread_mgr.cpp
+  agents/agent_slave.cpp
+  agents/agent_master.cpp
+  agents/agents.cpp
 
   net/socket.cpp
   net/connect.cpp
@@ -50,13 +49,14 @@ set(BDF_SRC
   net/sync_sequence.cpp
   net/server_connect.cpp
   net/client_reconnect_thread.cpp
+  net/io_handle.cpp
 
   coroutine/coroutine_actor.cpp
   coroutine/coroutine_context.cpp
   coroutine/coroutine_impl.cpp
   coroutine/coroutine_schedule.cpp
 
-  service/service_manager.cpp
+  service/io_service.cpp
   service/service_handle.cpp
   service/coroutine_service_handle.cpp
 

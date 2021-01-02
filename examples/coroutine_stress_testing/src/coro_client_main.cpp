@@ -2,7 +2,7 @@
 #include <unistd.h>
 #include "app/app.h"
 #include "coro_test_server_handle.h"
-#include "service/service_manager.h"
+#include "service/io_service.h"
 #include "client_task_test.h"
 
 LOGGER_STATIC_DECL_IMPL(logger, "root");
@@ -16,7 +16,7 @@ int StartTaskThread(void* data) {
   uint64_t send_times = 0;
   ClientTaskTest client_test_task;
   while (!thread_exit){
-    bdf::service::GetServiceManager().SendTaskToServiceHandle(&client_test_task);
+    bdf::service::GetIoService().SendTaskToServiceHandle(&client_test_task);
     //这种发送方式很容易造成服务端过载,可参考test_client_server的方式更佳
     if (0 == (send_times%60000)){
       sleep(1);
