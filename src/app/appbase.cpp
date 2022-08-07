@@ -116,12 +116,17 @@ int AppBase::StartLogger() {
   return 0;
 }
 
+ConfigInfo* AppBase::CreateConfig() {
+  ConfigInfo* config_info = new ConfigInfo();
+  return config_info;
+}
+
 int AppBase::LoadConfig() {
   if (cmd_parser_.application_config_.empty()){
     return -1;
   }
 
-  ConfigInfo* config_info = new ConfigInfo();
+  ConfigInfo* config_info = CreateConfig();
   if (0 != config_info->LoadConfig(cmd_parser_.application_config_)) {
     delete config_info;
     return -1;
