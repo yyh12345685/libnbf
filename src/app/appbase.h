@@ -25,6 +25,9 @@ public:
   AppBase();
   virtual ~AppBase();
 
+  //应用程序需要自己实现创建ConfigInfo指针，用于灵活定义自己的配置
+  virtual ConfigInfo* CreateConfig();
+
   ConfigInfo* GetConfigInfo() { return config_info_; }
 
   ClientMgr* GetClientMgr() { return client_mgr_; }
