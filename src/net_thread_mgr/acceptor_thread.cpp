@@ -41,6 +41,7 @@ bool AcceptorThread::Init(
       continue;
     }
 
+    //可以判断下ip是ipv4还是v6，最后一个参数根据判断结果来传
     int fd = Socket::Listen(ip, port, 20480,false);
     if (fd<0){
       WARN(logger_, "AcceptorThread::Init SocketHelper::Listen error, ip:"
