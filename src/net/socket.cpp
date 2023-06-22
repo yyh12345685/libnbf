@@ -62,7 +62,7 @@ int Socket::Listen(const char *addr, int port, size_t backlog,bool ipv6){
   if (addr && inet_aton(addr, &sa.sin_addr) == 0) {
     return -1;
   }
-  return Listen(sa, backlog);
+  return Listen(sa, backlog, ipv6);
 }
 
 int Socket::Listen(const sockaddr_in& addr, size_t backlog,bool ipv6) {
