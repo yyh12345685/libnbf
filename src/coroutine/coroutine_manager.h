@@ -10,28 +10,27 @@ class CoroutineSchedule;
 class CoroutineServiceHandler;
 class TimerMgr;
 
-struct CoroutineContext {
+// 每一个用到的线程一个CoroutineManager对象
+// 所以就注定了使用CoroutineManager的对象需要在线程中运行
+struct CoroutineManager {
  public:
 
-  static CoroutineContext& Instance() {
-    static thread_local CoroutineContext context_;
+  static CoroutineManager& Instance() {
+    static thread_local CoroutineManager context_;
     return context_;
   }
 
+  // 每一个CoroutineManager可以配合一个定时器来用
   static void Init(
     CoroutineServiceHandler* service_handle,
     TimerMgr* time_mgr);
 
-  inline static CoroutineActor* GetCurCoroutineCtx() {
-    return Instance().scheduler_->GetCoroutineCtx(Instance().GetCurCoroutineId()) ;
+  inline static CoroContext* GetCurrentCoroutine() {
+    return Instance().scheduler_->GetCurrentCoroutine();
   }
 
-  inline static int GetCurCoroutineId() {
-    return Instance().cur_coroutine_id_;
-  }
-
-  inline static void SetCurCoroutineId(int cur_coroutine_id) {
-    Instance().cur_coroutine_id_ = cur_coroutine_id;
+  inline static void SetCurrentCoroutine(CoroContext* coro) {
+    //TODO
   }
 
   inline static CoroutineSchedule* GetScheduler() {
@@ -47,19 +46,18 @@ struct CoroutineContext {
   }
 
  private:
-  CoroutineContext(){
+   CoroutineManager(){
   }
 
-  ~CoroutineContext() {
+  ~CoroutineManager() {
     if (nullptr != scheduler_){
       delete scheduler_;
     }
   }
 
-  DISALLOW_COPY_AND_ASSIGN(CoroutineContext);
+  DISALLOW_COPY_AND_ASSIGN(CoroutineManager);
 
   CoroutineSchedule* scheduler_ = nullptr;
-  int cur_coroutine_id_ = -1;
   CoroutineServiceHandler* service_handle_ = nullptr;
   TimerMgr* time_mgr_ = nullptr;
 };

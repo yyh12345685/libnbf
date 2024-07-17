@@ -51,10 +51,10 @@ set(BDF_SRC
   net/server_connect.cpp
   net/client_reconnect_thread.cpp
 
-  coroutine/coroutine_actor.cpp
-  coroutine/coroutine_context.cpp
-  coroutine/coroutine_impl.cpp
+  coroutine/coroutine_manager.cpp
   coroutine/coroutine_schedule.cpp
+  coroutine/coroutine_impl_c/coroutine_impl_c.cpp
+  coroutine/coroutine_impl_c/coroutine_actor_c.cpp
 
   service/service_manager.cpp
   service/service_handle.cpp

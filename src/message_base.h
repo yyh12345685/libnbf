@@ -131,6 +131,8 @@ public:
   int event_mask = 0;
 };
 
+class CoroContext;
+
 class EventMessage : public MessageBase {
  public:
   EventMessage(uint8_t type_id): 
@@ -139,7 +141,7 @@ class EventMessage : public MessageBase {
     handle_id(-1),
     timer_out_id(0),
     ctx(nullptr),
-    coroutine_id(-1){
+    msg_coro(nullptr){
   }
 
   EventMessage(uint8_t type_id_, int64_t descriptor_id_) : 
@@ -171,7 +173,7 @@ class EventMessage : public MessageBase {
   uint64_t timer_out_id;//for sync message
 
   ContextBase* ctx;
-  int coroutine_id;
+  CoroContext* msg_coro; //当前发送消息的协程
 };
 
 class MessageFactory {

@@ -27,7 +27,7 @@ protected:
   friend class CoroTimer;
   virtual void OnTimer(void* function_data){}
 
-  virtual void OnTimerCoro(void* function_data, int& coro_id);
+  virtual void OnTimerCoro(void* function_data);
 private:
   LOGGER_CLASS_DECL(logger_);
 

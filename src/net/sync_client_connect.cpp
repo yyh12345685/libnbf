@@ -45,7 +45,7 @@ void SyncClientConnect::OnDecodeMessage(EventMessage* message) {
   message->status = EventMessage::kStatusOK;
   message->direction = EventMessage::kIncomingResponse;
   message->sequence_id = keeper_message->sequence_id;
-  message->coroutine_id = keeper_message->coroutine_id;
+  message->msg_coro = keeper_message->msg_coro;
   message->handle_id = keeper_message->handle_id;
   message->descriptor_id = (int64_t)((void*)(this));
   if (nullptr != keeper_message->ctx && nullptr != keeper_message->ctx->callback) {
@@ -71,7 +71,7 @@ int SyncClientConnect::EncodeMsg(EventMessage* message){
 
   if (sigle_send_sigle_recv_ && sync_sequence_.Size()>1) {
     //可能还有一个心跳包
-    INFO(logger, "22222222,size:"<<sync_sequence_.Size());
+    INFO(logger, "SyncClientConnect::EncodeMsg,size:"<<sync_sequence_.Size());
   }
 
   //test_lock1_.lock();

@@ -4,9 +4,10 @@
 #include <sys/prctl.h>
 #include "common/thread_id.h"
 #include "service/coroutine_service_handle.h"
-#include "coroutine/coroutine_context.h"
+#include "coroutine/coroutine_manager.h"
 #include "coroutine/coroutine_schedule.h"
 #include "coroutine/coroutine_actor.h"
+#include "coroutine/coro_context.h"
 #include "handle_data.h"
 #include "task.h"
 #include "net/connect.h"
@@ -20,39 +21,29 @@ LOGGER_CLASS_IMPL(logger_, CoroutineServiceHandler);
 void CoroutineServiceHandler::Run(HandleData* data){
   prctl(PR_SET_NAME, "CoroutineServiceHandler");
   INFO(logger_, "CoroutineServiceHandler::Run,thread id:"<< ThreadId::Get());
-  CoroutineContext::Instance().Init(this,&time_mgr_);
-  CoroutineSchedule* scheduler = CoroutineContext::Instance().GetScheduler();
+  CoroutineManager::Instance().Init(this,&time_mgr_);
+  CoroutineSchedule* scheduler = CoroutineManager::Instance().GetScheduler();
   int coroutine_size = service::GetServiceManager().GetServiceConfig().coroutine_size;
   scheduler->InitCoroSchedule(
     &CoroutineServiceHandler::ProcessCoroutine, data, coroutine_size);
-  int coro_id = scheduler->GetAvailableCoroId();
-  scheduler->CoroutineResume(coro_id);
+  CoroContext* coro = scheduler->GetAvailableCoro();
+  if (coro == nullptr) {
+    WARN(logger_, "CoroutineServiceHandler::Run exit becase coro is nullptr.");
+    return;
+  }
 
   debug_time_ = time(NULL);
 
   while (data->is_run) {
     //这里负责切换到协程，所有业务都在协程中处理
-    if (scheduler->CoroutineResumeActive()){
-      continue;
-    }
-
-    if (CoroutineContext::GetCurCoroutineId() < 0) {
-      int coro_id = scheduler->GetAvailableCoroId();
-      //想看详细日志可以打开
-      //TRACE(logger_, "CoroutineResume available coro id:"<< coro_id);
-      if (coro_id < 0){
-        continue;
-      }
-      scheduler->CoroutineResume(coro_id);
-    }else{
-      WARN(logger_, "not to here,coro id:"<< CoroutineContext::GetCurCoroutineId());
-    }
+    scheduler->CoroutineResume(coro);
   }
+  // coro 可以还回到free list中
   INFO(logger_, "CoroutineServiceHandler::Run exit.");
 }
 
 static void ProcessDebug(){
-  CoroutineSchedule* scheduler = CoroutineContext::Instance().GetScheduler();
+  CoroutineSchedule* scheduler = CoroutineManager::Instance().GetScheduler();
   scheduler->ProcessDebug();
 }
 
@@ -80,23 +71,23 @@ void CoroutineServiceHandler::ProcessTimer() {
 }
 
 //when send receive timeout
-void CoroutineServiceHandler::OnTimerCoro(void* function_data, int& coro_id){
+void CoroutineServiceHandler::OnTimerCoro(void* function_data){
   TRACE(logger_, "CoroutineServiceHandler::OnTimer.");
-  int coro_id_tmp = *(int*)(function_data);
-  if (coro_id_tmp < 0) {
+  CoroContext* msg_coro = (CoroContext*)(function_data);
+  if (nullptr == msg_coro) {
     //not to here,否则会丢消息
-    ERROR(logger_, "error coro_id:" << coro_id);
+    ERROR(logger_, "error coro data:" << function_data);
     return;
   }
 
-  if (coro_id_tmp != coro_id){
+  /*if (coro_id_tmp != coro_id) {
     WARN(logger_, "may be error tmp coro_id:" << coro_id_tmp << ",coro_id" << coro_id);
-  }
+  }*/
 
-  CoroutineSchedule* scheduler = CoroutineContext::Instance().GetScheduler();
-  //本来就在协程里面，会先切出来，然后切到另外一个协程
-  if (!scheduler->CoroutineYieldToActive(coro_id_tmp)) {
-    TRACE(logger_, "yield failed, coro_id:" << coro_id_tmp);
+  CoroutineSchedule* scheduler = CoroutineManager::Instance().GetScheduler();
+  // 本来就在协程里面，会先切出来，然后切到另外一个协程
+  if (!scheduler->CoroutineResume(msg_coro)) {
+    TRACE(logger_, "yield failed, msg_coro:" << msg_coro);
   }
 }
 
@@ -120,7 +111,7 @@ void CoroutineServiceHandler::ProcessTask(HandleData* data){
 }
 
 void CoroutineServiceHandler::Process(HandleData* data){
-  CoroutineSchedule* scheduler = CoroutineContext::Instance().GetScheduler();
+  CoroutineSchedule* scheduler = CoroutineManager::Instance().GetScheduler();
   int static empty_times = 0;
   if (data->data_.empty()) {
     usleep(200);
@@ -140,19 +131,19 @@ void CoroutineServiceHandler::Process(HandleData* data){
 }
 
 void CoroutineServiceHandler::ProcessClientItem(EventMessage* msg){
-  CoroutineSchedule* scheduler = CoroutineContext::Instance().GetScheduler();
-  if (msg->coroutine_id <0){
+  CoroutineSchedule* scheduler = CoroutineManager::Instance().GetScheduler();
+  if (nullptr == msg->msg_coro){
     //not to here,否则会丢消息
-    ERROR(logger_, "error coro_id:" << msg->coroutine_id);
+    ERROR(logger_, "msg_coro is null msg:" << msg);
     scheduler->CoroutineYield();
     MessageFactory::Destroy(msg);
     return;
   }
-  CoroutineActor* coroutine = scheduler->GetCoroutineCtx(msg->coroutine_id);
+  CoroutineActor* coroutine = msg->msg_coro->actor;
   if (coroutine->SendMessage(msg)){
     //本来就在协程里面，会先切出来，然后切到另外一个协程
-    if (!scheduler->CoroutineYieldToActive(msg->coroutine_id)) {
-      WARN(logger_, "client yield failed, coro_id:" << msg->coroutine_id);
+    if (!scheduler->CoroutineResume(msg->msg_coro)) {
+      WARN(logger_, "client yield failed, msg:" << msg);
     }
   }else{
     //超时的
@@ -163,7 +154,7 @@ void CoroutineServiceHandler::ProcessClientItem(EventMessage* msg){
 void CoroutineServiceHandler::ProcessMessageHandle(std::queue<EventMessage*>& msg_list) {
   TRACE(logger_, "handle id:" << GetHandlerId()
     << ",ProcessMessage size:" << msg_list.size());
-  CoroutineSchedule* scheduler = CoroutineContext::Instance().GetScheduler();
+  CoroutineSchedule* scheduler = CoroutineManager::Instance().GetScheduler();
   size_t handle_size = msg_list.size();
   while (!msg_list.empty()) {
     //for debug begin-------------
@@ -202,8 +193,8 @@ void CoroutineServiceHandler::ProcessMessageHandle(std::queue<EventMessage*>& ms
 }
 
 void CoroTimer::OnTimer(void* timer_data, uint64_t time_id){
-  int coro_id_tmp = *(int*)(timer_data);
-  service_handle_->OnTimerCoro(timer_data, coro_id_tmp);
+  // TODO 这里的timer_data已经改为CoroutineActor了，需要改
+  service_handle_->OnTimerCoro(timer_data);
   //delete this;
 }
 

@@ -25,7 +25,7 @@ public:
   AppBase();
   virtual ~AppBase();
 
-  //Ó¦ÓÃ³ÌĞòĞèÒª×Ô¼ºÊµÏÖ´´½¨ConfigInfoÖ¸Õë£¬ÓÃÓÚÁé»î¶¨Òå×Ô¼ºµÄÅäÖÃ
+  //åº”ç”¨ç¨‹åºå®ç°ConfigInfoï¼Œç„¶åå®ç°åŠ è½½åº”ç”¨ç¨‹åºé…ç½®
   virtual ConfigInfo* CreateConfig();
 
   ConfigInfo* GetConfigInfo() { return config_info_; }

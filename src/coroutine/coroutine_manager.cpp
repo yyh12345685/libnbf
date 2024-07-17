@@ -1,15 +1,14 @@
 
-#include "coroutine/coroutine_context.h"
+#include "coroutine/coroutine_manager.h"
 
 namespace bdf{
 
-  void CoroutineContext::Init(
+  void CoroutineManager::Init(
     CoroutineServiceHandler* service_handle, 
     TimerMgr* time_mgr) {
   Instance().time_mgr_ = time_mgr;
   Instance().service_handle_ = service_handle;
   Instance().scheduler_ = new CoroutineSchedule;
-  Instance().cur_coroutine_id_ = -1;
 }
 
 }
