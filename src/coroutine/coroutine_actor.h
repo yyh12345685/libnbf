@@ -8,6 +8,7 @@ namespace bdf {
 
   class CoroutineActor {
   public:
+    virtual ~CoroutineActor(){}
 
     virtual EventMessage* RecieveMessage(EventMessage* message, uint32_t timeout_ms = 0) = 0;
     virtual bool SendMessage(EventMessage* message) = 0;

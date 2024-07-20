@@ -96,7 +96,7 @@ int EventDriver::Add(int fd, EventFunctionBase *ezfd,bool lock){
       delete data;
       return -2;
     }
-    maxfd_ = fd;
+    maxfd_ = fd; // 这里可能有多线程的并发问题
   }
   event_data_.fd2data_[fd] = data;
 

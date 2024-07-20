@@ -18,6 +18,11 @@ public:
     kCoroutineRunning = 2,
     kCoroutineSuspend = 3,
   };
+
+  enum {
+    kCoroutineTypeC = 0, 
+  };
+
   virtual int CoroutineSize() { return 0; }
   virtual bool CoroutineInit(
     CoroutineFunc func, void* data, 

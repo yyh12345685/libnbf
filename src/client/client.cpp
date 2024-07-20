@@ -202,7 +202,7 @@ EventMessage* Client::DoRecieve(EventMessage* message) {
   CoroutineSchedule* schedule = CoroutineManager::Instance().GetScheduler();
   if (nullptr != schedule) {
     // int coro_id = CoroutineManager::GetCurCoroutineId();
-    // TODO 调用DoRecieve一定是在协程中吗？
+    // TODO 调用DoRecieve一定是在协程中吗,理论应该存在不在协程中的情况？
     CoroContext* coro = schedule->GetCurrentCoroutine();
     if (nullptr == coro){
       WARN(logger_, "no valid coroutine id:");

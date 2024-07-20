@@ -6,6 +6,7 @@
 #include "coroutine/coroutine_schedule.h"
 #include "coroutine/coro_context.h"
 #include "coro_context_c.h"
+#include "common/thread_id.h"
 
 namespace bdf{
 
@@ -29,7 +30,10 @@ CoroContextc* CoNew(
   return coctx;
 }
 
-void CoDelete(CoroContextc*coctx) {
+void CoDelete(CoroContextc* coctx) {
+  if (coctx->actor != nullptr) {
+    delete coctx->actor;
+  }
   free(coctx->stack);
   delete(coctx);
 }
@@ -45,6 +49,7 @@ bool CoroutineImplc::CoroutineInit(
   //memset(coro_ls_->coctxs, 0, sizeof(CoroutineActor*) * coro_ls_->cap);
   //coro_ls_->coctxs.resize(coro_ls_->cap);
 
+  TRACE(logger_, "ThreadId:" << ThreadId::Get() << ",will create coro size:" << coro_ls_->cap);
   for (int idx = 0; idx < coro_ls_->cap; idx++) {
     InitNewCoroutine(func, data, free_list);
   }
@@ -62,8 +67,6 @@ int CoroutineImplc::InitNewCoroutine(
   //if (coroutine_id > max_coro_id_) {
   //  max_coro_id_ = coroutine_id;
   //}
-
-  CoroutineID::GetInst().InitMaxIds(MAX_CORO_IDS);
 
   return 0;
 }
@@ -98,11 +101,12 @@ CoroContext* CoroutineImplc::CoroutineNew(CoroutineFunc func, void *ud) {
     WARN(logger_, "coroutine is limited:" << coro_ls_->cap);
     return nullptr;
   }
-  CoroContextc*coctx = CoNew(coro_ls_, func, ud);
+  CoroContextc* coctx = CoNew(coro_ls_, func, ud);
   coro_ls_->coctxs.insert(coctx);
-  coro_ls_->cap++;
-  ++coro_ls_->nco;
-  TRACE(logger_, "create coroutine,ptr:" << coctx);
+  //coro_ls_->cap++;
+  coro_ls_->nco++;
+  coctx->actor = new CoroutineActorc();
+  TRACE(logger_, "ThreadId:" << ThreadId::Get() << "create coroutine ptr:" << coctx << ",idx:" << coro_ls_->nco);
   return coctx;
 
   /*if (coro_ls_->nco >= coro_ls_->cap) {
@@ -146,7 +150,7 @@ static void MainFunc(uint32_t low32, uint32_t hi32) {
 bool CoroutineImplc::CoroutineResume(CoroContext* coro) {
   assert(coro_ls_ != nullptr);
   if (coro_ls_->running != nullptr){
-    WARN(logger_, "error running:" << coro_ls_->running);
+    WARN(logger_, "CoroutineResume error running:" << coro_ls_->running);
     return false;
   }
 
@@ -203,8 +207,8 @@ void CoroutineImplc::SaveStack(CoroContextc* coctx, char *top){
 void CoroutineImplc::CoroutineYield() {
   assert(coro_ls_ != nullptr);
   // TODO 需要处理在协程中和不在协程中的情况[如在线程中时情况存在吗？]
-  if (coro_ls_->running != nullptr) {
-    WARN(logger_, "error running:" << coro_ls_->running);
+  if (coro_ls_->running == nullptr) {
+    WARN(logger_, "CoroutineYield error running:" << coro_ls_->running);
     return;
   }
 

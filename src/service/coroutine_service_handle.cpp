@@ -24,18 +24,23 @@ void CoroutineServiceHandler::Run(HandleData* data){
   CoroutineManager::Instance().Init(this,&time_mgr_);
   CoroutineSchedule* scheduler = CoroutineManager::Instance().GetScheduler();
   int coroutine_size = service::GetServiceManager().GetServiceConfig().coroutine_size;
+  uint32_t coroutine_type = service::GetServiceManager().GetServiceConfig().coroutine_type;
   scheduler->InitCoroSchedule(
-    &CoroutineServiceHandler::ProcessCoroutine, data, coroutine_size);
+    &CoroutineServiceHandler::ProcessCoroutine, data, coroutine_size, coroutine_type);
   CoroContext* coro = scheduler->GetAvailableCoro();
   if (coro == nullptr) {
     WARN(logger_, "CoroutineServiceHandler::Run exit becase coro is nullptr.");
     return;
   }
-
+  scheduler->CoroutineResume(coro);
   debug_time_ = time(NULL);
 
   while (data->is_run) {
     //这里负责切换到协程，所有业务都在协程中处理
+    if (scheduler->CoroutineResumeActive()) {
+      continue;
+    }
+    // 第一个coro放这里做循环
     scheduler->CoroutineResume(coro);
   }
   // coro 可以还回到free list中
@@ -48,7 +53,7 @@ static void ProcessDebug(){
 }
 
 void CoroutineServiceHandler::ProcessCoroutine(void* data){
-  TRACE(logger_, "CoroutineServiceHandler::Process. thread id:"<< ThreadId::Get());
+  TRACE(logger_, "CoroutineServiceHandler::ProcessCoroutine. thread id:"<< ThreadId::Get());
   HandleData* handle_data = (HandleData*)data;
   CoroutineServiceHandler* handle = 
     dynamic_cast<CoroutineServiceHandler*>(handle_data->handle_);
@@ -85,8 +90,8 @@ void CoroutineServiceHandler::OnTimerCoro(void* function_data){
   }*/
 
   CoroutineSchedule* scheduler = CoroutineManager::Instance().GetScheduler();
-  // 本来就在协程里面，会先切出来，然后切到另外一个协程
-  if (!scheduler->CoroutineResume(msg_coro)) {
+  // 本来就在协程里面，会先切出来，然后切到另外一个协程，这个可以直接切吗，还是要先挂起当前协程？
+  if (!scheduler->CoroutineYieldToActive(msg_coro)) {
     TRACE(logger_, "yield failed, msg_coro:" << msg_coro);
   }
 }
@@ -142,7 +147,7 @@ void CoroutineServiceHandler::ProcessClientItem(EventMessage* msg){
   CoroutineActor* coroutine = msg->msg_coro->actor;
   if (coroutine->SendMessage(msg)){
     //本来就在协程里面，会先切出来，然后切到另外一个协程
-    if (!scheduler->CoroutineResume(msg->msg_coro)) {
+    if (!scheduler->CoroutineYieldToActive(msg->msg_coro)) {
       WARN(logger_, "client yield failed, msg:" << msg);
     }
   }else{

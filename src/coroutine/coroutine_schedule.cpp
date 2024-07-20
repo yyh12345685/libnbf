@@ -2,19 +2,30 @@
 #include "coroutine_actor.h"
 #include "coroutine_manager.h"
 #include "common/thread_id.h"
+#include "coroutine/coroutine_impl_c/coroutine_impl_c.h"
 
 namespace bdf {
 
 LOGGER_CLASS_IMPL(logger_, CoroutineSchedule);
 
 CoroutineSchedule::~CoroutineSchedule(){
-  coro_impl_.Release();
+  coro_impl_->Release();
 }
 
 void CoroutineSchedule::InitCoroSchedule(
-  CoroutineFunc func, void* data, int coroutine_size){
+  CoroutineFunc func, void* data, int coroutine_size, int coroutine_type){
+  
+  switch (coroutine_type)
+  {
+  case Coroutine::kCoroutineTypeC:
+    coro_impl_ = new CoroutineImplc();
+    break;
+  default:
+    ERROR(logger_, "InitCoroSchedule unkown coroutine_type:" << coroutine_type);
+    return;
+  }
 
-  coro_impl_.CoroutineInit(func, data, free_list_, coroutine_size);
+  coro_impl_->CoroutineInit(func, data, free_list_, coroutine_size);
 }
 
 CoroContext* CoroutineSchedule::GetAvailableCoro(){
@@ -44,7 +55,7 @@ CoroContext* CoroutineSchedule::GetAvailableCoro(){
 }
 
 CoroContext* CoroutineSchedule::GetCurrentCoroutine() {
-  return coro_impl_.GetCurrentCoroutine();
+  return coro_impl_->GetCurrentCoroutine();
 }
 
 void CoroutineSchedule::ProcessDebug(){
@@ -68,30 +79,26 @@ void CoroutineSchedule::ProcessDebug(){
   }
 }
 
-//挂起当前协程，并将收到消息的协程激活，下次优先切入
-bool CoroutineSchedule::CoroutineYield(CoroContext* coro){
-  /*if (coro_id < 0 || coro_id >= CoroutineSize()) {
+//挂起当前协程，并将收到消息的协程激活，下次有限切入
+bool CoroutineSchedule::CoroutineYieldToActive(CoroContext* coro) {
+  if (nullptr == coro) {
     return false;
   }
 
-  if (GetRunningId() == coro_id) {
+  if (GetCurrentCoroutine() == coro) {
     //先返回了，马上又收到了timeout么?
-    WARN(logger_, "may be timeout,running id:"<< GetRunningId());
+    WARN(logger_, "may be timeout,running coro:" << coro);
     return false;
   }
 
   //说明要切换协程，切换回来之后可能是收到了客户端的消息或者超时
-  active_coro_list_.emplace(coro_id);
-  //if (!available_coro_list_.insert(coro_id).second) {
-  //  INFO(logger_, "repeated resume coro id:" << coro_id);
-  //  //return false;
-  //}*/
-  if (GetCurrentCoroutine() != nullptr) {
+  active_coro_list_.emplace(coro);
+  if (nullptr != GetCurrentCoroutine()) {
     //当前是在协程中，切出去
-    TRACE(logger_, "cur coro ptr:" << GetCurrentCoroutine() << ",change to coro ptr:" << coro);
+    TRACE(logger_, "cur coro ptr:" << GetCurrentCoroutine() << ",will change to coro ptr:" << coro);
     CoroutineYield();
     return true;
-  } else{
+  } else {
     WARN(logger_, "warn CoroutineYieldToActive coro ptr:" << coro);
     return false;
   }
@@ -143,7 +150,23 @@ bool CoroutineSchedule::CoroutineResume(CoroContext* coro) {
   //CoroutineManager::SetCurCoroutineId(id);
   //想看详细日志可以打开
   //TRACE(logger_, "will be resume coroutine:" << id);
-  return coro_impl_.CoroutineResume(coro);
+  return coro_impl_->CoroutineResume(coro);
+}
+
+bool CoroutineSchedule::CoroutineResumeActive() {
+  if (GetCurrentCoroutine() != nullptr) {
+    INFO(logger_, "CoroutineResumeActive not should to here");
+    return false;
+  }
+
+  if (active_coro_list_.size() > 0) {
+    CoroContext* coro = active_coro_list_.front();
+    TRACE(logger_, "change to coro ptr:" << coro);
+    active_coro_list_.pop();
+    CoroutineResume(coro);
+    return true;
+  }
+  return false;
 }
 
 /*int CoroutineSchedule::GetRunningId() {
@@ -151,28 +174,12 @@ bool CoroutineSchedule::CoroutineResume(CoroContext* coro) {
 }*/
 
 int CoroutineSchedule::CoroutineStatus() {
-  return coro_impl_.CoroutineStatus(coro_impl_.GetCurrentCoroutine());
+  return coro_impl_->CoroutineStatus(coro_impl_->GetCurrentCoroutine());
 }
 
 // 挂起当前运行的协程
 void CoroutineSchedule::CoroutineYield() {
-  coro_impl_.CoroutineYield();
-}
-
-void CoroutineID::InitMaxIds(int max_coro_id){
-  lock_.lock();
-
-  if (max_coro_id <= (int)(all_coro_ids_tmp_.size())){
-    lock_.unlock();
-    return;
-  }
-
-  //因为这个版本的 coroutine id是从0依次递增
-  for (int idx = all_coro_ids_tmp_.size(); idx < max_coro_id; idx++) {
-    all_coro_ids_tmp_.emplace_back(idx);
-  }
-
-  lock_.unlock();
+  coro_impl_->CoroutineYield();
 }
 
 }
