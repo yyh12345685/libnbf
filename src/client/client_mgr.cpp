@@ -99,6 +99,7 @@ bool ClientMgr::Invoke(
 }
 
 //支持协程
+//调用DoRecieve要求一定是在协程中，暂不支持不在协程中调用
 EventMessage* ClientMgr::SendRecieve(const std::string& router,EventMessage* message) {
   ClientRouters* routers = GetClientRouters(router);
   if (nullptr == routers) {

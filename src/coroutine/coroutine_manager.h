@@ -29,10 +29,6 @@ struct CoroutineManager {
     return Instance().scheduler_->GetCurrentCoroutine();
   }
 
-  inline static void SetCurrentCoroutine(CoroContext* coro) {
-    //TODO
-  }
-
   inline static CoroutineSchedule* GetScheduler() {
     return Instance().scheduler_;
   }

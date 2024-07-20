@@ -14,7 +14,8 @@ CoroutineSchedule::~CoroutineSchedule(){
 
 void CoroutineSchedule::InitCoroSchedule(
   CoroutineFunc func, void* data, int coroutine_size, int coroutine_type){
-  
+  coro_func_ = func;
+  coro_data_ = data;
   switch (coroutine_type)
   {
   case Coroutine::kCoroutineTypeC:
@@ -28,34 +29,32 @@ void CoroutineSchedule::InitCoroSchedule(
   coro_impl_->CoroutineInit(func, data, free_list_, coroutine_size);
 }
 
-CoroContext* CoroutineSchedule::GetAvailableCoro(){
-  CoroContext* ret = nullptr;
-  if (!free_list_.empty()) {
-    // 从空闲队列中获取
-    ret = free_list_.front();
-    free_list_.pop();
-  } else {
-    // TODO,协程不够用，动态创建。
+CoroContext* CoroutineSchedule::GetAvailableCoro() {
+  // 用来接收消息的协程是暂时不可用的，其他的协程都是可用的
+  for (CoroContext* coro : free_list_) {
+    return coro;
   }
+
+  // 不够用，创建新协程
+  CoroContext* ret = coro_impl_->CoroutineNew(coro_func_, coro_data_);
+  // INFO(logger_, "ThreadId:" << ThreadId::Get() << ",AddNewCoroutine:" << ret);
   return ret;
-  /*for (const auto id: available_coro_list_){
-    return id;
-  }
-
-  //协程不够用，动态增加 TODO
-  int id = AddNewCoroutine();
-  if (id >= 0){
-    INFO(logger_, "ThreadId:" << ThreadId::Get() << ",AddNewCoroutine id:" << id);
-    return id;
-  }
-
-  WARN(logger_, "ThreadId:" << ThreadId::Get() 
-    << ",no available coro,and add failed,coro size:" << available_coro_list_.size());
-  return -1;*/
 }
 
 CoroContext* CoroutineSchedule::GetCurrentCoroutine() {
   return coro_impl_->GetCurrentCoroutine();
+}
+
+// 支持使用InitCoroSchedule中的值，或者新传入的值
+void CoroutineSchedule::CoroutineStart(CoroutineFunc func, void* data) {
+  CoroutineFunc func1 = func != nullptr ? func : coro_func_;
+  void* data1 = data != nullptr ? data : coro_data_;
+  CoroContext* coro = coro_impl_->CoroutineNew(func1, data1);
+  coro_impl_->CoroutineResume(coro);
+}
+
+void CoroutineSchedule::CoroutineStart(CoroContext* coro, CoroutineFunc func, void* data) {
+  coro_impl_->CoroutineStart(coro, func, data);
 }
 
 void CoroutineSchedule::ProcessDebug(){
@@ -64,18 +63,9 @@ void CoroutineSchedule::ProcessDebug(){
   time_t cur_time = time(NULL);
   if ((cur_time - now) > 60) {
     //60秒一次trace
-    INFO(logger_, "ThreadId:" << ThreadId::Get()
-      << ",free list size:" << free_list_.size());
+    INFO(logger_, "ThreadId:" << ThreadId::Get() << ",free list size:" 
+      << free_list_.size() << ",receive list size:" << active_coro_list_.size());
     now = cur_time;
-    //for (size_t idx = 0; idx < yield_time_debug_.size(); idx++) {
-    //  if (yield_time_debug_[idx].is_yield) {
-    //    int yield_times = cur_time - yield_time_debug_[idx].yield_time;
-    //    if (yield_times >= 10) {
-    //      INFO(logger_, "ThreadId:" << ThreadId::Get() << ",try to resume coro id:"
-    //        << idx << ",yield times:" << yield_times);
-    //    }
-    //  }
-    //}
   }
 }
 
@@ -104,55 +94,11 @@ bool CoroutineSchedule::CoroutineYieldToActive(CoroContext* coro) {
   }
 }
 
-/*bool CoroutineSchedule::AfterYieldToAvailable(int coro_id) {
-  //yield_time_debug_[coro_id].is_yield = false;
-  //yield_time_debug_[coro_id].yield_time = time(nullptr);
-  if (!available_coro_list_.insert(coro_id).second) {
-    INFO(logger_, "repeated resume coro id:" << coro_id);
-    //return false;
-  }
-  return true;
-}*/
-
-//启动协程或者恢复有返回的协程,有消息返回，优先切换消费
-/*bool CoroutineSchedule::CoroutineResumeActive() {
-  if (GetRunningId() >= 0){
-    INFO(logger_, "not to here,cur coro id:" << GetRunningId());
-    return false;
-  }
-  if (active_coro_list_.size()>0){
-    int id = active_coro_list_.front();
-    TRACE(logger_, "change to coro id:" << id);
-    active_coro_list_.pop();
-    if (id < 0 || id >= CoroutineSize()) {
-      WARN(logger_, "error coro id:" << id);
-      return false;
-    }
-    CoroutineResume(id);
-    return true;
-  }
-  return false;
-}*/
-
-bool CoroutineSchedule::CoroutineResume(CoroContext* coro) {
-  //业务逻辑都在协程中处理，所以调用该函数一定不在协程里
-  //if (GetRunningId() >= 0) {
-  //  //如果当前是在协程中，先切出去
-  //  INFO(logger_, "cur coro id:" << GetRunningId() << ",change to coro id:" << id);
-  //  CoroutineManager::SetCurCoroutineId(-1);
-  //  CoroutineYield();
-  //}
-  /*if (id < 0 || id >= CoroutineSize()) {
-    WARN(logger_,"invalid id:"<<id);
-    return;
-  }*/
-
-  //CoroutineManager::SetCurCoroutineId(id);
-  //想看详细日志可以打开
-  //TRACE(logger_, "will be resume coroutine:" << id);
+bool CoroutineSchedule::ScCoroutineResume(CoroContext* coro) {
   return coro_impl_->CoroutineResume(coro);
 }
 
+// 尝试切换到一个已经接收数据就绪的协程
 bool CoroutineSchedule::CoroutineResumeActive() {
   if (GetCurrentCoroutine() != nullptr) {
     INFO(logger_, "CoroutineResumeActive not should to here");
@@ -161,25 +107,38 @@ bool CoroutineSchedule::CoroutineResumeActive() {
 
   if (active_coro_list_.size() > 0) {
     CoroContext* coro = active_coro_list_.front();
-    TRACE(logger_, "change to coro ptr:" << coro);
+    TRACE(logger_, "CoroutineResumeActive change to coro ptr:" << coro);
     active_coro_list_.pop();
-    CoroutineResume(coro);
+    ScCoroutineResume(coro);
     return true;
   }
   return false;
 }
 
-/*int CoroutineSchedule::GetRunningId() {
-  return coro_impl_.CoroutineRunning(coro_sche_);
-}*/
 
 int CoroutineSchedule::CoroutineStatus() {
   return coro_impl_->CoroutineStatus(coro_impl_->GetCurrentCoroutine());
 }
 
 // 挂起当前运行的协程
-void CoroutineSchedule::CoroutineYield() {
+void CoroutineSchedule::CoroutineYield(){
   coro_impl_->CoroutineYield();
+}
+
+// 准备接收数据挂起当前运行的协程
+void CoroutineSchedule::ReceiveCoroutineYield() {
+  CoroContext* cur = coro_impl_->GetCurrentCoroutine();
+  auto it = free_list_.find(cur);
+  if (it != free_list_.end()) {
+    free_list_.erase(it);
+  } else {
+    WARN(logger_, "ScCoroutineYield free_list_ not found coro:" << cur);
+  }
+
+  coro_impl_->CoroutineYield();
+
+  // 协程切回来之后又可以用了
+  free_list_.insert(cur);
 }
 
 }

@@ -21,7 +21,7 @@ LOGGER_CLASS_IMPL(logger_, CoroutineServiceHandler);
 void CoroutineServiceHandler::Run(HandleData* data){
   prctl(PR_SET_NAME, "CoroutineServiceHandler");
   INFO(logger_, "CoroutineServiceHandler::Run,thread id:"<< ThreadId::Get());
-  CoroutineManager::Instance().Init(this,&time_mgr_);
+  CoroutineManager::Instance().Init(this, &time_mgr_);
   CoroutineSchedule* scheduler = CoroutineManager::Instance().GetScheduler();
   int coroutine_size = service::GetServiceManager().GetServiceConfig().coroutine_size;
   uint32_t coroutine_type = service::GetServiceManager().GetServiceConfig().coroutine_type;
@@ -32,18 +32,23 @@ void CoroutineServiceHandler::Run(HandleData* data){
     WARN(logger_, "CoroutineServiceHandler::Run exit becase coro is nullptr.");
     return;
   }
-  scheduler->CoroutineResume(coro);
+  scheduler->ScCoroutineResume(coro);
   debug_time_ = time(NULL);
 
   while (data->is_run) {
-    //这里负责切换到协程，所有业务都在协程中处理
+    // 优先切到已经有数据的协程
     if (scheduler->CoroutineResumeActive()) {
       continue;
     }
+     CoroContext* loop_coro = scheduler->GetAvailableCoro();
+    if (loop_coro == nullptr) {
+      WARN(logger_, "CoroutineServiceHandler::Run no coro maybe is limited.");
+      continue;
+    }
+    // TRACE(logger_, "CoroutineServiceHandler resume loop coro:" << loop_coro);
     // 第一个coro放这里做循环
-    scheduler->CoroutineResume(coro);
+    scheduler->ScCoroutineResume(loop_coro);
   }
-  // coro 可以还回到free list中
   INFO(logger_, "CoroutineServiceHandler::Run exit.");
 }
 
@@ -85,10 +90,6 @@ void CoroutineServiceHandler::OnTimerCoro(void* function_data){
     return;
   }
 
-  /*if (coro_id_tmp != coro_id) {
-    WARN(logger_, "may be error tmp coro_id:" << coro_id_tmp << ",coro_id" << coro_id);
-  }*/
-
   CoroutineSchedule* scheduler = CoroutineManager::Instance().GetScheduler();
   // 本来就在协程里面，会先切出来，然后切到另外一个协程，这个可以直接切吗，还是要先挂起当前协程？
   if (!scheduler->CoroutineYieldToActive(msg_coro)) {
@@ -115,7 +116,7 @@ void CoroutineServiceHandler::ProcessTask(HandleData* data){
 
 }
 
-void CoroutineServiceHandler::Process(HandleData* data){
+void CoroutineServiceHandler::Process(HandleData* data) {
   CoroutineSchedule* scheduler = CoroutineManager::Instance().GetScheduler();
   int static empty_times = 0;
   if (data->data_.empty()) {
@@ -135,7 +136,7 @@ void CoroutineServiceHandler::Process(HandleData* data){
   ProcessMessageHandle(temp);
 }
 
-void CoroutineServiceHandler::ProcessClientItem(EventMessage* msg){
+void CoroutineServiceHandler::ProcessClientItem(EventMessage* msg) {
   CoroutineSchedule* scheduler = CoroutineManager::Instance().GetScheduler();
   if (nullptr == msg->msg_coro){
     //not to here,否则会丢消息
@@ -145,7 +146,7 @@ void CoroutineServiceHandler::ProcessClientItem(EventMessage* msg){
     return;
   }
   CoroutineActor* coroutine = msg->msg_coro->actor;
-  if (coroutine->SendMessage(msg)){
+  if (coroutine->SendMessage(msg)) {
     //本来就在协程里面，会先切出来，然后切到另外一个协程
     if (!scheduler->CoroutineYieldToActive(msg->msg_coro)) {
       WARN(logger_, "client yield failed, msg:" << msg);
@@ -173,19 +174,19 @@ void CoroutineServiceHandler::ProcessMessageHandle(std::queue<EventMessage*>& ms
     EventMessage *msg = msg_list.front();
     msg_list.pop();
 
-    TRACE(logger_, "message is:" << *msg);
-    if (MessageBase::kStatusOK != msg->status){
+    TRACE(logger_, "ProcessMessageHandle message is:" << *msg);
+    if (MessageBase::kStatusOK != msg->status) {
       //超时或者连接被关闭等无效消息
       scheduler->CoroutineYield();
       MessageFactory::Destroy(msg);
       continue;
     }
-    if (msg->direction == MessageBase::kIncomingRequest){
+    if (msg->direction == MessageBase::kIncomingRequest) {
       //处理服务端接收的消息
       uint64_t birth_to_now = Time::GetCurrentClockTime()- msg->birthtime;
-      if (birth_to_now > INNER_QUERY_SEND_PROTECT_TIME){
+      if (birth_to_now > INNER_QUERY_SEND_PROTECT_TIME) {
         //从io handle到service handle超过100ms,服务端过载保护
-        INFO(logger_, "birth_to_now:"<< birth_to_now <<",msg:" << *msg);
+        INFO(logger_, "ProcessMessageHandle birth_to_now_ms:" << birth_to_now << ",msg:" << *msg);
         MessageFactory::Destroy(msg);
         continue;
       }
@@ -198,7 +199,6 @@ void CoroutineServiceHandler::ProcessMessageHandle(std::queue<EventMessage*>& ms
 }
 
 void CoroTimer::OnTimer(void* timer_data, uint64_t time_id){
-  // TODO 这里的timer_data已经改为CoroutineActor了，需要改
   service_handle_->OnTimerCoro(timer_data);
   //delete this;
 }

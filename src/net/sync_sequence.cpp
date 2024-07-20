@@ -52,7 +52,7 @@ EventMessage* SyncSequence::Get() {
   if (nullptr != fired && fired->timer_out_id > 0) {
     int thread_id = sync_client_con_->GetRegisterThreadId();
     ServiceManager::GetInstance().GetNetThreadManager()->CancelTimer(
-      fired->timer_out_id,thread_id);
+      fired->timer_out_id, thread_id);
     TRACE(logger_, "have response cancel timer id:" << fired->timer_out_id);
   }else{
     WARN(logger_, "fired:" << fired << ",not cancel timer id:" << fired->timer_out_id);

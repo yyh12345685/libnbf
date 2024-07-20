@@ -153,7 +153,7 @@ int Matrix::MarkEnd(uint64_t token, const bool succeed) {
 int Matrix::SendToCollector(const MatrixItem* item) {
   int ret = collector_->Send(item);
   if (0 != ret) {
-    if (1 == (rand()%10)){
+    if (1 == (rand()%10)) {
       INFO(logger_, "Matrix::SendToCollector fail,ret:"<< ret);
     }
     if (item != nullptr) {

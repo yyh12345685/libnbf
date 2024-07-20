@@ -20,18 +20,22 @@ public:
 
   virtual bool CoroutineInit(
     CoroutineFunc func, void* data, 
-    std::queue<CoroContext*>& free_list, int coroutine_size = DEFAULT_COROUTINE);
+    std::unordered_set<CoroContext*>& free_list, int coroutine_size = DEFAULT_COROUTINE);
+
   virtual void Release();
 
   virtual int CoroutineSize();
 
   //创建协程
-  CoroContext* CoroutineNew(CoroutineFunc, void *ud);
-  //启动或者恢复挂起的协程
+  virtual CoroContext* CoroutineNew(CoroutineFunc, void *ud);
+
+  //启动协程
+  virtual void CoroutineStart(CoroContext* coro, CoroutineFunc func = nullptr, void* data = nullptr);
+
+  //启动协程/恢复挂起的协程
   virtual bool CoroutineResume(CoroContext* coro);
 
   virtual int CoroutineStatus(CoroContext* coctx);
-  int CoroutineRunning();
 
   //挂起运行中的协程
   virtual void CoroutineYield();
@@ -40,8 +44,6 @@ public:
 
 protected:
   void SaveStack(CoroContextc* coctx, char *top);
-
-  int InitNewCoroutine(CoroutineFunc func, void* data, std::queue<CoroContext*>& free_list);
 
 private:
   CoroContextList* coro_ls_;

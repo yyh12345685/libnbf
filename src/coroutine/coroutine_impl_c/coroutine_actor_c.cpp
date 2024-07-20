@@ -35,10 +35,8 @@ EventMessage* CoroutineActorc::RecieveMessage(EventMessage* message, uint32_t ti
     // 该定时器是为了请求超时之后，协程可以切换回来
     time_id = CoroutineManager::Instance().GetTimerMgr()->AddTimer(tim, timeout_ms);
     TRACE(logger_, "ThreadId:"<< ThreadId::Get()
-      <<",RecieveMessage CoroutineYield:" << this <<",msg"<< *message);
-    scheduler->CoroutineYield(); // 在协程里面，切出当前协程
-    // TODO 如果超时了，定时器里面已经切回到当前协程了，不用再切。。。
-    // scheduler->CoroutineResume(msg_coro); // 切回之前运行前的协程（如果是非对称协程，不需要这一步）
+      <<",RecieveMessage CoroutineYield:" << msg_coro <<",msg"<< *message);
+    scheduler->ReceiveCoroutineYield(); // 在协程里面，切出当前协程，切回来的条件是要么收到消息，要么超时
   }else{
     WARN(logger_, "tid:" << ThreadId::Get() << ",msg_list_ size is:" << msg_list_.size());
   }
@@ -63,7 +61,7 @@ EventMessage* CoroutineActorc::RecieveMessage(EventMessage* message, uint32_t ti
   }
 
   TRACE(logger_, "maybe time out:"<< timeout_ms << ",running coro:" 
-    << scheduler ->GetCurrentCoroutine()<<",prt:"<< this);
+    << scheduler ->GetCurrentCoroutine() << ",prt:"<< this);
   return nullptr;
 }
 
