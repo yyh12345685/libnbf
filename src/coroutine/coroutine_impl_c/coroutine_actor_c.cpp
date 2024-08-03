@@ -19,7 +19,7 @@ CoroutineActorc::CoroutineActorc() :
 EventMessage* CoroutineActorc::RecieveMessage(EventMessage* message, uint32_t timeout_ms){
   TRACE(logger_, "CoroutineActorc::RecieveMessage,timeout_ms:"
     << timeout_ms<<",msg_list_:"<<msg_list_.size());
-  uint64_t time_id = 0;
+  // uint64_t time_id = 0;
   CoroutineSchedule* scheduler = CoroutineManager::Instance().GetScheduler();
   uint64_t seq_id_send_tmp = message->sequence_id;
   CoroContext* msg_coro = message->msg_coro;
@@ -27,25 +27,25 @@ EventMessage* CoroutineActorc::RecieveMessage(EventMessage* message, uint32_t ti
     WARN(logger_, "may be send failed in io handle, message:" << *message);
     return nullptr;
   }
-  CoroTimer* tim = nullptr;
+  //CoroTimer* tim = nullptr;
   if (likely(msg_list_.empty())){
-    CoroutineServiceHandler* hdl = CoroutineManager::Instance().GetServiceHandler();
-    tim = BDF_NEW (CoroTimer, hdl);
-    tim->timer_data_ = msg_coro;
+    //CoroutineServiceHandler* hdl = CoroutineManager::Instance().GetServiceHandler();
+    //tim = BDF_NEW (CoroTimer, hdl);
+    //tim->timer_data_ = msg_coro;
     // 该定时器是为了请求超时之后，协程可以切换回来
-    time_id = CoroutineManager::Instance().GetTimerMgr()->AddTimer(tim, timeout_ms);
-    TRACE(logger_, "ThreadId:"<< ThreadId::Get()
-      <<",RecieveMessage CoroutineYield:" << msg_coro <<",msg"<< *message);
+    //time_id = CoroutineManager::Instance().GetTimerMgr()->AddTimer(tim, timeout_ms);
+    //TRACE(logger_, "ThreadId:"<< ThreadId::Get()
+    //  <<",RecieveMessage CoroutineYield:" << msg_coro <<",msg"<< *message);
     scheduler->ReceiveCoroutineYield(); // 在协程里面，切出当前协程，切回来的条件是要么收到消息，要么超时
   }else{
     WARN(logger_, "tid:" << ThreadId::Get() << ",msg_list_ size is:" << msg_list_.size());
   }
   is_waiting_ = false;
   waiting_id_ = -1;
-  if (0 != time_id && nullptr != tim){
+  /*if (0 != time_id && nullptr != tim){
     CoroutineManager::Instance().GetTimerMgr()->DelTimer(time_id);
     BDF_DELETE(tim);
-  }
+  }*/
   
   while(!msg_list_.empty()) {
     EventMessage* msg = msg_list_.front();

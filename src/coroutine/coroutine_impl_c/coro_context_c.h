@@ -2,28 +2,32 @@
 
 #include <set>
 #include <ucontext.h>
+#include <stddef.h>
 #include "coroutine/coro_context.h"
 #include "coroutine/coroutine.h"
 
 namespace bdf {
 
+// æ”¹ä¸ºç‹¬äº«æ ˆåç¨‹
+// è¿™é‡Œå…±äº«æ ˆæœ‰ç‚¹é—®é¢˜ï¼šå¤šçº¿ç¨‹æ—¶ï¼Œåç¨‹åˆ‡å›å»çš„æ—¶å€™æ¢å¤æ ˆç©ºé—´è¿™å—æœ‰ç©ºè¿˜å¯ä»¥çœ‹ä¸‹
 struct CoroContextList {
-  char stack[STACK_SIZE]; // ¹²ÏíÕ»
+  //char stack[STACK_SIZE]; // å…±äº«æ ˆ
   ucontext_t main_ctx;
-  int nco;
+  //int nco;
   int cap;
+  int stack_size;
   CoroContext* running = nullptr;
-  // Êµ¼Ê´æ·ÅµÄÊÇÅÉÉúÀàCoroContextc
-  std::set <CoroContext*> coctxs; // ÓÃset·½±ã²éÕÒ£¬ÓÖ²»»áÏñhash setÕ¼ÓÃÄÇÃ´¶àÄÚ´æ
+  // å®é™…å­˜æ”¾çš„æ˜¯æ´¾ç”Ÿç±»CoroContextc
+  std::set <CoroContext*> coctxs; // ç”¨setæ–¹ä¾¿æŸ¥æ‰¾ï¼Œåˆä¸ä¼šåƒhash setå ç”¨é‚£ä¹ˆå¤šå†…å­˜
 };
 
 struct CoroContextc : public CoroContext {
-  CoroutineFunc init_func = nullptr; // Ö§³Ö³õÊ¼»¯µÄÊ±ºò´«Ğ­³Ìº¯Êı
-  CoroutineFunc start_func = nullptr; //Ò²Ö§³ÖÆô¶¯Ğ­³ÌµÄÊ±ºò´«Ğ­³Ìº¯Êı
+  CoroutineFunc init_func = nullptr; // æ”¯æŒåˆå§‹åŒ–çš„æ—¶å€™ä¼ åç¨‹å‡½æ•°
+  CoroutineFunc start_func = nullptr; //ä¹Ÿæ”¯æŒå¯åŠ¨åç¨‹çš„æ—¶å€™ä¼ åç¨‹å‡½æ•°
   void *ud;
   ucontext_t ctx;
-  int ctx_cap;
-  int size; // Õ»´óĞ¡
+  //ptrdiff_t ctx_cap;
+  ptrdiff_t size; // æ ˆå¤§å°
   int status;
   char *stack;
 };

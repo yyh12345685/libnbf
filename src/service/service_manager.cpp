@@ -117,8 +117,8 @@ uint32_t ServiceManager::GetServiceHandleCount() {
   return handle_thread_.service_handle_thread_.size();
 }
 
-void ServiceManager::SendToServiceHandle(EventMessage* msg){
-  uint32_t id = GetServiceHandleId(msg);
+void ServiceManager::SendToServiceHandle(EventMessage* msg) {
+  uint32_t id = GetServiceHandleId(msg); //还是给到当时发送消息的线程
   TRACE(logger_, "ThreadId:" << ThreadId::Get()
     <<",handle id:" << msg->handle_id << ",Get id:" << id);
   HandleData* hd = handle_thread_.service_handle_data_.at(id);

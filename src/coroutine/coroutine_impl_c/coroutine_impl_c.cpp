@@ -18,15 +18,15 @@ LOGGER_CLASS_IMPL(logger_, CoroutineImplc);
 #define MAX_CORO_IDS 100000
 
 CoroContextc* CoNew(
-  CoroContextList* corotine_ls, CoroutineFunc func, void* ud) {
+  CoroContextList* corotine_ls, CoroutineFunc func, void* ud, int stack_size) {
   CoroContextc* coctx = new CoroContextc;
   coctx->init_func = func;
   coctx->ud = ud;
   //coctx->ls = corotine_ls;
-  coctx->ctx_cap = 0;
-  coctx->size = 0;
+  //coctx->ctx_cap = 0;
+  coctx->size = stack_size;
   coctx->status = Coroutine::kCoroutineReady;
-  coctx->stack = nullptr; 
+  coctx->stack = (char*)malloc(stack_size); 
   return coctx;
 }
 
@@ -34,24 +34,32 @@ void CoDelete(CoroContextc* coctx) {
   if (coctx->actor != nullptr) {
     delete coctx->actor;
   }
-  free(coctx->stack);
+  if (coctx->stack != nullptr) {
+    free(coctx->stack);
+  }
+  
   delete(coctx);
 }
 
 bool CoroutineImplc::CoroutineInit(
   CoroutineFunc func, void* data, 
-  std::unordered_set<CoroContext*>& free_list, int coroutine_size) {
+  std::unordered_set<CoroContext*>& free_list, int coroutine_size, int stack_size) {
   coro_ls_ = new CoroContextList;
-  coro_ls_->nco = 0;
+  //coro_ls_->nco = 0;
   coro_ls_->cap = coroutine_size;
   coro_ls_->running = nullptr;
+  if (stack_size <= 0) {
+    coro_ls_->stack_size = DEFAULT_STACK_SIZE;
+  } else {
+    coro_ls_->stack_size = stack_size;
+  }
   //coro_ls_->coctxs = (CoroutineActor**)malloc(sizeof(CoroutineActor*) * coro_ls_->cap);
   //memset(coro_ls_->coctxs, 0, sizeof(CoroutineActor*) * coro_ls_->cap);
   //coro_ls_->coctxs.resize(coro_ls_->cap);
 
   TRACE(logger_, "ThreadId:" << ThreadId::Get() << ",will create coro size:" << coro_ls_->cap);
   for (int idx = 0; idx < coro_ls_->cap; idx++) {
-    CoroContext* coro = CoroutineNew(func, data);
+    CoroContext* coro = CoroutineNew(func, data, stack_size);
     free_list.insert(coro);
   }
 
@@ -74,20 +82,20 @@ int CoroutineImplc::CoroutineSize() {
   return coro_ls_->cap;
 }
 
-CoroContext* CoroutineImplc::CoroutineNew(CoroutineFunc func, void *ud) {
+CoroContext* CoroutineImplc::CoroutineNew(CoroutineFunc func, void *ud, int stack_size) {
   assert(coro_ls_ != nullptr);
-  if (coro_ls_->nco >= MAX_CORO_IDS) {
+  if (coro_ls_->cap >= MAX_CORO_IDS) {
     WARN(logger_, "coroutine is limited:" << coro_ls_->cap);
     return nullptr;
   }
-  CoroContextc* coctx = CoNew(coro_ls_, func, ud);
+  if (stack_size <= 0) {
+    stack_size = DEFAULT_STACK_SIZE;
+  } 
+
+  CoroContextc* coctx = CoNew(coro_ls_, func, ud, stack_size);
   coro_ls_->coctxs.insert(coctx);
-  coro_ls_->nco++;
-  if (coro_ls_->nco >= coro_ls_->cap) {
-    coro_ls_->cap = coro_ls_->nco;
-  }
   coctx->actor = new CoroutineActorc();
-  TRACE(logger_, "ThreadId:" << ThreadId::Get() << "create coroutine ptr:" << coctx << ",idx:" << coro_ls_->nco);
+  INFO(logger_, "ThreadId:" << ThreadId::Get() << "create coroutine ptr:" << coctx << ",idx:" << coro_ls_->coctxs.size());
   return coctx;
 }
 
@@ -104,7 +112,7 @@ static void MainFunc(uint32_t low32, uint32_t hi32) {
   corotine_ls->coctxs.erase(coctx);
   CoDelete(coctx);
   
-  --corotine_ls->nco;
+  --corotine_ls->cap;
   corotine_ls->running = nullptr;
 }
 
@@ -127,8 +135,8 @@ void CoroutineImplc::CoroutineStart(CoroContext* coro, CoroutineFunc func, void*
   }
   if (status == kCoroutineReady) {
     getcontext(&coctx->ctx);
-    coctx->ctx.uc_stack.ss_sp = coro_ls_->stack;
-    coctx->ctx.uc_stack.ss_size = STACK_SIZE;
+    coctx->ctx.uc_stack.ss_sp = coctx->stack;
+    coctx->ctx.uc_stack.ss_size = coctx->size;
     coctx->ctx.uc_link = &coro_ls_->main_ctx;
     coro_ls_->running = coro;
     coctx->status = kCoroutineRunning;
@@ -156,8 +164,8 @@ bool CoroutineImplc::CoroutineResume(CoroContext* coro) {
   switch (status) {
   case kCoroutineReady: {
     getcontext(&coctx->ctx);
-    coctx->ctx.uc_stack.ss_sp = coro_ls_->stack;
-    coctx->ctx.uc_stack.ss_size = STACK_SIZE;
+    coctx->ctx.uc_stack.ss_sp = coctx->stack;
+    coctx->ctx.uc_stack.ss_size = coctx->size;
     coctx->ctx.uc_link = &coro_ls_->main_ctx;
     coro_ls_->running = coro;
     coctx->status = kCoroutineRunning;
@@ -167,7 +175,7 @@ bool CoroutineImplc::CoroutineResume(CoroContext* coro) {
     break; 
   }
   case kCoroutineSuspend:
-    memcpy(coro_ls_->stack + STACK_SIZE - coctx->size, coctx->stack, coctx->size);
+    //memcpy(coro_ls_->stack + STACK_SIZE - coctx->size, coctx->stack, coctx->size);
     coro_ls_->running = coro;
     coctx->status = kCoroutineRunning;
     swapcontext(&coro_ls_->main_ctx, &coctx->ctx);
@@ -182,20 +190,21 @@ bool CoroutineImplc::CoroutineResume(CoroContext* coro) {
   return true;
 }
 
-void CoroutineImplc::SaveStack(CoroContextc* coctx, char *top) {
+/*void CoroutineImplc::SaveStack(CoroContextc* coctx, char *top) {
   char dummy = 0;
-  if (top - &dummy >= STACK_SIZE){
-    ERROR(logger_, "stack is more than:" << STACK_SIZE);
-    return;
-  }
+  assert(top - &dummy <= STACK_SIZE);
   if (coctx->ctx_cap < top - &dummy) {
-    free(coctx->stack);
+    INFO(logger_, "stack size is:" << coctx->size << ",cap:" 
+      << coctx->ctx_cap << ",will change to:" << (top - &dummy) << ",coro:" << coctx);
+    if (coctx->stack != nullptr) {
+      free(coctx->stack);
+    }
     coctx->ctx_cap = top - &dummy;
     coctx->stack = (char*)malloc(coctx->ctx_cap);
   }
   coctx->size = top - &dummy;
   memcpy(coctx->stack, &dummy, coctx->size);
-}
+}*/
 
 void CoroutineImplc::CoroutineYield() {
   assert(coro_ls_ != nullptr);
@@ -208,11 +217,11 @@ void CoroutineImplc::CoroutineYield() {
   CoroContextc* coctx = dynamic_cast<CoroContextc*>(coro_ls_->running);
   if (nullptr == coctx)
     return;
-  if (coro_ls_->stack >= (char *)&coctx){
+  /*if (coro_ls_->stack >= (char *)&coctx){
     WARN(logger_, "error stack:" << coro_ls_->stack);
     return;
-  }
-  SaveStack(coctx, coro_ls_->stack + STACK_SIZE);
+  }*/
+  //SaveStack(coctx, coro_ls_->stack + STACK_SIZE);
   coctx->status = kCoroutineSuspend;
   coro_ls_->running = nullptr;
   swapcontext(&coctx->ctx, &coro_ls_->main_ctx);

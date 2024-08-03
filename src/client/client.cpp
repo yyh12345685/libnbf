@@ -162,6 +162,7 @@ EventMessage* Client::DoSendRecieve(EventMessage* message) {
   message->sequence_id = GetSequenceId();
   message->descriptor_id = (int64_t)((void*)connect_);
   message->direction = MessageBase::kOutgoingRequest;
+  message->is_send_receive = true;
   if (ForTest::Inst().GetForTest()){
     TRACE(logger_, "for test_client_server,only send.");
     if (message->IsSynchronous()) {

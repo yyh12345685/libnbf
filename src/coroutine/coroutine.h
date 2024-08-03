@@ -5,8 +5,8 @@
 namespace bdf {
 
  typedef void (*CoroutineFunc)(void*);
-#define STACK_SIZE (256*1024)
-#define DEFAULT_COROUTINE 512
+#define DEFAULT_STACK_SIZE (128*1024)
+#define DEFAULT_COROUTINE 256
 
  class CoroContext;
 
@@ -26,26 +26,26 @@ public:
   virtual int CoroutineSize() { return 0; }
   virtual bool CoroutineInit(
     CoroutineFunc func, void* data, 
-    std::unordered_set<CoroContext*>& free_list, int coroutine_size = DEFAULT_COROUTINE) {
+    std::unordered_set<CoroContext*>& free_list, int coroutine_size = DEFAULT_COROUTINE, int stack_size = 0) {
     return false;
   }
   virtual void Release() {}
 
-  // ´´½¨Ð­³Ì
-  virtual CoroContext* CoroutineNew(CoroutineFunc, void *ud) { return nullptr; }
+  // ï¿½ï¿½ï¿½ï¿½Ð­ï¿½ï¿½
+  virtual CoroContext* CoroutineNew(CoroutineFunc, void *ud, int stack_size = 0) { return nullptr; }
 
-  // »ñÈ¡µ±Ç°ÔËÐÐÖÐµÄÐ­³Ì
+  // ï¿½ï¿½È¡ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½Ðµï¿½Ð­ï¿½ï¿½
   virtual CoroContext* GetCurrentCoroutine() { return nullptr; }
 
   virtual int CoroutineStatus(CoroContext* coro) { return 0; }
 
-  //Æô¶¯Ð­³Ì
+  //ï¿½ï¿½ï¿½ï¿½Ð­ï¿½ï¿½
   virtual void CoroutineStart(CoroContext* coro, CoroutineFunc func = nullptr, void* data = nullptr) {}
 
-  //Æô¶¯»òÕß»Ö¸´¹ÒÆðµÄÐ­³Ì
+  //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß»Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð­ï¿½ï¿½
   virtual bool CoroutineResume(CoroContext* coro) { return false; }
 
-  //¹ÒÆðÔËÐÐÖÐµÄÐ­³Ì
+  //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ðµï¿½Ð­ï¿½ï¿½
   virtual void CoroutineYield() {}
 };
 

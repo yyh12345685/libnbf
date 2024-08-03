@@ -10,7 +10,8 @@ namespace bdf {
 class HandleData;
 
 class CoroutineServiceHandler : 
-  public ServiceHandler{
+
+public ServiceHandler{
 public:
   CoroutineServiceHandler():debug_time_(0){
   }
@@ -22,6 +23,8 @@ public:
   virtual ServiceHandler* Clone() {
     return new CoroutineServiceHandler();
   }
+
+  void HandleTimeOutFromClient(EventMessage* msg);
 
 protected:
   friend class CoroTimer;

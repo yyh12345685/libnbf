@@ -16,7 +16,7 @@ class CoroutineSchedule {
 public:
   ~CoroutineSchedule();
 
-  void InitCoroSchedule(CoroutineFunc func, void* data, int coroutine_size, int coroutine_type);
+  void InitCoroSchedule(CoroutineFunc func, void* data, int coroutine_size, int coroutine_type, int stack_size = 0);
 
   // 支持使用InitCoroSchedule中的值，或者新传入的值
   void CoroutineStart(CoroutineFunc func = nullptr, void* data = nullptr);

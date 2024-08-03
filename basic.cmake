@@ -9,6 +9,11 @@ add_definitions(
 link_libraries(-static-libstdc++ -static-libgcc)
 
 #Find and set LOG4CPLUS_INCLUDE_DIRS, LOG4CPLUS_LIBRARIES
+#1:unzip log4cplus-1.1.2.zip
+#2:cd log4cplus-1.1.2
+#3:./configure
+#4:make -j6
+#5:sudo make install
 find_path(LOG4CPLUS_INCLUDE_DIRS log4cplus/logger.h)
 find_library(LOG4CPLUS_LIBRARIES NAMES liblog4cplus.a log4cplus)
 

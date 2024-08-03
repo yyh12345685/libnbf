@@ -31,7 +31,7 @@ private:
   uint32_t timeout_ms_;
   std::list<EventMessage*> list_;
 
-  uint64_t StartTimer();
+  uint64_t StartTimer(EventMessage* message);
 
   LOGGER_CLASS_DECL(logger_);
 

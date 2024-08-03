@@ -12,6 +12,8 @@ void ServiceConfig::Dump(std::ostream& os) const {
     << ", \"service_handle_thread_count\": " << service_handle_thread_count
     << ", \"service_count\": " << service_count
     << ", \"coroutine_size\": " << coroutine_size
+    << ", \"coroutine_type\": " << coroutine_type
+    << ", \"coroutine_stack_size\": " << coroutine_stack_size
     << ", \"services_config\": ";
     for(const auto& srv_conf:server_config){
       os << "{\"name\":"<< srv_conf.name
@@ -97,6 +99,8 @@ int ConfigInfo::LoadServiceConfig(CIniFileS& ini, ServiceConfig* config){
   config->router_file = ini.GetValue("io_service", "router_file", "");
 
   config->coroutine_size = ini.GetValueInt("io_service", "coroutine_size", 512);
+  config->coroutine_type = ini.GetValueInt("io_service", "coroutine_type", 0);
+  config->coroutine_stack_size = ini.GetValueInt("io_service", "coroutine_stack_size");
 
   config->monitor_file_name = ini.GetValue("io_service", "monitor_file", "");
   config->monitor_token_bucket = ini.GetValueInt("io_service", "monitor_token_bucket", 16);

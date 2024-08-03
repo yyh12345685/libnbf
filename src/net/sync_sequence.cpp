@@ -5,6 +5,8 @@
 #include "service/service_manager.h"
 #include "net_thread_mgr/net_thread_mgr.h"
 #include "common/string_util.h"
+#include "service/coroutine_service_handle.h"
+#include "coroutine/coroutine_manager.h"
 
 namespace bdf {
 
@@ -19,14 +21,14 @@ SyncSequence::SyncSequence(
 SyncSequence::~SyncSequence(){
 }
 
-uint64_t SyncSequence::StartTimer(){
+uint64_t SyncSequence::StartTimer(EventMessage* message) {
   TimerData td;
   td.time_out_ms = timeout_ms_;
   td.time_proc = this;
-  td.function_data = nullptr;
+  td.function_data = message;
   //这里只是用来驱动超时检测,3ms之后执行OnTimer
   int thread_id = sync_client_con_->GetRegisterThreadId();
-  return ServiceManager::GetInstance().GetNetThreadManager()->StartTimer(td,thread_id);
+  return ServiceManager::GetInstance().GetNetThreadManager()->StartTimer(td, thread_id);
 }
 
 int SyncSequence::Put(EventMessage* message) {
@@ -34,7 +36,7 @@ int SyncSequence::Put(EventMessage* message) {
   list_.emplace_back(message);
   lock_.unlock();
 
-  message->timer_out_id = StartTimer();
+  message->timer_out_id = StartTimer(message);
   TRACE(logger_, "start timer id:" << message->timer_out_id);
   return 0;
 }
@@ -45,6 +47,7 @@ EventMessage* SyncSequence::Get() {
     lock_.unlock();
     return nullptr;
   }
+  // 这里默认同一个连接上的消息遵循先发送，先返回，后发送后返回
   EventMessage* fired = list_.front();
   list_.pop_front();
   lock_.unlock();
@@ -61,12 +64,19 @@ EventMessage* SyncSequence::Get() {
   return fired;
 }
 
-void SyncSequence::OnTimer(void* function_data){
+void SyncSequence::OnTimer(void* function_data) {
   //TRACE(logger_, "SyncSequence::OnTimer.");
   //超时先关闭连接
-  if (1 == rand() % 10)
+  //if (0 == rand() % 5) {
     INFO(logger_, "SyncSequence::OnTimer,fd:"<< sync_client_con_->GetFd()
       <<",sync_client_con_:"<< sync_client_con_);
+  //}
+  EventMessage* message = (EventMessage*)function_data;
+  if (message != nullptr && message->msg_coro != nullptr) {
+     CoroutineServiceHandler* hdl = CoroutineManager::Instance().GetServiceHandler();
+     hdl->HandleTimeOutFromClient(message);
+  }
+
   sync_client_con_->RegisterDel(sync_client_con_->GetFd());
   sync_client_con_->CleanSequenceQueue();
   sync_client_con_->CancelTimer();
@@ -74,7 +84,7 @@ void SyncSequence::OnTimer(void* function_data){
   sync_client_con_->StartReconnectTimer();
 }
 
-std::list<EventMessage*> SyncSequence::Clear(){
+std::list<EventMessage*> SyncSequence::Clear() {
   std::list<EventMessage*> tmp;
   lock_.lock();
   tmp.swap(list_);

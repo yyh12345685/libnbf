@@ -3,6 +3,8 @@
 #include "service/service_manager.h"
 #include "net_thread_mgr/net_thread_mgr.h"
 #include "net/async_client_connect.h"
+#include "service/coroutine_service_handle.h"
+#include "coroutine/coroutine_manager.h"
 
 namespace bdf{
 
@@ -60,7 +62,12 @@ EventMessage* AsyncSequence::Get(uint64_t sequence_id){
 void AsyncSequence::OnTimer(void* function_data){
   uint64_t sequence_id = *((uint64_t*)(function_data));
   EventMessage* msg = Get(sequence_id);
-  if (nullptr != msg){
+  INFO(logger, "AsyncSequence::OnTimer,seq id:"<< sequence_id <<",msg:"<< *msg);
+  if (nullptr != msg) {
+    if (msg->msg_coro != nullptr) {
+      CoroutineServiceHandler* hdl = CoroutineManager::Instance().GetServiceHandler();
+      hdl->HandleTimeOutFromClient(msg);
+    }
     async_client_con_->OnTimeout(msg);
   }
 }

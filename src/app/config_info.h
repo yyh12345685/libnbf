@@ -20,6 +20,7 @@ struct ServiceConfig {
     service_count(1),
     coroutine_size(256),
     coroutine_type(0),
+    coroutine_stack_size(0),
     monitor_token_bucket(16), 
     monitor_queue_bucket(16), 
     monitor_queue_size(1024 * 128) {
@@ -35,6 +36,7 @@ struct ServiceConfig {
   // coroutine 
   uint32_t coroutine_size;
   uint32_t coroutine_type;
+  int32_t coroutine_stack_size;
 
   // monitor
   std::string monitor_file_name;

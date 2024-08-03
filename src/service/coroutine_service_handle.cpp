@@ -25,8 +25,9 @@ void CoroutineServiceHandler::Run(HandleData* data){
   CoroutineSchedule* scheduler = CoroutineManager::Instance().GetScheduler();
   int coroutine_size = service::GetServiceManager().GetServiceConfig().coroutine_size;
   uint32_t coroutine_type = service::GetServiceManager().GetServiceConfig().coroutine_type;
+  int stack_size = service::GetServiceManager().GetServiceConfig().coroutine_stack_size;
   scheduler->InitCoroSchedule(
-    &CoroutineServiceHandler::ProcessCoroutine, data, coroutine_size, coroutine_type);
+    &CoroutineServiceHandler::ProcessCoroutine, data, coroutine_size, coroutine_type, stack_size);
   CoroContext* coro = scheduler->GetAvailableCoro();
   if (coro == nullptr) {
     WARN(logger_, "CoroutineServiceHandler::Run exit becase coro is nullptr.");
@@ -81,7 +82,7 @@ void CoroutineServiceHandler::ProcessTimer() {
 }
 
 //when send receive timeout
-void CoroutineServiceHandler::OnTimerCoro(void* function_data){
+void CoroutineServiceHandler::OnTimerCoro(void* function_data) {
   TRACE(logger_, "CoroutineServiceHandler::OnTimer.");
   CoroContext* msg_coro = (CoroContext*)(function_data);
   if (nullptr == msg_coro) {
@@ -93,8 +94,22 @@ void CoroutineServiceHandler::OnTimerCoro(void* function_data){
   CoroutineSchedule* scheduler = CoroutineManager::Instance().GetScheduler();
   // 本来就在协程里面，会先切出来，然后切到另外一个协程，这个可以直接切吗，还是要先挂起当前协程？
   if (!scheduler->CoroutineYieldToActive(msg_coro)) {
-    TRACE(logger_, "yield failed, msg_coro:" << msg_coro);
+    WARN(logger_, "add coror to run failed, msg_coro:" << msg_coro);
   }
+}
+
+void CoroutineServiceHandler::HandleTimeOutFromClient(EventMessage* msg) {
+  CoroutineSchedule* scheduler = CoroutineManager::Instance().GetScheduler();
+  // 本来就在协程里面，会先切出来，然后切到另外一个协程，这个可以直接切吗，还是要先挂起当前协程？
+  if (!scheduler->CoroutineYieldToActive(msg->msg_coro)) {
+    WARN(logger_, "add coror to run failed, msg_coro:" << *msg);
+  }
+
+  // 发送消息的协程执行之后，需要优先回到client去处理消息，
+  /*if (!scheduler->CoroutineYieldToActive(scheduler->GetCurrentCoroutine())) {
+    WARN(logger_, "add coror to run failed, msg_coro:" << *msg);
+  }*/
+  INFO(logger_, "timeout coro:" << msg->msg_coro << "send msg coro" << scheduler->GetCurrentCoroutine());
 }
 
 void CoroutineServiceHandler::ProcessTask(HandleData* data){
@@ -120,10 +135,10 @@ void CoroutineServiceHandler::Process(HandleData* data) {
   CoroutineSchedule* scheduler = CoroutineManager::Instance().GetScheduler();
   int static empty_times = 0;
   if (data->data_.empty()) {
-    usleep(200);
     empty_times++;
-    if (0 == empty_times % 10){
+    if (0 == empty_times % 5){
       scheduler->CoroutineYield();
+      usleep(100);
     }
     return;
   }

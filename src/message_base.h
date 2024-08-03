@@ -126,7 +126,7 @@ public:
   uint8_t type_io_event;
   uint8_t direction = 0;
   uint8_t status = kStatusOK;
-  uint64_t sequence_id=0xffffffffffffffff;
+  uint64_t sequence_id = 0xffffffffffffffff;
   uint64_t birthtime = 0;
   int event_mask = 0;
 };
@@ -141,16 +141,17 @@ class EventMessage : public MessageBase {
     handle_id(-1),
     timer_out_id(0),
     ctx(nullptr),
-    msg_coro(nullptr){
+    msg_coro(nullptr),
+    is_send_receive(false) {
   }
 
   EventMessage(uint8_t type_id_, int64_t descriptor_id_) : 
     MessageBase(type_id_), 
-    descriptor_id(descriptor_id_){
+    descriptor_id(descriptor_id_) {
   }
 
   virtual ~EventMessage() {
-    if (nullptr !=ctx){
+    if (nullptr !=ctx) {
       BDF_DELETE(ctx);
       ctx = nullptr;
     }
@@ -160,7 +161,7 @@ class EventMessage : public MessageBase {
 
   void Dump(std::ostream& os) const;
 
-  void SetDescriptorId(const int64_t& desc_id){
+  void SetDescriptorId(const int64_t& desc_id) {
     descriptor_id = desc_id;
   }
 
@@ -174,6 +175,8 @@ class EventMessage : public MessageBase {
 
   ContextBase* ctx;
   CoroContext* msg_coro; //当前发送消息的协程
+
+  bool is_send_receive; //是否是send receive的请求，不需要将event加入timer管理
 };
 
 class MessageFactory {

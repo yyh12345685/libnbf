@@ -13,7 +13,7 @@ CoroutineSchedule::~CoroutineSchedule(){
 }
 
 void CoroutineSchedule::InitCoroSchedule(
-  CoroutineFunc func, void* data, int coroutine_size, int coroutine_type){
+  CoroutineFunc func, void* data, int coroutine_size, int coroutine_type, int stack_size) {
   coro_func_ = func;
   coro_data_ = data;
   switch (coroutine_type)
@@ -26,7 +26,7 @@ void CoroutineSchedule::InitCoroSchedule(
     return;
   }
 
-  coro_impl_->CoroutineInit(func, data, free_list_, coroutine_size);
+  coro_impl_->CoroutineInit(func, data, free_list_, coroutine_size, stack_size);
 }
 
 CoroContext* CoroutineSchedule::GetAvailableCoro() {
@@ -37,6 +37,7 @@ CoroContext* CoroutineSchedule::GetAvailableCoro() {
 
   // 不够用，创建新协程
   CoroContext* ret = coro_impl_->CoroutineNew(coro_func_, coro_data_);
+  free_list_.insert(ret);
   // INFO(logger_, "ThreadId:" << ThreadId::Get() << ",AddNewCoroutine:" << ret);
   return ret;
 }
@@ -132,7 +133,7 @@ void CoroutineSchedule::ReceiveCoroutineYield() {
   if (it != free_list_.end()) {
     free_list_.erase(it);
   } else {
-    WARN(logger_, "ScCoroutineYield free_list_ not found coro:" << cur);
+    WARN(logger_, "ReceiveCoroutineYield free_list_ not found coro:" << cur);
   }
 
   coro_impl_->CoroutineYield();

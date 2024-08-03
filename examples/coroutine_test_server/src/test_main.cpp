@@ -15,14 +15,14 @@ static bool thread_exit = false;
 
 void CreateCoroTest(void* data) {
   std::string* str = (std::string*)(data);
-  INFO(logger_, "CreateCoroTest start and exit data:" << *str);
+  INFO(logger_, "CreateCoroTest start and exit data:" << *str); // 这里日志没出来，有空再查下原因
   std::cout << "CreateCoroTest start and exit data:" << *str << std::endl;
 }
 
 int CoroThreadTest(void* data) {
   prctl(PR_SET_NAME, "CoroThreadTest");
   std::cout << "CoroThreadTest start." << std::endl;
-  INFO(logger_, "CoroThreadTest start.");
+  INFO(logger_, "CoroThreadTest start."); // 这里日志没出来，有空再查下原因
   bdf::CoroutineManager::Instance().Init(nullptr, nullptr);
   bdf::CoroutineSchedule* scheduler = bdf::CoroutineManager::Instance().GetScheduler();
   scheduler->InitCoroSchedule(nullptr, nullptr, 0, 0);

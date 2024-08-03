@@ -107,7 +107,7 @@ void IoThreads::PutMessageToHandle(EventMessage* msg){
     //不能用con指针地址取模，回导致线程的队列分布非常不均匀，使用顺序id即可
     //id = con->GetConnectId() %io_thread_data_run_.size();
     //为了无锁，只能取摸,仔细看代码会发现id和GetRegisterThreadId()一致
-    id = msg->descriptor_id%io_thread_data_run_.size();
+    id = msg->descriptor_id % io_thread_data_run_.size();
   } else {
     id = (id_io++) % io_thread_data_run_.size();
   }

@@ -20,14 +20,14 @@ public:
 
   virtual bool CoroutineInit(
     CoroutineFunc func, void* data, 
-    std::unordered_set<CoroContext*>& free_list, int coroutine_size = DEFAULT_COROUTINE);
+    std::unordered_set<CoroContext*>& free_list, int coroutine_size = DEFAULT_COROUTINE, int stack_size = 0);
 
   virtual void Release();
 
   virtual int CoroutineSize();
 
   //创建协程
-  virtual CoroContext* CoroutineNew(CoroutineFunc, void *ud);
+  virtual CoroContext* CoroutineNew(CoroutineFunc, void *ud, int stack_size = 0);
 
   //启动协程
   virtual void CoroutineStart(CoroContext* coro, CoroutineFunc func = nullptr, void* data = nullptr);
@@ -43,7 +43,7 @@ public:
   virtual CoroContext* GetCurrentCoroutine();
 
 protected:
-  void SaveStack(CoroContextc* coctx, char *top);
+  //void SaveStack(CoroContextc* coctx, char *top);
 
 private:
   CoroContextList* coro_ls_;
