@@ -20,6 +20,7 @@ EventMessage* CoroutineActorc::RecieveMessage(EventMessage* message, uint32_t ti
   TRACE(logger_, "CoroutineActorc::RecieveMessage,timeout_ms:"
     << timeout_ms<<",msg_list_:"<<msg_list_.size());
   // uint64_t time_id = 0;
+  message->handle_svr =  CoroutineManager::Instance().GetServiceHandler();
   CoroutineSchedule* scheduler = CoroutineManager::Instance().GetScheduler();
   uint64_t seq_id_send_tmp = message->sequence_id;
   CoroContext* msg_coro = message->msg_coro;

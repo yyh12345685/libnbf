@@ -9,6 +9,7 @@ namespace bdf {
 #define DEFAULT_COROUTINE 256
 
  class CoroContext;
+ class CoroRelease;
 
 class Coroutine {
 public:
@@ -25,27 +26,27 @@ public:
 
   virtual int CoroutineSize() { return 0; }
   virtual bool CoroutineInit(
-    CoroutineFunc func, void* data, 
+    CoroutineFunc func, void* data, CoroRelease* release,
     std::unordered_set<CoroContext*>& free_list, int coroutine_size = DEFAULT_COROUTINE, int stack_size = 0) {
     return false;
   }
   virtual void Release() {}
 
-  // ����Э��
-  virtual CoroContext* CoroutineNew(CoroutineFunc, void *ud, int stack_size = 0) { return nullptr; }
+  // 创建协程
+  virtual CoroContext* CoroutineNew(CoroutineFunc, void *ud, CoroRelease* release, int stack_size = 0) { return nullptr; }
 
-  // ��ȡ��ǰ�����е�Э��
+  // 获取当前运行中的协程
   virtual CoroContext* GetCurrentCoroutine() { return nullptr; }
 
   virtual int CoroutineStatus(CoroContext* coro) { return 0; }
 
-  //����Э��
+  // 启动协程
   virtual void CoroutineStart(CoroContext* coro, CoroutineFunc func = nullptr, void* data = nullptr) {}
 
-  //�������߻ָ������Э��
+  // 启动或者恢复挂起的协程
   virtual bool CoroutineResume(CoroContext* coro) { return false; }
 
-  //���������е�Э��
+  // 挂起运行中的协程
   virtual void CoroutineYield() {}
 };
 

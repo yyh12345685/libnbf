@@ -3,11 +3,14 @@
 namespace bdf {
 
 class CoroutineActor;
+class CoroRelease;
 
 struct CoroContext {
   virtual ~CoroContext() {}
-  // 存放一个指针，做客户端时需要用
+  // 瀛樻斁涓�涓寚閽堬紝浣滀负鍗忕▼瀹㈡埛绔椂闇�瑕佺敤
   CoroutineActor* actor = nullptr;
+
+  CoroRelease* release = nullptr;
 };
 
 }

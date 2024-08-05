@@ -122,18 +122,20 @@ void ServiceManager::SendToServiceHandle(EventMessage* msg) {
   TRACE(logger_, "ThreadId:" << ThreadId::Get()
     <<",handle id:" << msg->handle_id << ",Get id:" << id);
   HandleData* hd = handle_thread_.service_handle_data_.at(id);
-  hd->lock_.lock();
+  hd->data_lock_.lock();
   hd->data_.emplace(msg);
-  hd->lock_.unlock();
+  hd->data_lock_.unlock();
+  //hd->PushData(msg);
 }
 
 void ServiceManager::SendTaskToServiceHandle(Task* task){
   static thread_local std::atomic<uint32_t> id_task(0);
   uint32_t tid = (id_task++) % handle_thread_.service_handle_data_.size();
   HandleData* hd = handle_thread_.service_handle_data_.at(tid);
-  hd->lock_task_.lock();
+  hd->task_lock_.lock();
   hd->task_.emplace(task);
-  hd->lock_task_.unlock();
+  hd->task_lock_.unlock();
+  /*hd->PushTask(task);*/
 }
 
 void ServiceManager::SendToNetThreadInner(EventMessage* msg){

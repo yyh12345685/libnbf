@@ -142,7 +142,7 @@ class EventMessage : public MessageBase {
     timer_out_id(0),
     ctx(nullptr),
     msg_coro(nullptr),
-    is_send_receive(false) {
+    handle_svr(nullptr) {
   }
 
   EventMessage(uint8_t type_id_, int64_t descriptor_id_) : 
@@ -176,7 +176,7 @@ class EventMessage : public MessageBase {
   ContextBase* ctx;
   CoroContext* msg_coro; //当前发送消息的协程
 
-  bool is_send_receive; //是否是send receive的请求，不需要将event加入timer管理
+  void* handle_svr; // 作为客户端时，处理的service handle对象
 };
 
 class MessageFactory {

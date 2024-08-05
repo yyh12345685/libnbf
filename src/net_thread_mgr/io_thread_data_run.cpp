@@ -18,22 +18,26 @@ IoThreadDataRun::~IoThreadDataRun(){
   }
 }
 
-void IoThreadDataRun::PutMessage(EventMessage* message){
-  hd_data_->lock_.lock();
+void IoThreadDataRun::PutMessage(EventMessage* message) {
+  hd_data_->data_lock_.lock();
   hd_data_->data_.emplace(message);
-  hd_data_->lock_.unlock();
+  hd_data_->data_lock_.unlock();
+  //hd_data_->PushData(message);
 }
 
-void IoThreadDataRun::CallRun(){
+void IoThreadDataRun::CallRun() {
   if (hd_data_->data_.empty()){
     return;
   }
   
   static time_t log_time = time(NULL);
   std::queue<EventMessage*> temp;
-  hd_data_->lock_.lock();
+  hd_data_->data_lock_.lock();
   temp.swap(hd_data_->data_);
-  hd_data_->lock_.unlock();
+  hd_data_->data_lock_.unlock();
+  /*if(!hd_data_->PopAllData(temp, 1)) {
+    return;
+  }*/
 
   //如有必要这里也可以增加队列超过一定长度的过载保护
   size_t handle_size = temp.size();

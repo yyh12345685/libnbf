@@ -26,7 +26,7 @@ void CoroutineSchedule::InitCoroSchedule(
     return;
   }
 
-  coro_impl_->CoroutineInit(func, data, free_list_, coroutine_size, stack_size);
+  coro_impl_->CoroutineInit(func, data, this, free_list_, coroutine_size, stack_size);
 }
 
 CoroContext* CoroutineSchedule::GetAvailableCoro() {
@@ -36,7 +36,7 @@ CoroContext* CoroutineSchedule::GetAvailableCoro() {
   }
 
   // 不够用，创建新协程
-  CoroContext* ret = coro_impl_->CoroutineNew(coro_func_, coro_data_);
+  CoroContext* ret = coro_impl_->CoroutineNew(coro_func_, coro_data_, this);
   free_list_.insert(ret);
   // INFO(logger_, "ThreadId:" << ThreadId::Get() << ",AddNewCoroutine:" << ret);
   return ret;
@@ -50,7 +50,8 @@ CoroContext* CoroutineSchedule::GetCurrentCoroutine() {
 void CoroutineSchedule::CoroutineStart(CoroutineFunc func, void* data) {
   CoroutineFunc func1 = func != nullptr ? func : coro_func_;
   void* data1 = data != nullptr ? data : coro_data_;
-  CoroContext* coro = coro_impl_->CoroutineNew(func1, data1);
+  CoroContext* coro = coro_impl_->CoroutineNew(func1, data1, this);
+  //free_list_.erase(coro);
   coro_impl_->CoroutineResume(coro);
 }
 
@@ -68,6 +69,11 @@ void CoroutineSchedule::ProcessDebug(){
       << free_list_.size() << ",receive list size:" << active_coro_list_.size());
     now = cur_time;
   }
+}
+
+bool CoroutineSchedule::ReleaseResource(CoroContext* coro) {
+  free_list_.erase(coro);
+  return true;
 }
 
 //挂起当前协程，并将收到消息的协程激活，下次有限切入
@@ -96,7 +102,10 @@ bool CoroutineSchedule::CoroutineYieldToActive(CoroContext* coro) {
 }
 
 bool CoroutineSchedule::ScCoroutineResume(CoroContext* coro) {
-  return coro_impl_->CoroutineResume(coro);
+  //free_list_.erase(coro);
+  bool ret = coro_impl_->CoroutineResume(coro);
+  //free_list_.insert(coro);
+  return ret;
 }
 
 // 尝试切换到一个已经接收数据就绪的协程
@@ -110,6 +119,7 @@ bool CoroutineSchedule::CoroutineResumeActive() {
     CoroContext* coro = active_coro_list_.front();
     TRACE(logger_, "CoroutineResumeActive change to coro ptr:" << coro);
     active_coro_list_.pop();
+    free_list_.insert(coro);
     ScCoroutineResume(coro);
     return true;
   }
@@ -122,13 +132,15 @@ int CoroutineSchedule::CoroutineStatus() {
 }
 
 // 挂起当前运行的协程
-void CoroutineSchedule::CoroutineYield(){
+void CoroutineSchedule::CoroutineYield() {
+  //free_list_.insert(GetCurrentCoroutine());
   coro_impl_->CoroutineYield();
 }
 
 // 准备接收数据挂起当前运行的协程
 void CoroutineSchedule::ReceiveCoroutineYield() {
   CoroContext* cur = coro_impl_->GetCurrentCoroutine();
+  // 从free list里面拿出是为了让收消息的协程不要再被调度上了，直到收到消息或者超时之前
   auto it = free_list_.find(cur);
   if (it != free_list_.end()) {
     free_list_.erase(it);

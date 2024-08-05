@@ -19,7 +19,7 @@ class CoroutineImplc : public Coroutine {
 public:
 
   virtual bool CoroutineInit(
-    CoroutineFunc func, void* data, 
+    CoroutineFunc func, void* data, CoroRelease* release,
     std::unordered_set<CoroContext*>& free_list, int coroutine_size = DEFAULT_COROUTINE, int stack_size = 0);
 
   virtual void Release();
@@ -27,7 +27,7 @@ public:
   virtual int CoroutineSize();
 
   //创建协程
-  virtual CoroContext* CoroutineNew(CoroutineFunc, void *ud, int stack_size = 0);
+  virtual CoroContext* CoroutineNew(CoroutineFunc, void *ud, CoroRelease* release, int stack_size = 0);
 
   //启动协程
   virtual void CoroutineStart(CoroContext* coro, CoroutineFunc func = nullptr, void* data = nullptr);

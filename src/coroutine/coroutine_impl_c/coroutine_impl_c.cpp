@@ -42,7 +42,7 @@ void CoDelete(CoroContextc* coctx) {
 }
 
 bool CoroutineImplc::CoroutineInit(
-  CoroutineFunc func, void* data, 
+  CoroutineFunc func, void* data, CoroRelease* release,
   std::unordered_set<CoroContext*>& free_list, int coroutine_size, int stack_size) {
   coro_ls_ = new CoroContextList;
   //coro_ls_->nco = 0;
@@ -59,7 +59,7 @@ bool CoroutineImplc::CoroutineInit(
 
   TRACE(logger_, "ThreadId:" << ThreadId::Get() << ",will create coro size:" << coro_ls_->cap);
   for (int idx = 0; idx < coro_ls_->cap; idx++) {
-    CoroContext* coro = CoroutineNew(func, data, stack_size);
+    CoroContext* coro = CoroutineNew(func, data, release, stack_size);
     free_list.insert(coro);
   }
 
@@ -82,7 +82,8 @@ int CoroutineImplc::CoroutineSize() {
   return coro_ls_->cap;
 }
 
-CoroContext* CoroutineImplc::CoroutineNew(CoroutineFunc func, void *ud, int stack_size) {
+CoroContext* CoroutineImplc::CoroutineNew(
+  CoroutineFunc func, void *ud, CoroRelease* release, int stack_size) {
   assert(coro_ls_ != nullptr);
   if (coro_ls_->cap >= MAX_CORO_IDS) {
     WARN(logger_, "coroutine is limited:" << coro_ls_->cap);
@@ -95,6 +96,7 @@ CoroContext* CoroutineImplc::CoroutineNew(CoroutineFunc func, void *ud, int stac
   CoroContextc* coctx = CoNew(coro_ls_, func, ud, stack_size);
   coro_ls_->coctxs.insert(coctx);
   coctx->actor = new CoroutineActorc();
+  coctx->release = release;
   INFO(logger_, "ThreadId:" << ThreadId::Get() << "create coroutine ptr:" << coctx << ",idx:" << coro_ls_->coctxs.size());
   return coctx;
 }
@@ -109,6 +111,9 @@ static void MainFunc(uint32_t low32, uint32_t hi32) {
     coctx->init_func(coctx->ud);
   }
   
+  if (coctx->release != nullptr) {
+    coctx->release->ReleaseResource(coctx);
+  }
   corotine_ls->coctxs.erase(coctx);
   CoDelete(coctx);
   
@@ -181,7 +186,7 @@ bool CoroutineImplc::CoroutineResume(CoroContext* coro) {
     swapcontext(&coro_ls_->main_ctx, &coctx->ctx);
     break; 
   default:
-    WARN(logger_, "unkown status:" << status);
+    WARN(logger_, "unkown status:" << status << ",coro:" << coro);
     return false;
     //break;
   }

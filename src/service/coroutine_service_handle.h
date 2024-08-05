@@ -2,16 +2,16 @@
 #pragma once
 
 #include <queue>
+#include <mutex>
 #include "common/timer_mgr.h"
 #include "service/service_handle.h"
 
 namespace bdf { 
 
 class HandleData;
+class CoroContext;
 
-class CoroutineServiceHandler : 
-
-public ServiceHandler{
+class CoroutineServiceHandler : public ServiceHandler {
 public:
   CoroutineServiceHandler():debug_time_(0){
   }
@@ -24,7 +24,7 @@ public:
     return new CoroutineServiceHandler();
   }
 
-  void HandleTimeOutFromClient(EventMessage* msg);
+  void AddTimeOutFromClient(CoroContext* msg_coro);
 
 protected:
   friend class CoroTimer;
@@ -48,6 +48,9 @@ private:
 
   //for debug
   time_t debug_time_;
+
+  std::queue<CoroContext*> time_out_coro_;
+  std::mutex time_out_lock_;
 };
 
 

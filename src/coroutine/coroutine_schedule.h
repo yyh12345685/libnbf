@@ -7,14 +7,15 @@
 #include "common/logger.h"
 #include "common/common.h"
 #include "coroutine.h"
+#include "coroutine_release.h"
 
 namespace bdf {
 
 class CoroContext;
 
-class CoroutineSchedule {
+class CoroutineSchedule : public CoroRelease {
 public:
-  ~CoroutineSchedule();
+  virtual ~CoroutineSchedule();
 
   void InitCoroSchedule(CoroutineFunc func, void* data, int coroutine_size, int coroutine_type, int stack_size = 0);
 
@@ -40,6 +41,9 @@ public:
   CoroContext* GetAvailableCoro();
 
   void ProcessDebug();
+
+  virtual bool ReleaseResource(CoroContext* coro);
+
 protected:
   int CoroutineStatus();
 

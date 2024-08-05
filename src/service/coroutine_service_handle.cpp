@@ -18,7 +18,7 @@ namespace bdf {
 
 LOGGER_CLASS_IMPL(logger_, CoroutineServiceHandler);
 
-void CoroutineServiceHandler::Run(HandleData* data){
+void CoroutineServiceHandler::Run(HandleData* data) {
   prctl(PR_SET_NAME, "CoroutineServiceHandler");
   INFO(logger_, "CoroutineServiceHandler::Run,thread id:"<< ThreadId::Get());
   CoroutineManager::Instance().Init(this, &time_mgr_);
@@ -41,7 +41,7 @@ void CoroutineServiceHandler::Run(HandleData* data){
     if (scheduler->CoroutineResumeActive()) {
       continue;
     }
-     CoroContext* loop_coro = scheduler->GetAvailableCoro();
+    CoroContext* loop_coro = scheduler->GetAvailableCoro();
     if (loop_coro == nullptr) {
       WARN(logger_, "CoroutineServiceHandler::Run no coro maybe is limited.");
       continue;
@@ -78,7 +78,27 @@ void CoroutineServiceHandler::ProcessCoroutine(void* data){
 }
 
 void CoroutineServiceHandler::ProcessTimer() {
+  // 延迟的定时任务
   time_mgr_.RunTimer();
+
+  // 客户端超时处理
+  if (time_out_coro_.empty()) {
+    return;
+  }
+  
+  std::queue<CoroContext*> temp;
+  time_out_lock_.lock();
+  temp.swap(time_out_coro_);
+  time_out_lock_.unlock();
+  while (!temp.empty()) {
+    CoroContext *msg_coro = temp.front();
+    temp.pop();
+    CoroutineSchedule* scheduler = CoroutineManager::Instance().GetScheduler();
+    // 本来就在协程里面，会先切出来，然后切到另外一个协程，这个可以直接切吗，还是要先挂起当前协程？
+    if (!scheduler->CoroutineYieldToActive(msg_coro)) {
+      WARN(logger_, "add coror to run failed, msg_coro:" << msg_coro);
+    }
+  }
 }
 
 //when send receive timeout
@@ -98,30 +118,26 @@ void CoroutineServiceHandler::OnTimerCoro(void* function_data) {
   }
 }
 
-void CoroutineServiceHandler::HandleTimeOutFromClient(EventMessage* msg) {
-  CoroutineSchedule* scheduler = CoroutineManager::Instance().GetScheduler();
-  // 本来就在协程里面，会先切出来，然后切到另外一个协程，这个可以直接切吗，还是要先挂起当前协程？
-  if (!scheduler->CoroutineYieldToActive(msg->msg_coro)) {
-    WARN(logger_, "add coror to run failed, msg_coro:" << *msg);
-  }
-
-  // 发送消息的协程执行之后，需要优先回到client去处理消息，
-  /*if (!scheduler->CoroutineYieldToActive(scheduler->GetCurrentCoroutine())) {
-    WARN(logger_, "add coror to run failed, msg_coro:" << *msg);
-  }*/
-  INFO(logger_, "timeout coro:" << msg->msg_coro << "send msg coro" << scheduler->GetCurrentCoroutine());
+void CoroutineServiceHandler::AddTimeOutFromClient(CoroContext* msg_coro) {
+  time_out_lock_.lock();
+  time_out_coro_.push(msg_coro);
+  time_out_lock_.unlock();
 }
 
-void CoroutineServiceHandler::ProcessTask(HandleData* data){
-  if (data->task_.empty()){
+void CoroutineServiceHandler::ProcessTask(HandleData* data) {
+  /*if (data->task_.empty()){
     return;
-  }
+  }*/
 
   TRACE(logger_, "CoroutineServiceHandler::ProcessTask.");
   std::queue<Task*> temp;
-  data->lock_task_.lock();
+  data->task_lock_.lock();
   temp.swap(data->task_);
-  data->lock_task_.unlock();
+  data->task_lock_.unlock();
+  
+  /*if (data->PopAllTask(temp, 1)) {
+    return;
+  }*/
 
   while (!temp.empty()) {
     Task *task = temp.front();
@@ -142,11 +158,14 @@ void CoroutineServiceHandler::Process(HandleData* data) {
     }
     return;
   }
-  empty_times = 0;
   std::queue<EventMessage*> temp;
-  data->lock_.lock();
+  empty_times = 0;
+  data->data_lock_.lock();
   temp.swap(data->data_);
-  data->lock_.unlock();
+  data->data_lock_.unlock();
+  /*if (data->PopAllData(temp, 1)) {
+    return;
+  }*/
 
   ProcessMessageHandle(temp);
 }

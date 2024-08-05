@@ -73,8 +73,11 @@ void SyncSequence::OnTimer(void* function_data) {
   //}
   EventMessage* message = (EventMessage*)function_data;
   if (message != nullptr && message->msg_coro != nullptr) {
-     CoroutineServiceHandler* hdl = CoroutineManager::Instance().GetServiceHandler();
-     hdl->HandleTimeOutFromClient(message);
+     CoroutineServiceHandler* hdl = (CoroutineServiceHandler*)message->handle_svr;
+      //CoroutineServiceHandler* hdl =  CoroutineManager::Instance().GetServiceHandler() 不能这样获取，因为在不同的线程
+      if (hdl != nullptr) {
+        hdl->AddTimeOutFromClient(message->msg_coro);
+      }
   }
 
   sync_client_con_->RegisterDel(sync_client_con_->GetFd());

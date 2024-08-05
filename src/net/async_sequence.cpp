@@ -65,8 +65,11 @@ void AsyncSequence::OnTimer(void* function_data){
   INFO(logger, "AsyncSequence::OnTimer,seq id:"<< sequence_id <<",msg:"<< *msg);
   if (nullptr != msg) {
     if (msg->msg_coro != nullptr) {
-      CoroutineServiceHandler* hdl = CoroutineManager::Instance().GetServiceHandler();
-      hdl->HandleTimeOutFromClient(msg);
+      CoroutineServiceHandler* hdl = (CoroutineServiceHandler*)msg->handle_svr;
+      //CoroutineServiceHandler* hdl =  CoroutineManager::Instance().GetServiceHandler() 不能这样获取，因为在不同的线程
+      if (hdl != nullptr) {
+        hdl->AddTimeOutFromClient(msg->msg_coro);
+      }
     }
     async_client_con_->OnTimeout(msg);
   }
