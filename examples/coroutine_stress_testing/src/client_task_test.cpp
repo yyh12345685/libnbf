@@ -19,7 +19,7 @@ void ClientTaskTest::RapidClientTestSigle() {
   bdf::EventMessage* msg2_resp =
     bdf::AppBase::Get()->GetClientMgr()->SendRecieve("rapid_test_client", rapid_message_2);
   if (nullptr == msg2_resp) {
-    TRACE(logger_, "msg2_resp is null.");
+    WARN(logger_, "msg2_resp is null.");
     return;
   }
   bdf::RapidMessage* real_msg = dynamic_cast<bdf::RapidMessage*>(msg2_resp);

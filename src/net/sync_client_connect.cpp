@@ -62,7 +62,7 @@ void SyncClientConnect::OnDecodeMessage(EventMessage* message) {
 int SyncClientConnect::EncodeMsg(EventMessage* message){
 
   if (GetStatus() != kConnected) {
-    DEBUG(logger, "SyncClientConnect::EncodeMsg ChannelBroken:" << GetStatus());
+    INFO(logger, "SyncClientConnect::EncodeMsg ChannelBroken:" << GetStatus());
     SetBuzy(false);
     return -1;
   }
@@ -126,7 +126,7 @@ int SyncClientConnect::DecodeMsg(){
     //test_lock_.unlock();
     if (failed) {
       failed = true;
-      TRACE(logger_, "Connecting::Decode,base->Decode failed.");
+      WARN(logger_, "Connecting::Decode,base->Decode failed.");
       if (msg != nullptr) {
         MessageFactory::Destroy(msg);
       }
@@ -134,6 +134,7 @@ int SyncClientConnect::DecodeMsg(){
     }
 
     if (nullptr == msg) {
+      // 可能出现nullptr，粘包的时候???
       TRACE(logger_, "event is nullptr.");
       break;
     }

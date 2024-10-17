@@ -176,11 +176,11 @@ EventMessage* Client::DoSendRecieve(EventMessage* message) {
   DoSend(message);
   //TRACE(logger_, "send msg handle_id:" << message->handle_id);
   EventMessage* response = DoRecieve(message);
-  if (response && response->status != EventMessage::kStatusOK) {
+  /*if (response && response->status != EventMessage::kStatusOK) {
     TRACE(logger_, "may be time out,status:" << response->status << ",msg:" << *response);
     MessageFactory::Destroy(response);
     return nullptr;
-  }
+  }*/
   return response;
 }
 

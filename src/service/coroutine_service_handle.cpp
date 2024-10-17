@@ -82,14 +82,14 @@ void CoroutineServiceHandler::ProcessTimer() {
   time_mgr_.RunTimer();
 
   // 客户端超时处理
-  if (time_out_coro_.empty()) {
-    return;
-  }
-  
-  std::queue<CoroContext*> temp;
-  time_out_lock_.lock();
-  temp.swap(time_out_coro_);
-  time_out_lock_.unlock();
+  /*std::queue<CoroContext*> temp;
+  {
+    std::unique_lock<std::mutex> lock(time_out_lock_);
+    if (time_out_coro_.empty()) {
+      return;
+    }  
+    temp.swap(time_out_coro_);
+  } 
   while (!temp.empty()) {
     CoroContext *msg_coro = temp.front();
     temp.pop();
@@ -98,7 +98,7 @@ void CoroutineServiceHandler::ProcessTimer() {
     if (!scheduler->CoroutineYieldToActive(msg_coro)) {
       WARN(logger_, "add coror to run failed, msg_coro:" << msg_coro);
     }
-  }
+  }*/
 }
 
 //when send receive timeout
@@ -118,22 +118,22 @@ void CoroutineServiceHandler::OnTimerCoro(void* function_data) {
   }
 }
 
-void CoroutineServiceHandler::AddTimeOutFromClient(CoroContext* msg_coro) {
+/*void CoroutineServiceHandler::AddTimeOutFromClient(CoroContext* msg_coro) {
   time_out_lock_.lock();
   time_out_coro_.push(msg_coro);
   time_out_lock_.unlock();
-}
+}*/
 
 void CoroutineServiceHandler::ProcessTask(HandleData* data) {
-  /*if (data->task_.empty()){
-    return;
-  }*/
-
   TRACE(logger_, "CoroutineServiceHandler::ProcessTask.");
   std::queue<Task*> temp;
-  data->task_lock_.lock();
-  temp.swap(data->task_);
-  data->task_lock_.unlock();
+  {
+    std::unique_lock<std::mutex> lock(data->task_lock_);
+    if (data->task_.empty()) {
+      return;
+    }
+    temp.swap(data->task_);
+  }
   
   /*if (data->PopAllTask(temp, 1)) {
     return;
@@ -144,25 +144,22 @@ void CoroutineServiceHandler::ProcessTask(HandleData* data) {
     temp.pop();
     task->OnTask(nullptr);
   }
-
 }
 
 void CoroutineServiceHandler::Process(HandleData* data) {
   CoroutineSchedule* scheduler = CoroutineManager::Instance().GetScheduler();
-  int static empty_times = 0;
-  if (data->data_.empty()) {
-    empty_times++;
-    if (0 == empty_times % 5){
-      scheduler->CoroutineYield();
-      usleep(100);
-    }
+  std::queue<EventMessage*> temp;
+  {
+    std::unique_lock<std::mutex> lock(data->data_lock_);
+    temp.swap(data->data_);
+  }
+
+  if (temp.empty()) {
+    usleep(100);
+    scheduler->CoroutineYield();
     return;
   }
-  std::queue<EventMessage*> temp;
-  empty_times = 0;
-  data->data_lock_.lock();
-  temp.swap(data->data_);
-  data->data_lock_.unlock();
+
   /*if (data->PopAllData(temp, 1)) {
     return;
   }*/
@@ -179,22 +176,23 @@ void CoroutineServiceHandler::ProcessClientItem(EventMessage* msg) {
     MessageFactory::Destroy(msg);
     return;
   }
+
   CoroutineActor* coroutine = msg->msg_coro->actor;
-  if (coroutine->SendMessage(msg)) {
-    //本来就在协程里面，会先切出来，然后切到另外一个协程
-    if (!scheduler->CoroutineYieldToActive(msg->msg_coro)) {
-      WARN(logger_, "client yield failed, msg:" << msg);
-    }
-  }else{
+  CoroContext* msg_coro = msg->msg_coro;
+  if (!coroutine->SendMessage(msg)) {
     //超时的
     MessageFactory::Destroy(msg);
+  }
+  //本来就在协程里面，会先切出来，然后切到另外一个协程
+  if (!scheduler->CoroutineYieldToActive(msg_coro)) {
+    WARN(logger_, "client yield failed, coro:" << msg_coro);
   }
 }
 
 void CoroutineServiceHandler::ProcessMessageHandle(std::queue<EventMessage*>& msg_list) {
   TRACE(logger_, "handle id:" << GetHandlerId()
     << ",ProcessMessage size:" << msg_list.size());
-  CoroutineSchedule* scheduler = CoroutineManager::Instance().GetScheduler();
+  //CoroutineSchedule* scheduler = CoroutineManager::Instance().GetScheduler();
   size_t handle_size = msg_list.size();
   while (!msg_list.empty()) {
     //for debug begin-------------
@@ -209,12 +207,12 @@ void CoroutineServiceHandler::ProcessMessageHandle(std::queue<EventMessage*>& ms
     msg_list.pop();
 
     TRACE(logger_, "ProcessMessageHandle message is:" << *msg);
-    if (MessageBase::kStatusOK != msg->status) {
+    /*if (MessageBase::kStatusOK != msg->status) {
       //超时或者连接被关闭等无效消息
       scheduler->CoroutineYield();
       MessageFactory::Destroy(msg);
       continue;
-    }
+    }*/
     if (msg->direction == MessageBase::kIncomingRequest) {
       //处理服务端接收的消息
       uint64_t birth_to_now = Time::GetCurrentClockTime()- msg->birthtime;
@@ -233,7 +231,7 @@ void CoroutineServiceHandler::ProcessMessageHandle(std::queue<EventMessage*>& ms
 }
 
 void CoroTimer::OnTimer(void* timer_data, uint64_t time_id){
-  service_handle_->OnTimerCoro(timer_data);
+  //service_handle_->OnTimerCoro(timer_data);
   //delete this;
 }
 

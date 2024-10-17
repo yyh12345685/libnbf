@@ -24,7 +24,7 @@ public:
     return new CoroutineServiceHandler();
   }
 
-  void AddTimeOutFromClient(CoroContext* msg_coro);
+  //void AddTimeOutFromClient(CoroContext* msg_coro);
 
 protected:
   friend class CoroTimer;
@@ -49,8 +49,8 @@ private:
   //for debug
   time_t debug_time_;
 
-  std::queue<CoroContext*> time_out_coro_;
-  std::mutex time_out_lock_;
+  //std::queue<CoroContext*> time_out_coro_;
+  //std::mutex time_out_lock_;
 };
 
 

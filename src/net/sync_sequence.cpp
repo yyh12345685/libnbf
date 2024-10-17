@@ -57,7 +57,7 @@ EventMessage* SyncSequence::Get() {
     ServiceManager::GetInstance().GetNetThreadManager()->CancelTimer(
       fired->timer_out_id, thread_id);
     TRACE(logger_, "have response cancel timer id:" << fired->timer_out_id);
-  }else{
+  } else {
     WARN(logger_, "fired:" << fired << ",not cancel timer id:" << fired->timer_out_id);
   }
 
@@ -71,14 +71,14 @@ void SyncSequence::OnTimer(void* function_data) {
     INFO(logger_, "SyncSequence::OnTimer,fd:"<< sync_client_con_->GetFd()
       <<",sync_client_con_:"<< sync_client_con_);
   //}
-  EventMessage* message = (EventMessage*)function_data;
+  /*EventMessage* message = (EventMessage*)function_data;
   if (message != nullptr && message->msg_coro != nullptr) {
      CoroutineServiceHandler* hdl = (CoroutineServiceHandler*)message->handle_svr;
       //CoroutineServiceHandler* hdl =  CoroutineManager::Instance().GetServiceHandler() 不能这样获取，因为在不同的线程
       if (hdl != nullptr) {
         hdl->AddTimeOutFromClient(message->msg_coro);
       }
-  }
+  }*/
 
   sync_client_con_->RegisterDel(sync_client_con_->GetFd());
   sync_client_con_->CleanSequenceQueue();

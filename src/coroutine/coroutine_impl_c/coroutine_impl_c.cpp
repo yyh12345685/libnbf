@@ -27,6 +27,7 @@ CoroContextc* CoNew(
   coctx->size = stack_size;
   coctx->status = Coroutine::kCoroutineReady;
   coctx->stack = (char*)malloc(stack_size); 
+  coctx->ctx = (ucontext_t*)malloc(sizeof(ucontext_t));
   return coctx;
 }
 
@@ -34,6 +35,11 @@ void CoDelete(CoroContextc* coctx) {
   if (coctx->actor != nullptr) {
     delete coctx->actor;
   }
+
+  if (coctx->ctx != nullptr) {
+    free(coctx->ctx);
+  }
+
   if (coctx->stack != nullptr) {
     free(coctx->stack);
   }
@@ -97,7 +103,8 @@ CoroContext* CoroutineImplc::CoroutineNew(
   coro_ls_->coctxs.insert(coctx);
   coctx->actor = new CoroutineActorc();
   coctx->release = release;
-  INFO(logger_, "ThreadId:" << ThreadId::Get() << "create coroutine ptr:" << coctx << ",idx:" << coro_ls_->coctxs.size());
+  INFO(logger_, "ThreadId:" << ThreadId::Get() 
+    << ",create coroutine ptr:" << coctx << ",idx:" << coro_ls_->coctxs.size());
   return coctx;
 }
 
@@ -139,15 +146,15 @@ void CoroutineImplc::CoroutineStart(CoroContext* coro, CoroutineFunc func, void*
     coctx->ud = data; // 支持启动的时候再传入协程函数参数
   }
   if (status == kCoroutineReady) {
-    getcontext(&coctx->ctx);
-    coctx->ctx.uc_stack.ss_sp = coctx->stack;
-    coctx->ctx.uc_stack.ss_size = coctx->size;
-    coctx->ctx.uc_link = &coro_ls_->main_ctx;
+    getcontext(coctx->ctx);
+    coctx->ctx->uc_stack.ss_sp = coctx->stack;
+    coctx->ctx->uc_stack.ss_size = coctx->size;
+    coctx->ctx->uc_link = &coro_ls_->main_ctx;
     coro_ls_->running = coro;
     coctx->status = kCoroutineRunning;
     uintptr_t ptr = (uintptr_t)coro_ls_;
-    makecontext(&coctx->ctx, (void(*)(void))MainFunc, 2, (uint32_t)ptr, (uint32_t)(ptr >> 32));
-    swapcontext(&coro_ls_->main_ctx, &coctx->ctx);
+    makecontext(coctx->ctx, (void(*)(void))MainFunc, 2, (uint32_t)ptr, (uint32_t)(ptr >> 32));
+    swapcontext(&coro_ls_->main_ctx, coctx->ctx);
   } else {
     WARN(logger_, "CoroutineStart unkown status:" << status);
   }
@@ -168,25 +175,25 @@ bool CoroutineImplc::CoroutineResume(CoroContext* coro) {
   //TRACE(logger_, "CoroutineResume coro:" << coro << ",status:" << status);
   switch (status) {
   case kCoroutineReady: {
-    getcontext(&coctx->ctx);
-    coctx->ctx.uc_stack.ss_sp = coctx->stack;
-    coctx->ctx.uc_stack.ss_size = coctx->size;
-    coctx->ctx.uc_link = &coro_ls_->main_ctx;
+    getcontext(coctx->ctx);
+    coctx->ctx->uc_stack.ss_sp = coctx->stack;
+    coctx->ctx->uc_stack.ss_size = coctx->size;
+    coctx->ctx->uc_link = &coro_ls_->main_ctx;
     coro_ls_->running = coro;
     coctx->status = kCoroutineRunning;
     uintptr_t ptr = (uintptr_t)coro_ls_;
-    makecontext(&coctx->ctx, (void(*)(void))MainFunc, 2, (uint32_t)ptr, (uint32_t)(ptr >> 32));
-    swapcontext(&coro_ls_->main_ctx, &coctx->ctx);
+    makecontext(coctx->ctx, (void(*)(void))MainFunc, 2, (uint32_t)ptr, (uint32_t)(ptr >> 32));
+    swapcontext(&coro_ls_->main_ctx, coctx->ctx); // 对称协程，从线程对应的主协程切换到coro来运行
     break; 
   }
   case kCoroutineSuspend:
     //memcpy(coro_ls_->stack + STACK_SIZE - coctx->size, coctx->stack, coctx->size);
     coro_ls_->running = coro;
     coctx->status = kCoroutineRunning;
-    swapcontext(&coro_ls_->main_ctx, &coctx->ctx);
+    swapcontext(&coro_ls_->main_ctx, coctx->ctx); // 对称协程，从线程对应的主协程切换到coro来运行
     break; 
   default:
-    WARN(logger_, "unkown status:" << status << ",coro:" << coro);
+    WARN(logger_, "ThreadId:" << ThreadId::Get() << ",unkown status:" << status << ",coro:" << coro);
     return false;
     //break;
   }
@@ -227,9 +234,15 @@ void CoroutineImplc::CoroutineYield() {
     return;
   }*/
   //SaveStack(coctx, coro_ls_->stack + STACK_SIZE);
+  char dummy = 0;
+  if (abs(coctx->stack - &dummy) > coctx->size) {
+    WARN(logger_, "ThreadId:" << ThreadId::Get() << ",coroutine ptr:" << coctx 
+      << ",stack size is :" << abs(coctx->stack - &dummy) << " more than:" << coctx->size);
+  }
   coctx->status = kCoroutineSuspend;
   coro_ls_->running = nullptr;
-  swapcontext(&coctx->ctx, &coro_ls_->main_ctx);
+  // 对称协程，切换到线程对应的主协程来运行
+  swapcontext(coctx->ctx, &coro_ls_->main_ctx);
 }
 
 int CoroutineImplc::CoroutineStatus(CoroContext* coro) {

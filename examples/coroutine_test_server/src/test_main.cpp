@@ -27,6 +27,7 @@ int CoroThreadTest(void* data) {
   bdf::CoroutineSchedule* scheduler = bdf::CoroutineManager::Instance().GetScheduler();
   scheduler->InitCoroSchedule(nullptr, nullptr, 0, 0);
   scheduler->CoroutineStart(&CreateCoroTest, data);
+  std::cout << "CoroThreadTest end." << std::endl;
   return 0;
 }
 
@@ -121,11 +122,6 @@ void StartTestThread(void* data) {
 }
 
 int main(int argc, char *argv[]){
-
-  //std::thread t1(&StartTestThread, nullptr);
-  std::string test = "hello world.";
-  std::thread t2(&CoroThreadTest, &test);
-
   TaskTest test_task;
 
   bdf::Application<bdf::testserver::AppTestServerHandler> app;
@@ -134,10 +130,17 @@ int main(int argc, char *argv[]){
     return 0;
   });
   app.SetOnAfterStart([&]() {
+
+    //std::thread t1(&StartTestThread, nullptr);
+
+    //std::string test = "hello world.";
+    //std::thread t2(&CoroThreadTest, &test);
+    //t2.join();
+
     bdf::service::GetServiceManager().SendTaskToServiceHandle(&test_task);
     return 0;
   });
-  t2.join();
+  
   app.AppRun(argc,argv);
   return 0;
 }

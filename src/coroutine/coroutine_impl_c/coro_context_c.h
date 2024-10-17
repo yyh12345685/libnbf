@@ -25,7 +25,7 @@ struct CoroContextc : public CoroContext {
   CoroutineFunc init_func = nullptr; // 支持初始化的时候传协程函数
   CoroutineFunc start_func = nullptr; //也支持启动协程的时候传协程函数
   void *ud;
-  ucontext_t ctx;
+  ucontext_t* ctx;
   //ptrdiff_t ctx_cap;
   ptrdiff_t size; // 栈大小
   int status;

@@ -4,6 +4,7 @@
 #include <unordered_set>
 #include <queue>
 #include <mutex>
+#include <atomic>
 #include "common/logger.h"
 #include "common/common.h"
 #include "coroutine.h"
@@ -15,6 +16,12 @@ class CoroContext;
 
 class CoroutineSchedule : public CoroRelease {
 public:
+  CoroutineSchedule():
+    receiving_cnt_(0),
+    coro_func_(nullptr),
+    coro_data_(nullptr){
+    }
+    
   virtual ~CoroutineSchedule();
 
   void InitCoroSchedule(CoroutineFunc func, void* data, int coroutine_size, int coroutine_type, int stack_size = 0);
@@ -59,6 +66,8 @@ private:
 
   // 任务结束的协程，客户端答复了，或者超时了，待处理的协程
   std::queue<CoroContext*> active_coro_list_;
+
+  std::atomic<uint32_t> receiving_cnt_; //正在接收请求的协程数量
 
   Coroutine* coro_impl_;
 
