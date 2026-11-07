@@ -6,6 +6,7 @@
 #include "message.h"
 #include "message_base.h"
 #include "client/client_mgr.h"
+#include "monitor/matrix_scope.h"
 
 LOGGER_STATIC_DECL_IMPL(logger, "root");
 
@@ -13,8 +14,28 @@ LOGGER_STATIC_DECL_IMPL(logger, "root");
 
 static bool thread_exit = false;
 
+void RecordClientError(const std::string& name, int status) {
+  const char* reason = "unknown";
+  switch (status) {
+  case bdf::MessageBase::kStatusTimeout:
+    reason = "timeout";
+    break;
+  case bdf::MessageBase::kStatusEncodeFail:
+    reason = "encode_fail";
+    break;
+  case bdf::MessageBase::kInternalFailure:
+    reason = "internal_failure";
+    break;
+  case bdf::MessageBase::kInvokeError:
+    reason = "invoke_error";
+    break;
+  }
+  bdf::monitor::MatrixCounter::Add(name + ".error." + reason, 1);
+}
+
 void RapidClientTestCallBack(bdf::EventMessage* msg) {
   if (msg->status != bdf::MessageBase::kStatusOK){
+    RecordClientError("rapid_test_client", msg->status);
     TRACE(logger, "call back rapid msg->status:" << (int)(msg->status));
     bdf::MessageFactory::Destroy(msg);
     return;
@@ -90,6 +111,7 @@ int RapidClientTest(void* data) {
 
 void HttpClientTestCallBack(bdf::EventMessage* msg) {
   if (msg->status != bdf::MessageBase::kStatusOK) {
+    RecordClientError("http_test_client", msg->status);
     TRACE(logger, "call back http msg->status:" << (int)(msg->status));
     bdf::MessageFactory::Destroy(msg);
     return;
@@ -184,7 +206,7 @@ int YaceClientTest(void* data) {
   INFO(logger, "YaceClientTest start,time:" << time(NULL));
   int64_t req_times = 0;
   while (!thread_exit) {
-    if (0 == req_times % 85) {
+    if (0 == req_times % 30) {
       //85次sleep1毫秒，测试机器使用不到5个核心
       //假如1秒钟有一半时间sleep，那么一秒钟500次
       //实际情况1秒钟不止500次
@@ -208,7 +230,7 @@ int main(int argc, char *argv[]){
     return 0;
   });
   app.SetOnAfterStart([&](){
-    sleep(1);
+    sleep(3);
     //std::thread t1(&RapidClientTest, &app);
     //std::thread t2(&HttpClientTest, &app);
     std::thread t1(&YaceClientTest, &app);

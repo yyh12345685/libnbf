@@ -16,8 +16,8 @@
 #define unlikely(x) __builtin_expect ((x), false)
 #endif
 
-//内部队列扭转过载保护时长 100ms
-#define INNER_QUERY_SEND_PROTECT_TIME 100
+//内部队列扭转过载保护时长 200ms
+#define INNER_QUERY_SEND_PROTECT_TIME 200
 
 #define DISALLOW_COPY_AND_ASSIGN(class_name)              \
 private:                                                  \
