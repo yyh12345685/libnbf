@@ -1,4 +1,5 @@
 
+#include <atomic>
 #include "net/server_connect.h"
 #include "common/time.h"
 #include "service/service_manager.h"
@@ -10,6 +11,8 @@ namespace bdf {
 LOGGER_CLASS_IMPL(logger_, ServerConnect);
 
 ServerConnect::ServerConnect(){
+  static std::atomic<int64_t> server_connect_id(0);
+  SetConnectId(server_connect_id.fetch_add(1, std::memory_order_relaxed));
 }
 
 ServerConnect::~ServerConnect(){

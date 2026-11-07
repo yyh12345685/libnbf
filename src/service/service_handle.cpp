@@ -5,6 +5,7 @@
 #include "handle_data.h"
 #include "common/thread_id.h"
 #include "common/time.h"
+#include "monitor/matrix_scope.h"
 
 namespace bdf {
 
@@ -53,6 +54,7 @@ void ServiceHandler::Handle(EventMessage* message) {
     //处理服务端接收的消息
     uint64_t birth_to_now = Time::GetCurrentClockTime() - message->birthtime;
     if (birth_to_now > INNER_QUERY_SEND_PROTECT_TIME) {
+      monitor::MatrixCounter::Add("server_request_queue_overload", 1);
       //从io handle到service handle超过100ms,过载保护
       INFO(logger_, "birth_to_now:" << birth_to_now << ",msg:" << *message);
       MessageFactory::Destroy(message);

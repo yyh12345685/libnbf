@@ -1,4 +1,5 @@
 
+#include <cstdint>
 #include "net_thread_mgr/io_threads.h"
 #include "net_thread_mgr/net_thread_mgr.h"
 #include "net_thread_mgr/io_thread_data_run.h"
@@ -10,6 +11,16 @@
 namespace bdf {
 
 LOGGER_CLASS_IMPL(logger_, IoThreads)
+
+static size_t GetIoThreadIndex(EventFunctionBase* event, size_t thread_count) {
+  uint64_t address = reinterpret_cast<uintptr_t>(event);
+  address ^= address >> 33;
+  address *= 0xff51afd7ed558ccdULL;
+  address ^= address >> 33;
+  address *= 0xc4ceb9fe1a85ec53ULL;
+  address ^= address >> 33;
+  return address % thread_count;
+}
 
 IoThreads::IoThreads(){
 }
@@ -53,7 +64,7 @@ void IoThreads::Stop() {
 
 int IoThreads::AddModrw(
   EventFunctionBase *ezfd, int fd, bool set, bool lock,int& register_thread_id){
-  int idx = (uint64_t)((void*)ezfd) % event_threads_.size();
+  int idx = GetIoThreadIndex(ezfd, event_threads_.size());
   register_thread_id = idx;
   if (0 != event_threads_[idx]->Add(fd, ezfd, lock)) {
     WARN(logger_, "event_threads_[idx].Add failed.");
@@ -75,7 +86,7 @@ int IoThreads::AddModrw(
 
 int IoThreads::AddModr(
   EventFunctionBase* ezfd,int fd,  bool set, bool lock,int& register_thread_id){
-  int idx = (uint64_t)((void*)ezfd) % event_threads_.size();
+  int idx = GetIoThreadIndex(ezfd, event_threads_.size());
   register_thread_id= idx;
   if (0!= event_threads_[idx]->Add(fd, ezfd, lock)){
     WARN(logger_, "event_threads_[idx].Add failed,fd:"<<fd);
@@ -91,7 +102,7 @@ int IoThreads::AddModr(
 }
 
 int IoThreads::Del(EventFunctionBase* ezfd, int fd){
-  uint64_t idx = (uint64_t)((void*)ezfd) % event_threads_.size();
+  size_t idx = GetIoThreadIndex(ezfd, event_threads_.size());
   if (0 != event_threads_[idx]->Del(fd)) {
     TRACE(logger_, "event_threads_[idx].Modr failed or fd:"<<fd<<" Already del.");
     return -1;
@@ -103,11 +114,8 @@ void IoThreads::PutMessageToHandle(EventMessage* msg){
   static thread_local std::atomic<uint32_t> id_io(0);
   uint32_t id = 0;
   if (0!= msg->descriptor_id){
-    //Connecting* con = (Connecting*)((void*)(msg->descriptor_id));
-    //不能用con指针地址取模，回导致线程的队列分布非常不均匀，使用顺序id即可
-    //id = con->GetConnectId() %io_thread_data_run_.size();
-    //为了无锁，只能取摸,仔细看代码会发现id和GetRegisterThreadId()一致
-    id = msg->descriptor_id%io_thread_data_run_.size();
+    Connecting* con = reinterpret_cast<Connecting*>(msg->descriptor_id);
+    id = GetIoThreadIndex(con, io_thread_data_run_.size());
   } else {
     id = (id_io++) % io_thread_data_run_.size();
   }

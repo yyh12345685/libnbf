@@ -7,6 +7,7 @@
 #include "net/connect.h"
 #include "common/thread_id.h"
 #include "common/time.h"
+#include "monitor/matrix_scope.h"
 
 namespace bdf{
 
@@ -75,6 +76,7 @@ void IoThreadDataRun::HandleIoMessageEvent(EventMessage* message){
     || message->direction == EventMessage::kOutgoingRequest){
     uint64_t birth_to_now = Time::GetCurrentClockTime() - message->birthtime;
     if (birth_to_now > INNER_QUERY_SEND_PROTECT_TIME) {
+      monitor::MatrixCounter::Add("client_send_queue_overload", 1);
       //从发送到io handle处理超过100ms,过载保护
       INFO(logger_, "birth_to_now:" << birth_to_now << ",msg:" << *message);
       HandleIoMessageFailed(message);
