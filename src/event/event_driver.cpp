@@ -186,16 +186,19 @@ int EventDriver::Poll(int timeout){
   //process timer
   timer_.ProcessTimer();
   //process event
-  inloop_ = true;
   struct epoll_event events[4096];
   int numfd = epoll_wait(epfd_, events, 4096, timeout);
   if (numfd <= 0)
     return 0;
+  inloop_ = true;
   for (int i = 0; i < numfd; ++i){
     FdEvent *data = (FdEvent *)events[i].data.ptr;
     if(nullptr == data){
       WARN(logger_, "nullptr == data...");
-      return -1;
+      continue;
+    }
+    if (data->closed_) {
+      continue;
     }
     EventFunctionBase *ezfd = data->ezfd_;
     bool expected_event = false;
@@ -224,6 +227,7 @@ int EventDriver::Poll(int timeout){
   }
 
   inloop_ = false;
+  event_data_.RemoveClosed();
   return 0;
 }
 

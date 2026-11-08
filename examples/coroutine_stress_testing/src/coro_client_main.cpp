@@ -18,8 +18,8 @@ int StartTaskThread(void* data) {
   while (!thread_exit){
     bdf::service::GetServiceManager().SendTaskToServiceHandle(&client_test_task);
     //这种发送方式很容易造成服务端过载,可参考test_client_server的方式更佳
-    if (0 == (send_times%60000)){
-      sleep(1);
+    if (0 == (send_times%10)){
+      usleep(1000);
     }
     send_times++;
   }

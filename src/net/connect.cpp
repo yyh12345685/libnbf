@@ -29,20 +29,21 @@ Connecting::~Connecting(){
 
 void Connecting::OnEvent(EventDriver *poll, int fd, short event){
   TRACE(logger_, "Connecting::OnEvent,event:"<< event<<",fd"<<fd);
-  if ((event & EVENT_CONNECT_CLOSED) || (event & EVENT_ERROR)){
-    //do not close socket ,error message allways hava read message for close
-    //if (IsServer()){
-      RegisterDel(poll, fd);
-    //}
+  if (fd != fd_ || fd_ < 0) {
+    return;
   }
-
   if (event & EVENT_READ) {
     OnRead();
   }
-  if (event & EVENT_WRITE) {
-    OnWrite();
+  // Reading may close the connection. Never write to that socket again.
+  if (fd != fd_) {
+    return;
   }
-  if ((event & EVENT_CONNECT_CLOSED) || (event & EVENT_ERROR)) {
+  if (event & (EVENT_CONNECT_CLOSED | EVENT_ERROR)) {
+    OnClose();
+    return;
+  }
+  if (event & EVENT_WRITE) {
     OnWrite();
   }
 }
@@ -230,9 +231,9 @@ void Connecting::OnActiveClose(){
 
 //when read write
 void Connecting::OnReadWriteClose(){
-  //events is delete in (event & EVENT_CONNECT_CLOSED) || (event & EVENT_ERROR)
-  Socket::ShutDownBoth(fd_);
-  //OnClose();
+  if (fd_ >= 0) {
+    OnClose();
+  }
 }
 
 void Connecting::Clean(){
