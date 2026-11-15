@@ -208,9 +208,6 @@
     <ClCompile Include="examples\coroutine_test_server\src\app_test_server_handle.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\net\client_reconnect_thread.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="src\net\connect_manager.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -342,6 +339,9 @@
     <ClInclude Include="src\protocol\redis\redis_protocol.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="src\protocol\redis\redis_reply.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
     <ClInclude Include="src\event\timer\timer_base.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -436,9 +436,6 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="src\task.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="src\net\client_reconnect_thread.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="src\common\lockfree_ringbuffer.h">

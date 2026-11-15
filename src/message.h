@@ -1,5 +1,6 @@
 #pragma once
 
+#include "protocol/redis/redis_reply.h"
 #include "message_base.h"
 #include "protocol/http/http_info.h"
 
@@ -57,14 +58,32 @@ struct RedisMessage : public EventMessage {
   virtual ~RedisMessage() {
   }
   void Dump(std::ostream& os) const {
-    os << "{\"type\": \"RapidMessage\""
+    os << "{\"type\": \"RedisMessage\""
       << ", \"EventMessage\": ";
     EventMessage::Dump(os);
-    os << ", \"bodys\": " << bodys.size()<< "\""
+    os << ", \"bodys\": " << bodys.size() << ", \"replies\": " << replies.size()
       << "}";
   }
   virtual bool IsSynchronous() { return true; }
+  // Request: one command per entry, arguments separated by '\1'.
+  // Reply: the raw values of all replies of the request, in order: a
+  // bulk/status/error/integer reply gives its text, an array its elements
+  // (nested arrays flattened, nil element -> ""), a nil reply nothing.
+  // Use replies to see types, errors and nil.
   std::vector<std::string> bodys;
+  // Reply: one structured entry per command of the request, in order.
+  std::vector<RedisReply> replies;
+
+  // True if any reply is an error ("-ERR ...").
+  bool HasError() const {
+    for (const auto& r : replies) if (r.IsError()) return true;
+    return false;
+  }
+  // Request, binary-safe alternative: one argument list per command
+  // (arguments may be empty or contain any byte). Sent before bodys.
+  std::vector<std::vector<std::string> > cmds;
+
+  void AddCmd(const std::vector<std::string>& args) { cmds.push_back(args); }
 };
 
 template<class Stream>

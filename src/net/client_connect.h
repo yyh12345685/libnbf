@@ -1,5 +1,8 @@
 #pragma once
 
+#include <atomic>
+#include <vector>
+#include "net/socket.h"
 #include "net/connect.h"
 #include "event/timer/timer_base.h"
 #include "common/logger.h"
@@ -28,6 +31,8 @@ public:
 
   int TryConnect();
   int Stop();
+  // Runs on the owning I/O thread (kIoActiveCloseEvent).
+  virtual void Destroy();
 
   int RegisterAddModrw(int fd,int& register_thread_id);
   int RegisterAddModr(int fd,int& register_thread_id);
@@ -42,8 +47,11 @@ public:
 
   virtual void OnClose();
 
-  //这几个timer相关的线程，只有iohandle回调的时候才能调用
-  int StartReconnectTimer();
+  // All timers of a connection live on its own I/O loop (the same thread
+  // that reads, writes and closes it), so their callbacks never race with
+  // the connection. They used to run on a separate ClientReconnect thread.
+  // delay_ms 0: the reconnect interval.
+  int StartReconnectTimer(uint32_t delay_ms = 0);
   int StartHeartBeatTimer();
   void CancelTimer();
 
@@ -73,7 +81,7 @@ protected:
 private:
   LOGGER_CLASS_DECL(logger);
 
-  int status_ ;
+  std::atomic<int> status_; // read by service threads (GetClientStatus)
 
   uint32_t timeout_ms_;
   uint32_t heartbeat_ms_;
@@ -82,6 +90,17 @@ private:
   uint64_t heartbeat_timer_;
 
   int register_thread_id_;
+
+  int TimerThreadId();
+
+  // Resolved once, on the first TryConnect (caller's thread). Reconnects run
+  // on the I/O loop and must not block on DNS, so they use this cache and
+  // move to the next address after each failed attempt.
+  std::vector<Socket::ResolvedAddr> addrs_;
+  size_t addr_index_ = 0;
+  void NextAddr() { if (!addrs_.empty()) addr_index_ = (addr_index_ + 1) % addrs_.size(); }
+
+  enum : uint32_t { kReconnectIntervalMs = 300, kConnectTimeoutMs = 3000 };
 
   //HeartBeatTimer heart_beat_timer_;
 };

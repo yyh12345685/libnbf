@@ -13,169 +13,166 @@
 
 namespace bdf {
 
-int RedisParser::ParseReply(
-  const std::string& reply, bool* is_pong, size_t* size_reply, std::string* out) {
-  if (0 == reply.length() || nullptr == is_pong || nullptr == size_reply || nullptr == out)
-    return -1;
-
-  size_t first_CRLF = reply.find("\r\n");
-  if (first_CRLF == reply.npos){
-    return -1;
+int64_t RedisParser::FindCRLF(const char* data, size_t len, size_t from) {
+  if (len < 2) return -1;
+  for (size_t i = from; i + 1 < len; ++i) {
+    if (data[i] == '\r' && data[i + 1] == '\n') return (int64_t)i;
   }
-
-  const char* p = reply.c_str();
-  *is_pong = false;
-  //*size_reply = 0;
-
-  switch (p[0]) {
-  case '-'://REDIS_REPLY_ERROR
-  {
-    *size_reply = first_CRLF + 2;
-    out->append("-1");
-    return 0;
-  }
-  case '+'://REDIS_REPLY_STATUS
-  {
-    *size_reply = first_CRLF + 2;
-    out->append("0");
-    if (first_CRLF == 5 && reply.substr(1, 4) == "PONG") {
-      *is_pong = true;
-    }
-    return 0;
-  }
-  case ':'://REDIS_REPLY_INTEGER
-  {
-    *size_reply = first_CRLF + 2;
-    out->push_back('1');
-    out->push_back(kSep);
-    out->append(reply.substr(1, first_CRLF-1));
-    return 0;
-  }
-  case '$'://REDIS_REPLY_STRING
-  {
-    std::string tmp_out;
-    int ret = ParseSingleStr(p, reply.size(), *size_reply, tmp_out);
-    if (0 == ret){
-      out->push_back('1');
-      out->push_back(kSep);
-      out->append(tmp_out);
-      return 0;
-    } else if (1 == ret){
-      out->append("0");
-      return 0;
-    } else if (2 == ret){
-      return 1;
-    } else{
-      return -1;
-    }
-  }
-  case '*'://REDIS_REPLY_ARRAY
-  {
-    *size_reply = first_CRLF + 2;
-    char* end_ptr = nullptr;
-    int64_t array_num = strtoll(++p, &end_ptr, 10);
-    if (array_num > 0){
-      *out = reply.substr(1,first_CRLF-1);
-      for (int i = 0; i < array_num;++i){
-        std::string tmp_out;
-        size_t one_str_len = 0;
-        int ret = ParseSingleStr(
-          reply.c_str() + *size_reply, reply.size() - *size_reply, one_str_len, tmp_out);
-        if (0 == ret){
-          out->push_back(kSep);
-          out->append(tmp_out);
-        }else if (1 == ret){
-          out->push_back(kSep);
-          out->append("-1");
-        }else if (2 == ret){
-          return 1;
-        }else{
-          return -1;
-        }
-        *size_reply += one_str_len;
-      }
-      return 0;
-    }
-    else if (array_num == -1){
-      out->append("0");
-      return 0;
-    }
-    else{
-      return -1;
-    }
-  }
-  default:
-    return -1;
-  }
+  return -1;
 }
 
-bool RedisParser::ParseCmd(const std::string& in, std::string& out) {
-  if (0==in.length()) return false;
-
-  std::string result("\r\n");
-  size_t follower=0;
-  size_t leader;
-  uint32_t num_segs=0;
-
-  static const size_t kMaxLenInt64 = 30;
-  char int_buf[kMaxLenInt64 + 1] = {'\0'};
-  do{
-    leader = in.find(kSep, follower);
-    if (leader == follower)
-    {//跳过连续的\1
-      //follower = leader + 1;
-      //continue;
-      return false;
-    }
-
-    uint32_t len_seg = (std::string::npos!=leader ? leader-follower : in.length()-follower);
-    if (0==len_seg) break;
-
-    ++num_segs;
-
-    sprintf(int_buf, "%u", len_seg);
-    result.append("$").append(int_buf).append("\r\n").append(in, follower, len_seg).append("\r\n");
-
-    follower=leader+1;
-  } while(leader!=std::string::npos);
-
-  sprintf(int_buf, "%u", num_segs);
-  out.assign("*").append(int_buf).append(result);
+bool RedisParser::ParseInt(const char* data, size_t begin, size_t end, int64_t* val) {
+  if (begin >= end) return false;
+  bool neg = false;
+  size_t i = begin;
+  if (data[i] == '-' || data[i] == '+') {
+    neg = (data[i] == '-');
+    ++i;
+    if (i == end) return false;
+  }
+  uint64_t v = 0;
+  for (; i < end; ++i) {
+    if (data[i] < '0' || data[i] > '9') return false;
+    v = v * 10 + (uint64_t)(data[i] - '0');
+    if (v > (uint64_t)INT64_MAX) return false;
+  }
+  *val = neg ? -(int64_t)v : (int64_t)v;
   return true;
 }
 
-int RedisParser::ParseSingleStr(const char* line_data, const size_t& line_len, size_t& has_read_len, std::string& out){
-  if (line_data[0] == '$'){
-    int length_line_len = GetLengthLinelength(line_data, line_len);
-    if (length_line_len == -1){
-      return -1;
+int RedisParser::ParseElement(const char* data, size_t len, size_t* pos,
+  int depth, RedisReply* out) {
+  size_t start = *pos;
+  if (start >= len) return kParseNeedMore;
+  if (depth > kMaxNestDepth) return kParseError;
+
+  const char type = data[start];
+  if (type != '+' && type != '-' && type != ':' && type != '$' && type != '*') {
+    return kParseError;
+  }
+
+  int64_t crlf = FindCRLF(data, len, start + 1);
+  if (crlf < 0) {
+    // a length / integer line can not be long: a missing CRLF after many
+    // bytes means a corrupt stream, not a slow one
+    static const size_t kMaxNumLine = 32;
+    if (type != '+' && type != '-' && len - start > kMaxNumLine) return kParseError;
+    return kParseNeedMore;
+  }
+  const size_t line_begin = start + 1;
+  const size_t line_end = (size_t)crlf;
+  const size_t after_line = line_end + 2;
+
+  switch (type) {
+  case '-':
+  case '+':
+    out->type = (type == '-') ? RedisReply::kError : RedisReply::kStatus;
+    out->str.assign(data + line_begin, line_end - line_begin);
+    *pos = after_line;
+    return kParseOk;
+  case ':':
+  {
+    int64_t v = 0;
+    if (!ParseInt(data, line_begin, line_end, &v)) return kParseError;
+    out->type = RedisReply::kInteger;
+    out->integer = v;
+    out->str.assign(data + line_begin, line_end - line_begin);
+    *pos = after_line;
+    return kParseOk;
+  }
+  case '$':
+  {
+    int64_t str_len = 0;
+    if (!ParseInt(data, line_begin, line_end, &str_len)) return kParseError;
+    if (str_len == -1) {
+      out->type = RedisReply::kNil;
+      *pos = after_line;
+      return kParseOk;
     }
-    has_read_len += length_line_len;
-    char* read_pos = nullptr;
-    int64_t str_len = strtoll(&line_data[1], &read_pos, 10);
-    if (str_len > 0){
-      read_pos += 2;//jump \r\n
-      if (str_len <= (signed)(line_len - has_read_len - 2))//-2 include \r\n
-      {
-        if (read_pos[str_len] == '\r' && read_pos[str_len + 1] == '\n'){
-          out.assign(read_pos, str_len);
-          has_read_len += str_len + 2;
-          return 0;
-        }else{
-          return -1;//wrong end, missing \r\n
-        }
-      }else{
-        return 2;//need to recv the rest string
-      }
-    }else if (str_len == -1){
-      return 1;
-    }else{
-      return -1;
+    if (str_len < 0 || str_len > kMaxBulkLen) return kParseError;
+    size_t need = after_line + (size_t)str_len + 2;
+    if (need > len) return kParseNeedMore;
+    if (data[need - 2] != '\r' || data[need - 1] != '\n') return kParseError;
+    out->type = RedisReply::kString;
+    out->str.assign(data + after_line, (size_t)str_len);
+    *pos = need;
+    return kParseOk;
+  }
+  case '*':
+  {
+    int64_t array_num = 0;
+    if (!ParseInt(data, line_begin, line_end, &array_num)) return kParseError;
+    if (array_num == -1) {
+      out->type = RedisReply::kNil;
+      *pos = after_line;
+      return kParseOk;
     }
-  }else{
-    return -1;
+    if (array_num < 0 || array_num > kMaxArrayLen) return kParseError;
+    out->type = RedisReply::kArray;
+    out->elements.clear();
+    size_t cur = after_line;
+    for (int64_t i = 0; i < array_num; ++i) {
+      // Need-more is detected before the array is materialized in full; do
+      // not reserve array_num up front (it is attacker-controlled).
+      out->elements.emplace_back();
+      int ret = ParseElement(data, len, &cur, depth + 1, &out->elements.back());
+      if (ret != kParseOk) return ret;
+    }
+    *pos = cur;
+    return kParseOk;
+  }
+  default:
+    return kParseError;
   }
 }
 
+int RedisParser::ParseReply(
+  const char* data, size_t len, size_t* consumed, RedisReply* out) {
+  if (nullptr == data || nullptr == consumed || nullptr == out) return kParseError;
+  if (0 == len) return kParseNeedMore;
+  RedisReply result;
+  size_t pos = 0;
+  int ret = ParseElement(data, len, &pos, 0, &result);
+  if (ret != kParseOk) return ret;
+  *consumed = pos;
+  *out = std::move(result);
+  return kParseOk;
 }
 
+bool RedisParser::EncodeArgs(const std::vector<std::string>& args, std::string& out) {
+  if (args.empty()) return false;
+  char int_buf[32];
+  snprintf(int_buf, sizeof(int_buf), "%zu", args.size());
+  out.assign("*").append(int_buf).append("\r\n");
+  for (const auto& arg : args) {
+    snprintf(int_buf, sizeof(int_buf), "%zu", arg.size());
+    out.append("$").append(int_buf).append("\r\n").append(arg).append("\r\n");
+  }
+  return true;
+}
+
+bool RedisParser::ParseCmd(const std::string& in, std::string& out) {
+  if (in.empty()) return false;
+  // Split on kSep. Consecutive separators give an empty argument (the old
+  // loop rejected them). One trailing kSep is ignored as before, so callers
+  // that end every argument with kSep keep working; for an empty *last*
+  // argument use EncodeArgs / RedisMessage::cmds.
+  std::vector<std::string> args;
+  size_t from = 0;
+  while (true) {
+    size_t pos = in.find(kSep, from);
+    if (pos == std::string::npos) {
+      args.emplace_back(in, from, std::string::npos);
+      break;
+    }
+    args.emplace_back(in, from, pos - from);
+    from = pos + 1;
+  }
+  if (args.size() > 1 && args.back().empty()) {
+    args.pop_back(); // trailing separator
+  }
+  if (args[0].empty()) return false; // a command name is required
+  return EncodeArgs(args, out);
+}
+
+}

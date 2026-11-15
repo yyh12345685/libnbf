@@ -81,10 +81,16 @@ int AsyncClientConnect::EncodeMsg(EventMessage* message){
 
 void AsyncClientConnect::OnTimeout(EventMessage* msg){
   if (msg->type_id == MessageType::kHeartBeatMessage) {
-    //HeartBeat time out
-    INFO(logger, "AsyncClientChannel::OnTimeout HeartBeat time out.");
-    OnClose();
-    //CleanClient();
+    // Close only if the peer sent nothing at all since the heartbeat went
+    // out. A peer that answers requests but not heartbeats (an older server
+    // that does not know the heartbeat frame) is still alive.
+    if (GetLastReadMs() <= msg->birthtime) {
+      INFO(logger, "AsyncClientChannel::OnTimeout HeartBeat time out.");
+      DoSendBack(msg, EventMessage::kStatusTimeout); // frees it
+      OnClose();
+      return;
+    }
+    TRACE(logger, "heartbeat unanswered but connection has traffic");
   } else {
     DEBUG(logger, "AsyncClientChannel::OnTimeout message");
   }

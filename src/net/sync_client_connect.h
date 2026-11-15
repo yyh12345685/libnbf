@@ -16,9 +16,6 @@ public:
 
   ~SyncClientConnect();
 
-  virtual void Destroy() {
-    BDF_DELETE(this);
-  }
 
   virtual void OnDecodeMessage(EventMessage* message);
   virtual int EncodeMsg(EventMessage* message);
