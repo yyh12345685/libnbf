@@ -5,8 +5,7 @@
 #include "net/async_client_connect.h"
 #include "net/sync_client_connect.h"
 #include "coroutine/coroutine_actor.h"
-#include "coroutine/coro_context.h"
-#include "coroutine/coroutine_manager.h"
+#include "coroutine/coroutine_context.h"
 #include "service/coroutine_service_handle.h"
 #include "client/client_mgr.h"
 #include "net/connect_manager.h"
@@ -173,23 +172,23 @@ EventMessage* Client::DoSendRecieve(EventMessage* message) {
     return nullptr;
   }
   
+  // I/O owns message after enqueue and may destroy it before this thread resumes.
+  const uint64_t sequence_id = message->sequence_id;
   DoSend(message);
-  //TRACE(logger_, "send msg handle_id:" << message->handle_id);
-  EventMessage* response = DoRecieve(message);
-  /*if (response && response->status != EventMessage::kStatusOK) {
+  EventMessage* response = DoRecieve(sequence_id);
+  if (response && response->status != EventMessage::kStatusOK) {
     TRACE(logger_, "may be time out,status:" << response->status << ",msg:" << *response);
     MessageFactory::Destroy(response);
     return nullptr;
-  }*/
+  }
   return response;
 }
 
 void Client::DoSend(EventMessage* message){
-  if (nullptr != CoroutineManager::Instance().GetServiceHandler()){
+  if (nullptr != CoroutineContext::Instance().GetServiceHandler()){
     //使用协程handle的时候不为空，非协程框架使用异步调用Invoke
-    message->handle_id = CoroutineManager::Instance().GetServiceHandler()->GetHandlerId();
-    //message->coroutine_id = CoroutineManager::GetCurCoroutineId();
-    message->msg_coro = CoroutineManager::GetCurrentCoroutine();
+    message->handle_id = CoroutineContext::Instance().GetServiceHandler()->GetHandlerId();
+    message->coroutine_id = CoroutineContext::GetCurCoroutineId();
   }
   
   message->birthtime = Time::GetCurrentClockTime();
@@ -198,26 +197,18 @@ void Client::DoSend(EventMessage* message){
   service::GetServiceManager().SendToNetThread(message);
 }
 
-EventMessage* Client::DoRecieve(EventMessage* message) {
-  CoroutineSchedule* schedule = CoroutineManager::Instance().GetScheduler();
-  if (nullptr != schedule) {
-    // int coro_id = CoroutineManager::GetCurCoroutineId();
-    // 调用DoRecieve要求一定是在协程中，不在协程中无法调用
-    CoroContext* coro = schedule->GetCurrentCoroutine();
-    if (nullptr == coro){
-      WARN(logger_, "no valid coroutine id:");
+EventMessage* Client::DoRecieve(uint64_t sequence_id){
+  if (nullptr != CoroutineContext::Instance().GetScheduler()){
+    int coro_id = CoroutineContext::GetCurCoroutineId();
+    CoroutineActor* actor = CoroutineContext::GetCurCoroutineCtx();
+    if (nullptr == actor || coro_id < 0){
+      WARN(logger_, "no valid coroutine id:" << coro_id);
       return nullptr;
     }
-    CoroutineActor* actor = coro->actor;
-    if (nullptr == actor) {
-      WARN(logger_, "actor is null,coro:" << coro);
-      return nullptr;
-    }
-    message->msg_coro = coro;
-    TRACE(logger_, "get coroutine ptr:" << coro << ",actor:" << actor);
-    actor->SetWaitingId(message->sequence_id);
-    return actor->RecieveMessage(message, timeout_ms_);
-  } else {
+    TRACE(logger_, "get coroutine id:" << coro_id << ",ptr:" << actor);
+    actor->SetWaitingId(sequence_id);
+    return actor->RecieveMessage(sequence_id,timeout_ms_);
+  }else{
     //非协程使用异步调用Invoke，不是用该函数
     WARN(logger_, "use error,not should to here...");
     return nullptr;

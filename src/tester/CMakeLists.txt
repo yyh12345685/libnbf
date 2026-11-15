@@ -15,3 +15,9 @@ link_libraries(
 add_executable(t_timer t_timer.cpp)
 add_test(t_timer t_timer)
 
+
+add_executable(t_network_regression t_network_regression.cpp)
+add_test(t_network_regression t_network_regression)
+
+add_executable(t_connection_lifecycle t_connection_lifecycle.cpp)
+add_test(t_connection_lifecycle t_connection_lifecycle)
