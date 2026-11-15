@@ -1,14 +1,19 @@
 #include "net/connect.h"
+#include "common/time.h"
 #include "net/socket.h"
 #include "event/event_driver.h"
 #include "protocol/protocol_base.h"
 #include "service/service_manager.h"
+#include "net_thread_mgr/net_thread_mgr.h"
+#include "net_thread_mgr/io_threads.h"
 
 namespace bdf{
 
 LOGGER_CLASS_IMPL(logger_, Connecting);
 
-const static int max_send_buf_failed_size = 10 * 1024 * 1024+1;//10M
+// Pending bytes allowed for a peer that stopped reading. Above this the
+// connection is closed: dropping bytes would split a frame and desync the peer.
+const static size_t max_send_buf_failed_size = 64 * 1024 * 1024;
 
 Connecting::Connecting():
   fd_(-1),
@@ -85,6 +90,7 @@ void Connecting::OnRead(){
     }
 
     total_read += nread;
+    last_read_ms_ = Time::GetCurrentClockTime();
     if (nread == sizeof(tmp)){
       DEBUG(logger_, "continue read. fd:" << fd_);
       rc = true;
@@ -143,59 +149,62 @@ void Connecting::OnWrite(){
 
   int size = 0;
   int send = 0;
-  int should_send_size = outbuf_.GetReadingSize();
   while ((size = outbuf_.GetReadingSize()) > 0){
-    int ret = Socket::TcpSocketWrite(fd_, outbuf_.GetReading(), size);
+    int ret = WriteSocket(outbuf_.GetReading(), size);
     if (ret > 0){
       send += ret;
       outbuf_.DrainReading(ret);
-      if (send >= should_send_size){
-        //RegisterModw(fd_, false);
-        break;
-      }
       TRACE(logger_, "send size is:" << ret);
-    } else if (ret < 0){
-      if (EINTR == errno) {
-        continue;
-      }
-      if (errno == EINTR || errno == EAGAIN){
-
-      }else{
-        if (1 == rand() % 10)
-          INFO(logger_, "errno:" << errno << ",TCP write failed:" << ",send:" << send
-            << ",ret:" << ret << ",ip:" << GetIp() << ",port:" << GetPort()
-            <<",is_server_:"<<IsServer()<< ",send capacity:" << outbuf_.GetCapacity()
-            <<",fd:"<<fd_ << ",errno:" << strerror(errno)<<",ptr:"<<this);
-        //发现偶尔会触发两次，一次errno104，一次errno32
-        OnReadWriteClose();
-        break;
-      }
-
-      if (send > 0){
-        INFO(logger_, "send size:" << send << ",not send size:" << (should_send_size - send)
-          << ",send capacity:" << outbuf_.GetCapacity() << ",not send completed,errno:" << errno
-          <<",ip:"<<ip_<<",port:"<<port_<<",is_server_:"<<IsServer());
-        if (outbuf_.GetReadingSize() > max_send_buf_failed_size){
-          outbuf_.DrainReading(outbuf_.GetReadingSize());
-          TRACE(logger_, "will be lose size:" << (should_send_size - send));
-        } else{
-          // this operation RegisterModw will let the event poll to call the function handleWrite 
-          // when the write-cache enable to write 
-          //RegisterModw(fd_, true);
-        }
-      } else{
-        TRACE(logger_, "socket not ok or server is cannot handled,errno" << errno);
-        outbuf_.DrainReading(outbuf_.GetReadingSize());
-      }
-      break;
-    } else{
-      INFO(logger_, "send return zero,TCP write failed,fd=:" << fd_ 
-        << ",errno:" << errno << ",ip:" << ip_ << ",port:" << port_ << ",ptr:" << this);
-      OnReadWriteClose();
-      break;
+      continue;
     }
+    if (ret < 0 && EINTR == errno) {
+      continue;
+    }
+    if (ret < 0 && (EAGAIN == errno || EWOULDBLOCK == errno)) {
+      // Socket buffer is full: keep the data and let epoll call OnWrite
+      // again once the socket is writable.
+      if (outbuf_.GetReadingSize() > max_send_buf_failed_size) {
+        WARN(logger_, "peer not reading, pending:" << outbuf_.GetReadingSize()
+          << ",ip:" << ip_ << ",port:" << port_ << ",is_server_:" << IsServer());
+        OnReadWriteClose();
+        return;
+      }
+      if (!write_interest_) {
+        if (0 != SetWriteInterest(true)) {
+          OnReadWriteClose();
+          return;
+        }
+        write_interest_ = true;
+      }
+      TRACE(logger_, "send would block, pending:" << outbuf_.GetReadingSize());
+      return;
+    }
+    if (1 == rand() % 10)
+      INFO(logger_, "errno:" << errno << ",TCP write failed,send:" << send
+        << ",ret:" << ret << ",ip:" << GetIp() << ",port:" << GetPort()
+        << ",is_server_:" << IsServer() << ",fd:" << fd_ << ",ptr:" << this);
+    //发现偶尔会触发两次，一次errno104，一次errno32
+    OnReadWriteClose();
+    return;
+  }
+  // Everything is out: stop waking up for EPOLLOUT.
+  if (write_interest_) {
+    if (0 != SetWriteInterest(false)) {
+      OnReadWriteClose();
+      return;
+    }
+    write_interest_ = false;
   }
   TRACE(logger_, "Real Send Message size is:" << send);
+}
+
+int Connecting::SetWriteInterest(bool set){
+  return service::GetServiceManager().GetNetThreadManager()
+    ->GetIoThreads()->Modw(this, fd_, set);
+}
+
+int Connecting::WriteSocket(const char* data, int size){
+  return Socket::TcpSocketWrite(fd_, const_cast<char*>(data), size);
 }
 
 int Connecting::EncodeMsg(EventMessage* message){
@@ -243,9 +252,13 @@ void Connecting::Clean(){
 
   Socket::Close(fd_);
   fd_ = -1;
+  write_interest_ = false;
 
   inbuf_.ResetAll();
   outbuf_.ResetAll();
+  if (protocol_) {
+    protocol_->Reset();
+  }
 }
 
 void Connecting::RegisterDel(EventDriver *poll, int fd){
