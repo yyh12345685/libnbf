@@ -12,8 +12,6 @@ void ServiceConfig::Dump(std::ostream& os) const {
     << ", \"service_handle_thread_count\": " << service_handle_thread_count
     << ", \"service_count\": " << service_count
     << ", \"coroutine_size\": " << coroutine_size
-    << ", \"coroutine_type\": " << coroutine_type
-    << ", \"coroutine_stack_size\": " << coroutine_stack_size
     << ", \"services_config\": ";
     for(const auto& srv_conf:server_config){
       os << "{\"name\":"<< srv_conf.name
@@ -98,15 +96,27 @@ int ConfigInfo::LoadServiceConfig(CIniFileS& ini, ServiceConfig* config){
 
   config->router_file = ini.GetValue("io_service", "router_file", "");
 
-  config->coroutine_size = ini.GetValueInt("io_service", "coroutine_size", 512);
-  config->coroutine_type = ini.GetValueInt("io_service", "coroutine_type", 0);
-  config->coroutine_stack_size = ini.GetValueInt("io_service", "coroutine_stack_size");
+  // Read signed: coroutine_size is uint32_t, so a negative value used to
+  // wrap to ~4e9 and abort in vector::resize.
+  int coroutine_size = ini.GetValueInt("io_service", "coroutine_size", 512);
 
   config->monitor_file_name = ini.GetValue("io_service", "monitor_file", "");
   config->monitor_token_bucket = ini.GetValueInt("io_service", "monitor_token_bucket", 16);
   config->monitor_queue_bucket = ini.GetValueInt("io_service", "monitor_queue_bucket", 16);
   config->monitor_queue_size = ini.GetValueInt("io_service", "monitor_queue_size", 1024*512);
-  
+
+  // Reject values that crash later (modulo by zero in thread selection,
+  // vector::resize with a huge size, bucket % 0 in the monitor).
+  if (config->io_thread_count <= 0 || config->service_handle_thread_count <= 0) {
+    ERROR(logger_, "io_thread_count and service_handle_thread_count must be > 0, got "
+      << config->io_thread_count << "," << config->service_handle_thread_count);
+    return -1;
+  }
+  if (coroutine_size <= 0 || coroutine_size > 100000) {
+    ERROR(logger_, "coroutine_size must be in 1..100000, got " << coroutine_size);
+    return -1;
+  }
+  config->coroutine_size = static_cast<uint32_t>(coroutine_size);
   return 0;
 }
 
@@ -138,7 +148,13 @@ int ConfigInfo::LoadRouterConfig(const std::string& file_path){
     return -1;
   }
 
-  int clients_cnt = ini_config.GetValueInt("router", "client_count", 1);
+  // Default 0: a router file without a [router] section used to create one
+  // client with an empty address, and startup failed.
+  int clients_cnt = ini_config.GetValueInt("router", "client_count", 0);
+  if (clients_cnt < 0) {
+    ERROR(logger_, "client_count must be >= 0, got " << clients_cnt);
+    return -1;
+  }
   for (int idx = 0; idx < clients_cnt;idx++) {
     std::string section("client");
     section.append(common::ToString(idx));
@@ -148,6 +164,11 @@ int ConfigInfo::LoadRouterConfig(const std::string& file_path){
     router.sigle_send_sigle_recv = 
       ini_config.GetValueInt(section.c_str(), "sigle_send_sigle_recv", 0);
     int addr_cnt = ini_config.GetValueInt(section.c_str(), "address_count", 1);
+    if (addr_cnt <= 0) {
+      // An empty router makes every lookup do "idx % 0".
+      ERROR(logger_, section << ": address_count must be > 0, got " << addr_cnt);
+      return -1;
+    }
 
     for (int jdx = 0; jdx < addr_cnt; jdx++) {
       ClientConfig client;
@@ -158,6 +179,12 @@ int ConfigInfo::LoadRouterConfig(const std::string& file_path){
       std::string section1("address");
       section1.append(common::ToString(jdx));
       client.address = ini_config.GetValue(section.c_str(), section1.c_str(), "");
+      if (client.address.empty() || client.single_addr_connect_count <= 0
+        || client.timeout <= 0 || client.heartbeat < 0) {
+        ERROR(logger_, section << "." << section1 << ": need a non-empty address,"
+          " single_addr_connect_count > 0, timeout_ms > 0, heartbeat_ms >= 0");
+        return -1;
+      }
       router.clients.push_back(client);
     }
     client_routers_config_.client_router_config.push_back(router);
