@@ -9,6 +9,7 @@
 #include "event/event_driver.h"
 #include "net/server_connect.h"
 #include "net/connect_manager.h"
+#include <arpa/inet.h>
 
 namespace bdf {
 
@@ -33,7 +34,7 @@ bool AcceptorThread::Init(
   net_thread_mgr_ = net_thread_mgr;
 
   for (const auto& addr:conf_->server_config){
-    char ip[1024];
+    char ip[256];
     int port;
     int cate = ProtocolHelper::ParseSpecAddr(addr.address.c_str(), ip, &port);
     if (cate == MessageType::kUnknownEvent) {
@@ -41,8 +42,7 @@ bool AcceptorThread::Init(
       continue;
     }
 
-    //可以判断下ip是ipv4还是v6，最后一个参数根据判断结果来传
-    int fd = Socket::Listen(ip, port, 20480,false);
+    int fd = Socket::Listen(ip, port, 20480); // IPv4 or IPv6 by address
     if (fd<0){
       WARN(logger_, "AcceptorThread::Init SocketHelper::Listen error, ip:"
 					<< ip <<"port:"<<port<<",fd,"<<fd << " errno:" << errno);
@@ -83,84 +83,62 @@ void AcceptorThread::OnEvent(EventDriver *poll, int fd, short event){
 
 void AcceptorThread::AcceptClient(
   EventDriver *poll, int fd,std::pair<int,int>& server_cate_port){
+  // The listen fd is edge-triggered: drain the backlog until EAGAIN, or the
+  // connections still queued get no new event and hang until the next client.
   int cate = server_cate_port.first;
   int listen_port = server_cate_port.second;
-  char ip[256];
-  int port;
-  int sock = 0;
-  while((sock = Socket::Accept(fd, ip, &port)) > 0){
+  char ip[INET6_ADDRSTRLEN + 1];
+  int port = 0;
+  while (true) {
+    int sock = Socket::Accept(fd, ip, &port);
+    if (sock == -2) {
+      continue; // this socket could not be set up (already closed); next one
+    }
+    if (sock < 0) {
+      if (errno == EMFILE || errno == ENFILE) {
+        // Out of fds: accept-and-close one with the spare fd to clear the
+        // edge, then keep draining.
+        close(idle_fd_);
+        int fd_tmp = Socket::Accept(fd);
+        if (fd_tmp >= 0) close(fd_tmp);
+        idle_fd_ = ::open("/dev/null", O_RDONLY | O_CLOEXEC);
+        INFO(logger_, "fd exhausted, dropped one connection,idle_file fd:" << idle_fd_);
+        if (fd_tmp >= 0) continue;
+      }
+      break; // EAGAIN: backlog empty (or an unrecoverable error)
+    }
     ServerConnect* svr_con = BDF_NEW(ServerConnect);
-    std::string ip_str;
-    ip_str.assign(ip, strlen(ip));
+    std::string ip_str(ip);
     svr_con->SetIp(ip_str);
     svr_con->SetFd(sock);
     svr_con->SetPort(port);
     svr_con->SetProtocol(cate);
+    // Track it before the I/O thread can see it: if the peer closes at once,
+    // OnClose -> SetRelease must find the entry, or the object leaks.
+    release_mgr_->AddConnect(svr_con);
     int register_thread_id = -1;
     if (0!= net_thread_mgr_->GetIoThreads()->AddModr(
       svr_con, sock, true,false,register_thread_id)){
       WARN(logger_, "AddModr faild,fd:"<<sock<<",reg tid:"<<register_thread_id);
-      BDF_DELETE(svr_con);
-      break;
+      release_mgr_->Remove(svr_con);
+      BDF_DELETE(svr_con); // closes sock; keep accepting the rest
+      continue;
     }
-    release_mgr_->AddConnect(svr_con);
-    poll->Wakeup();
-    TRACE(logger_, "listen port:"<< listen_port <<",accept client ip:" << ip_str 
+    TRACE(logger_, "listen port:"<< listen_port <<",accept client ip:" << ip_str
       << ",port:" << port << ",sock:" << sock << ",con's addr:" << svr_con
       << ",register_thread_id:"<<register_thread_id);
-  }
-  if(sock < 0 && errno == EMFILE){
-      close(idle_fd_);
-      int fd_tmp = Socket::Accept(fd);//优雅的关闭连接
-      close(fd_tmp);
-      idle_fd_ = ::open("/dev/null", O_RDONLY | O_CLOEXEC);
-      INFO(logger_, "tmp fd:"<<fd_tmp<<",idle_file fd:"<< idle_fd_);
   }
 }
 
 void AcceptorThread::AcceptClientV1(
   EventDriver *poll, int fd,std::pair<int,int>& server_cate_port){
-  //surport ipv6
-  //如果时ip v6需配合Listen传入参数,该函数还有待验证
-  int cate = server_cate_port.first;
-  int listen_port = server_cate_port.second;
-  char ip[256];
-  int port;
-  int sock = 0;
-  while(true){
-    sock = Socket::Accept4(fd, ip, &port);
-    if(sock>=0){
-      ServerConnect* svr_con = BDF_NEW(ServerConnect);
-      std::string ip_str;
-      ip_str.assign(ip, strlen(ip));
-      svr_con->SetIp(ip_str);
-      svr_con->SetFd(sock);
-      svr_con->SetPort(port);
-      svr_con->SetProtocol(cate);
-      int register_thread_id = -1;
-      if (0!= net_thread_mgr_->GetIoThreads()->AddModr(
-        svr_con, sock, true,false,register_thread_id)){
-        WARN(logger_, "AddModr faild,fd:"<<sock<<",reg tid:"<<register_thread_id);
-        BDF_DELETE(svr_con);
-        break;
-      }
-      release_mgr_->AddConnect(svr_con);
-      poll->Wakeup();
-      TRACE(logger_, "listen port:"<< listen_port <<",accept client ip:" << ip_str 
-        << ",port:" << port << ",sock:" << sock << ",con's addr:" << svr_con
-        << ",register_thread_id:"<<register_thread_id);
-    }{
-      if (errno == EMFILE) {
-        close(idle_fd_);
-        int fd_tmp = Socket::Accept4(fd);
-        close(fd_tmp);
-        idle_fd_ = ::open("/dev/null", O_RDONLY | O_CLOEXEC);
-        INFO(logger_, "tmp fd:"<<fd_tmp<<",idle_file fd:"<< idle_fd_);
-      } else if (errno == EAGAIN){
-        break;
-      }
-    }
-  }
+  // Kept for API compatibility. Accept now handles IPv4 and IPv6 alike;
+  // the old body read errno after a successful accept and could spin.
+  AcceptClient(poll, fd, server_cate_port);
+}
+
+bool AcceptorThread::IsLiveConnect(ServerConnect* con){
+  return release_mgr_->IsLive(con);
 }
 
 bool AcceptorThread::AreaseReleasedConnect(ServerConnect* con){

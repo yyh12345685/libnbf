@@ -24,6 +24,7 @@ public:
 private:
   LOGGER_CLASS_DECL(logger_);
 
+  bool released_ = false; // only touched on the owning I/O thread
 };
 
 }

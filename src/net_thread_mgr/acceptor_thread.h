@@ -25,6 +25,7 @@ public:
   virtual void OnEvent(EventDriver *poll, int fd, short event);
 
   bool AreaseReleasedConnect(ServerConnect* con);
+  bool IsLiveConnect(ServerConnect* con);
 protected:
   void AcceptClient(EventDriver *poll,int fd,std::pair<int,int>& server_cate_port);
   void AcceptClientV1(EventDriver *poll,int fd,std::pair<int,int>& server_cate_port);
