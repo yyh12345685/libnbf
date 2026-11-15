@@ -3,6 +3,7 @@
 
 #include <unordered_set>
 #include <deque>
+#include <mutex>
 #include "event/event_data.h"
 #include "event/event_notifier.h"
 #include "event/timer/timer.h"
@@ -56,6 +57,11 @@ private:
   LOGGER_CLASS_DECL(logger_);
 
   EventData event_data_;
+  // Add/Mod/Del are called from the acceptor and other threads while the
+  // loop thread polls: guards event_data_ and maxfd_. Recursive because
+  // OnEvent callbacks run on the loop thread and call Del/Modw themselves;
+  // the lock is never held across a callback.
+  std::recursive_mutex fd_lock_;
 
   EventNotifier event_notifier_;
 

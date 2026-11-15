@@ -46,6 +46,11 @@ int EventDriver::Run(){
     }
   }
   this->Poll(0); // clear unproc tasks
+  if(thread_data_run_!=nullptr){
+    // Run queued close/destroy messages posted right before Stop, otherwise
+    // those connections are never destroyed.
+    thread_data_run_->CallRun();
+  }
   return 0;
 }
 
@@ -78,6 +83,7 @@ int EventDriver::ShutDown()
 }
 
 int EventDriver::Add(int fd, EventFunctionBase *ezfd,bool lock){
+  std::lock_guard<std::recursive_mutex> guard(fd_lock_);
   if (fd > 0 && fd < event_data_.fd2data_size_ 
     && nullptr != event_data_.fd2data_[fd]){
     WARN(logger_, "repeated add fd:" << fd);
@@ -112,6 +118,7 @@ int EventDriver::Add(int fd, EventFunctionBase *ezfd,bool lock){
 }
 
 int EventDriver::Del(int fd){
+  std::lock_guard<std::recursive_mutex> guard(fd_lock_);
   if(nullptr == event_data_.fd2data_
       || fd < 0
       || fd > maxfd_
@@ -120,19 +127,20 @@ int EventDriver::Del(int fd){
     return -2;
   }
 
-  if (inloop_){
-    event_data_.ReInitClosed(fd);
-  }else{
-    delete event_data_.fd2data_[fd];
+  // Always defer the delete to the end of the loop's Poll (RemoveClosed):
+  // Del may run on another thread while Poll holds this FdEvent from
+  // epoll_wait. (Deleting at once when !inloop_ raced with that.)
+  epoll_ctl(epfd_, EPOLL_CTL_DEL, fd, nullptr);
+  if (!event_data_.ReInitClosed(fd)) {
+    event_data_.fd2data_[fd]->closed_ = true; // leak rather than use-after-free
   }
   event_data_.fd2data_[fd] = nullptr;
-
-  epoll_ctl(epfd_, EPOLL_CTL_DEL, fd, nullptr);
   Wakeup();
   return 0;
 }
 
 int EventDriver::Modr(int fd, bool set){
+  std::lock_guard<std::recursive_mutex> guard(fd_lock_);
   if (fd < 0 || fd > maxfd_ || nullptr == event_data_.fd2data_[fd]){
     TRACE(logger_, "fd is invalid or fd2data_ is nullptr, fd" << fd << ",maxfd" << maxfd_);
     return -1;
@@ -149,6 +157,7 @@ int EventDriver::Modr(int fd, bool set){
 }
 
 int EventDriver::Modw(int fd, bool set){
+  std::lock_guard<std::recursive_mutex> guard(fd_lock_);
   if (fd < 0 || fd > maxfd_ || nullptr == event_data_.fd2data_[fd]){
 		TRACE(logger_,"fd2data_ is nullptr, fd"<<fd<<",maxfd"<<maxfd_);
     return -1;
@@ -165,6 +174,7 @@ int EventDriver::Modw(int fd, bool set){
 }
 
 int EventDriver::Modrw(int fd, bool set){
+  std::lock_guard<std::recursive_mutex> guard(fd_lock_);
   if (fd < 0 || fd > maxfd_ || nullptr == event_data_.fd2data_[fd]) {
     TRACE(logger_, "fd2data_ is nullptr, fd" << fd << ",maxfd" << maxfd_);
     return -1;
@@ -197,17 +207,26 @@ int EventDriver::Poll(int timeout){
       WARN(logger_, "nullptr == data...");
       continue;
     }
-    if (data->closed_) {
-      continue;
+    // Snapshot under the lock; another thread may Del/Mod this fd.
+    EventFunctionBase *ezfd = nullptr;
+    short registered = EVENT_NONE;
+    int data_fd = -1;
+    {
+      std::lock_guard<std::recursive_mutex> guard(fd_lock_);
+      if (data->closed_) {
+        continue;
+      }
+      ezfd = data->ezfd_;
+      registered = data->event_;
+      data_fd = data->fd_;
     }
-    EventFunctionBase *ezfd = data->ezfd_;
     bool expected_event = false;
     short event = EVENT_NONE;
-    if ((data->event_ & EVENT_READ) && (events[i].events & EPOLLIN)){
+    if ((registered & EVENT_READ) && (events[i].events & EPOLLIN)){
       event |= EVENT_READ;
       expected_event = true;
     }
-    if ((data->event_ & EVENT_WRITE) && (events[i].events & EPOLLOUT)){
+    if ((registered & EVENT_WRITE) && (events[i].events & EPOLLOUT)){
       event |= EVENT_WRITE;
       expected_event = true;
     }
@@ -223,10 +242,11 @@ int EventDriver::Poll(int timeout){
       WARN(logger_, "unexpected event........");
       continue;
     }
-    ezfd->OnEvent(this, data->fd_, event);
+    ezfd->OnEvent(this, data_fd, event);
   }
 
   inloop_ = false;
+  std::lock_guard<std::recursive_mutex> guard(fd_lock_);
   event_data_.RemoveClosed();
   return 0;
 }
@@ -236,6 +256,7 @@ int EventDriver::Wakeup(){
 }
 
 int EventDriver::Mod(int fd){
+  std::lock_guard<std::recursive_mutex> guard(fd_lock_);
   FdEvent *data = event_data_.fd2data_[fd];
   if(nullptr == data){
     WARN(logger_, "nullptr == data...");
