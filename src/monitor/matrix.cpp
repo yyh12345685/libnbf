@@ -20,6 +20,12 @@ int GlobalMatrix::Init(
   uint32_t queue_bucket,
   uint32_t queue_size) {
 
+  // 0 passes the power-of-two test below but is later used as "% 0".
+  if (0 == item_map_bucket || 0 == queue_bucket || 0 == queue_size) {
+    ERROR(logger_, "GlobalMatrix::Init bucket/queue size must be > 0");
+    return -1;
+  }
+
   if (item_map_bucket & (item_map_bucket - 1)) {
     ERROR(logger_, "GlobalMatrix::Init item_map_bucket error:" << item_map_bucket);
     return -1;
@@ -54,8 +60,8 @@ int GlobalMatrix::Init(
 
 int GlobalMatrix::Destroy() {
   INFO(logger_, "GlobalMatrix Stop start.");
-  global_matrix_->Stop();
   if (global_matrix_) {
+    global_matrix_->Stop();
     delete global_matrix_;
     global_matrix_ = nullptr;
   }

@@ -145,7 +145,9 @@ void MatrixCollector::Run() {
     if (GetFileName(new_name)){
       fclose(fp);
       monitor_file_name_ = new_name;
-      FILE* fp = fopen(monitor_file_name_.c_str(), "a");
+      // Assign the outer fp: a new local here left the outer one pointing at
+      // the closed FILE, which was then written and closed again every day.
+      fp = fopen(monitor_file_name_.c_str(), "a");
       if (fp == nullptr) {
         ERROR(logger, "open monitor file failed. file:" << monitor_file_name_);
         return;
