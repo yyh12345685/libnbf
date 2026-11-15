@@ -16,6 +16,7 @@ typedef struct{
   OnTimerBase* time_proc;
   void* function_data;
   int coro_id;
+  uint64_t timer_id; // set by Timer; ids are never reused
 }TimerData;
 
 }

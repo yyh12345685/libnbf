@@ -142,9 +142,11 @@ class EventMessage : public MessageBase {
     coroutine_id(-1){
   }
 
-  EventMessage(uint8_t type_id_, int64_t descriptor_id_) : 
-    MessageBase(type_id_), 
-    descriptor_id(descriptor_id_){
+  // Delegate so ctx/handle_id/coroutine_id are initialised: ctx used to be
+  // left uninitialised and the destructor deleted a garbage pointer.
+  EventMessage(uint8_t type_id_, int64_t descriptor_id_) :
+    EventMessage(type_id_){
+    descriptor_id = descriptor_id_;
   }
 
   virtual ~EventMessage() {

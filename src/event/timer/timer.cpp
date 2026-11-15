@@ -18,44 +18,56 @@ Timer::~Timer() {
 uint64_t Timer::AddTimer(uint64_t after_ms, TimerData& data){
   uint64_t cur_time_ms = Time::GetCurrentClockTime();
   data.time_out_ms = cur_time_ms + after_ms;
-  size_t time_id;
-  heap_timer_.Insert(data, time_id);
-  return time_id;
+  std::lock_guard<std::mutex> guard(lock_);
+  data.timer_id = next_id_++;
+  size_t sign;
+  heap_timer_.Insert(data, sign);
+  id_to_sign_[data.timer_id] = sign;
+  return data.timer_id;
 }
 
 int Timer::DelTimer(uint64_t id){
-  heap_timer_.Erase(id);
+  std::lock_guard<std::mutex> guard(lock_);
+  auto it = id_to_sign_.find(id);
+  if (it == id_to_sign_.end()) {
+    return -1; // already fired or cancelled
+  }
+  heap_timer_.Erase(it->second);
+  id_to_sign_.erase(it);
   return 0;
 }
 
-int Timer::ProcessTimer(){
-  if (0 == heap_timer_.Size()){
-    return 0;
+bool Timer::PopExpired(uint64_t now, TimerData& out){
+  std::lock_guard<std::mutex> guard(lock_);
+  TimerData* top = heap_timer_.Top();
+  if (nullptr == top || now < top->time_out_ms) {
+    return false;
   }
+  out = *top;
+  heap_timer_.Pop();
+  id_to_sign_.erase(out.timer_id);
+  return true;
+}
+
+int Timer::ProcessTimer(){
   uint64_t cur_time_ms = Time::GetCurrentClockTime();
-  TimerData* event_timeo = heap_timer_.Top();
-  while (nullptr != event_timeo
-    && cur_time_ms >= event_timeo->time_out_ms 
-    && nullptr != event_timeo->time_proc) {
-    event_timeo->time_proc->OnTimer(event_timeo->function_data);
-    heap_timer_.Pop();
-    event_timeo = heap_timer_.Top();
+  TimerData expired;
+  while (PopExpired(cur_time_ms, expired)) {
+    if (nullptr != expired.time_proc) {
+      expired.time_proc->OnTimer(expired.function_data);
+    }
   }
   return 0;
 }
 
 int Timer::ProcessTimerTest(std::list<size_t>& ids){
-  if (0 == heap_timer_.Size()) {
-    return 0;
-  }
   uint64_t cur_time_ms = Time::GetCurrentClockTime();
-  TimerData* event_timeo = heap_timer_.Top();
-  while (nullptr != event_timeo
-    && cur_time_ms >= event_timeo->time_out_ms
-    && nullptr != event_timeo->time_proc) {
-    event_timeo->time_proc->OnTimer(event_timeo->function_data);
-    ids.emplace_back(heap_timer_.Pop());
-    event_timeo = heap_timer_.Top();
+  TimerData expired;
+  while (PopExpired(cur_time_ms, expired)) {
+    ids.emplace_back(expired.timer_id);
+    if (nullptr != expired.time_proc) {
+      expired.time_proc->OnTimer(expired.function_data);
+    }
   }
   return 0;
 }
@@ -64,24 +76,20 @@ int Timer::ProcessTimerTest(std::list<size_t>& ids){
 //改为取到top之后，先pop，发现还是不太对
 //所以后面协程里面的Timer改为了common目录下的TimerMgr
 int Timer::ProcessTimerCoro() {
-  if (0 == heap_timer_.Size()) {
-    return 0;
-  }
   uint64_t cur_time_ms = Time::GetCurrentClockTime();
-  TimerData* event_timeo = heap_timer_.Top();
-  while (nullptr != event_timeo
-    && cur_time_ms >= event_timeo->time_out_ms
-    && nullptr != event_timeo->time_proc) {
-    heap_timer_.Pop();
-    event_timeo->time_proc->OnTimerCoro(
-      event_timeo->function_data, event_timeo->coro_id);
-    event_timeo = heap_timer_.Top();
+  TimerData expired;
+  while (PopExpired(cur_time_ms, expired)) {
+    if (nullptr != expired.time_proc) {
+      expired.time_proc->OnTimerCoro(expired.function_data, expired.coro_id);
+    }
   }
   return 0;
 }
 
 void Timer::Clear(){
+  std::lock_guard<std::mutex> guard(lock_);
   heap_timer_.Clear();
+  id_to_sign_.clear();
 }
 
 }
