@@ -128,8 +128,7 @@ public:
   uint8_t status = kStatusOK;
   uint64_t sequence_id = 0xffffffffffffffff;
   uint64_t birthtime = 0;
-  int event_mask = 0;
-};
+  int event_mask = 0;`r`n`r`n  static const int kEventDropNotice = 0x1;`r`n};
 
 class CoroContext;
 
@@ -145,9 +144,9 @@ class EventMessage : public MessageBase {
     handle_svr(nullptr) {
   }
 
-  EventMessage(uint8_t type_id_, int64_t descriptor_id_) : 
-    MessageBase(type_id_), 
-    descriptor_id(descriptor_id_) {
+  EventMessage(uint8_t type_id_, int64_t descriptor_id_) :
+    EventMessage(type_id_) {
+    descriptor_id = descriptor_id_;
   }
 
   virtual ~EventMessage() {
@@ -194,3 +193,4 @@ class MessageFactory {
 std::ostream& operator << (std::ostream& os, const EventMessage& message);
 
 }
+
