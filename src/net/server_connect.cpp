@@ -33,6 +33,17 @@ void ServerConnect::OnClose() {
 }
 
 void ServerConnect::Destroy(){
+  // Also reached from kIoActiveCloseEvent with the fd still open: unregister
+  // and close it first, or the fd stays registered with a pointer that
+  // dangles once the delayed delete runs.
+  if (fd_ >= 0) {
+    RegisterDel(fd_);
+    Clean();
+  }
+  if (released_) {
+    return; // OnClose and an active close both end here
+  }
+  released_ = true;
   service::GetServiceManager().ReleaseServerCon(this);
   //BDF_DELETE(this);
 }
@@ -40,8 +51,12 @@ void ServerConnect::Destroy(){
 void ServerConnect::OnDecodeMessage(EventMessage* message) {
   if (message->type_id == MessageType::kHeartBeatMessage) {
     EventMessage* heartbeat_response = GetProtocol()->HeartBeatResponse(message);
-    if (0 != EncodeMsg(heartbeat_response)) {
-      MessageFactory::Destroy(heartbeat_response);
+    // Encode copies into outbuf_, so the message is freed on success too
+    // (it used to leak one message per heartbeat / favicon request).
+    int ret = EncodeMsg(heartbeat_response);
+    MessageFactory::Destroy(heartbeat_response);
+    if (0 == ret) {
+      OnWrite(); // decode runs on this connection's I/O thread
     }
     return;
   }
