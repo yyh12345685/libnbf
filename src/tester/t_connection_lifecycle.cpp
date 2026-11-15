@@ -20,22 +20,24 @@ using namespace bdf;
 struct Counts {
   std::atomic<int> live{0}, replies{0}, destroyed{0};
 };
+// Messages are freed with MessageFactory::Destroy, which (with MEM_PROFILE)
+// expects MessageFactory::Allocate's header: never create them with new.
 struct CountedRapid : RapidMessage {
   Counts& counts;
-  explicit CountedRapid(Counts& c) : counts(c) { ++counts.live; }
+  explicit CountedRapid(Counts* c) : counts(*c) { ++counts.live; }
   ~CountedRapid() { --counts.live; }
 };
 struct CountedHttp : HeartBeatMessage {
   Counts& counts;
-  explicit CountedHttp(Counts& c) : counts(c) { ++counts.live; }
+  explicit CountedHttp(Counts* c) : counts(*c) { ++counts.live; }
   ~CountedHttp() { --counts.live; }
 };
 struct RapidHeartbeats : RapidProtocol {
   Counts& counts;
   bool hold;
-  RapidHeartbeats(Counts& c, bool pending) : counts(c), hold(pending) {}
+  RapidHeartbeats(Counts* c, bool pending) : counts(*c), hold(pending) {}
   EventMessage* HeartBeatRequest() override {
-    auto* msg = new CountedRapid(counts);
+    auto* msg = MessageFactory::Allocate<CountedRapid>(&counts);
     msg->type_id = MessageType::kHeartBeatMessage;
     msg->direction = MessageBase::kOutgoingRequest;
     msg->command = 255;
@@ -48,9 +50,9 @@ struct RapidHeartbeats : RapidProtocol {
 struct HttpHeartbeats : HttpProtocol {
   Counts& counts;
   bool hold;
-  HttpHeartbeats(Counts& c, bool pending) : counts(c), hold(pending) {}
+  HttpHeartbeats(Counts* c, bool pending) : counts(*c), hold(pending) {}
   EventMessage* HeartBeatRequest() override {
-    auto* msg = new CountedHttp(counts);
+    auto* msg = MessageFactory::Allocate<CountedHttp>(&counts);
     msg->direction = MessageBase::kOutgoingRequest;
     msg->heart_type = MessageType::kHttpMessage;
     msg->load_avg = 0;
@@ -62,7 +64,7 @@ struct HttpHeartbeats : HttpProtocol {
 };
 struct RapidClient : AsyncClientConnect {
   Counts& counts;
-  explicit RapidClient(Counts& c) : AsyncClientConnect(500, 5), counts(c) {}
+  explicit RapidClient(Counts* c) : AsyncClientConnect(500, 5), counts(*c) {}
   ~RapidClient() { ++counts.destroyed; }
   void OnDecodeMessage(EventMessage* msg) override {
     AsyncClientConnect::OnDecodeMessage(msg);
@@ -71,7 +73,7 @@ struct RapidClient : AsyncClientConnect {
 };
 struct HttpClient : SyncClientConnect {
   Counts& counts;
-  explicit HttpClient(Counts& c) : SyncClientConnect(500, 5, false), counts(c) {}
+  explicit HttpClient(Counts* c) : SyncClientConnect(500, 5, false), counts(*c) {}
   ~HttpClient() { ++counts.destroyed; }
   void OnDecodeMessage(EventMessage* msg) override {
     SyncClientConnect::OnDecodeMessage(msg);
@@ -112,11 +114,12 @@ int main() {
         Counts counts;
         ClientConnect* client;
         if (is_http) {
-          client = new HttpClient(counts);
-          client->SetProtocol(new HttpHeartbeats(counts, pending));
+          // Connections and protocols are freed with BDF_DELETE: use BDF_NEW.
+          client = BDF_NEW(HttpClient, &counts);
+          client->SetProtocol(BDF_NEW(HttpHeartbeats, &counts, pending));
         } else {
-          client = new RapidClient(counts);
-          client->SetProtocol(new RapidHeartbeats(counts, pending));
+          client = BDF_NEW(RapidClient, &counts);
+          client->SetProtocol(BDF_NEW(RapidHeartbeats, &counts, pending));
         }
         client->SetIp("127.0.0.1"); client->SetPort(is_http ? hp : rp);
         assert(client->TryConnect() == 0);
