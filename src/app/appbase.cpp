@@ -1,5 +1,6 @@
 #include <unistd.h>
 #include <signal.h>
+#include <atomic>
 #include "app/appbase.h"
 #include "client/client_mgr.h"
 #include "service/service_manager.h"
@@ -7,6 +8,15 @@
 namespace bdf{
 
 LOGGER_CLASS_IMPL(logger_, AppBase);
+
+// The user's OnStop hook runs exactly once: from the signal handler (existing
+// apps rely on it to end loops started in OnAfterStart) or from AppStop.
+static std::atomic<bool> g_on_stop_called(false);
+static void CallOnStopOnce(AppBase* app) {
+  if (!g_on_stop_called.exchange(true)) {
+    app->OnStopHook();
+  }
+}
 
 AppBase* AppBase::application_ = nullptr;
 
@@ -85,8 +95,19 @@ int AppBase::AppWait() {
 }
 
 int AppBase::AppStop() {
+  // Runs once: AppRun calls it after AppWait returns, and user code may too.
+  static std::atomic<bool> stopped(false);
+  if (stopped.exchange(true)) {
+    return 0;
+  }
   INFO(logger_, "AppBase::OnStop");
-  OnStop();
+  CallOnStopOnce(this);
+
+  // Join the handler threads before stopping clients: a handler that is
+  // still running could hand a request to a client connection that is being
+  // destroyed on its I/O loop.
+  INFO(logger_, "AppBase::StopHandlers");
+  service::GetServiceManager().StopHandlers();
 
   INFO(logger_, "AppBase::StopClientManager");
   StopClientManager();
@@ -170,8 +191,13 @@ void AppBase::HandleSignal() {
 }
 
 void AppBase::StopApp(int signal) {
-  INFO(logger_, "service will be Stop,signal:" << signal);
-  AppBase::Get()->AppStop();
+  // Signal handler: no logging, locks or deletes here (it used to run the
+  // whole AppStop, then AppRun ran it a second time on freed objects). Only
+  // ask the handler threads to exit; AppWait then returns and AppRun stops
+  // everything once on the main thread.
+  (void)signal;
+  CallOnStopOnce(AppBase::Get()); // must itself be signal-safe (e.g. set an atomic)
+  service::GetServiceManager().ThreadStopFromSignal();
 }
 
 int AppBase::StopClientManager(){

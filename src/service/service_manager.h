@@ -42,6 +42,10 @@ public:
   int Start(ServiceHandler* handle);
   int Stop();
   int Wait();
+  // Async-signal-safe: only stores to atomics.
+  void ThreadStopFromSignal();
+  // Stop and join the service handler threads (idempotent).
+  int StopHandlers();
 
   void Reply(EventMessage* message);
   void SendToNetThread(EventMessage* msg);
@@ -74,6 +78,7 @@ private:
 
   int ThreadWait();
   int ThreadStop();
+  bool HasServiceHandle();
   LOGGER_CLASS_DECL(logger_);
 
   ServiceConfig service_config_;
