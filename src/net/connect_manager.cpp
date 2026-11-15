@@ -34,6 +34,7 @@ bool ServerConnectDelayReleaseMgr::SetRelease(ServerConnect* con){
   mutex_lock_.lock();
   size_t ret = connected_list_.erase(con->GetConnectId());
   mutex_lock_.unlock();
+  SetLive(con, false);
   TRACE(logger_, "erase id:" << con->GetConnectId() << ", ret:" << ret);
   if (0 == ret){
     WARN(logger_, "connected_list_.size():" << connected_list_.size() 
@@ -53,6 +54,27 @@ bool ServerConnectDelayReleaseMgr::SetRelease(ServerConnect* con){
   }
   con_mutex_lock_.unlock();
   return ret_v;
+}
+
+void ServerConnectDelayReleaseMgr::Remove(ServerConnect* con){
+  {
+    std::lock_guard<std::mutex> guard(mutex_lock_);
+    connected_list_.erase(con->GetConnectId());
+  }
+  SetLive(con, false);
+}
+
+void ServerConnectDelayReleaseMgr::SetLive(ServerConnect* con, bool live){
+  LiveShard& shard = ShardOf(con);
+  std::lock_guard<std::mutex> guard(shard.lock);
+  if (live) shard.set.insert(con);
+  else shard.set.erase(con);
+}
+
+bool ServerConnectDelayReleaseMgr::IsLive(ServerConnect* con){
+  LiveShard& shard = ShardOf(con);
+  std::lock_guard<std::mutex> guard(shard.lock);
+  return shard.set.count(con) > 0;
 }
 
 void ServerConnectDelayReleaseMgr::DeleteDalayCon(){
@@ -91,6 +113,7 @@ void ServerConnectDelayReleaseMgr::AddConnect(ServerConnect* connect){
   insert_ok = connected_list_.insert(
     std::pair<int64_t, ServerConnect*>(connect->GetConnectId(), connect)).second;
   mutex_lock_.unlock();
+  if (insert_ok) SetLive(connect, true);
 
   if (!insert_ok){
     WARN(logger_, "insert faild,may be memory leak,id:" << connect->GetConnectId());

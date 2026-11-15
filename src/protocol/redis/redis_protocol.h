@@ -3,6 +3,10 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <deque>
+#include <string>
+#include <vector>
+#include "protocol/redis/redis_reply.h"
 
 #include "protocol/protocol_base.h"
 #include "common/logger.h"
@@ -35,8 +39,17 @@ public:
 
   virtual EventMessage* HeartBeatRequest();
   virtual EventMessage* HeartBeatResponse(EventMessage* request);
+
+  virtual void Reset();
 private:
   LOGGER_CLASS_DECL(logger_);
+
+  // Replies still expected per encoded request, in send order. A request
+  // with N commands gets N replies; Decode merges them into one message so
+  // the connection's one-request-one-response matching stays aligned.
+  // Encode and Decode both run on the connection's I/O thread.
+  std::deque<size_t> expected_replies_;
+  std::vector<RedisReply> partial_replies_;
 };
 
 }

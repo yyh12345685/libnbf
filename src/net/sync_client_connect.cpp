@@ -106,14 +106,14 @@ void SyncClientConnect::CleanSyncClient(){
 
 void SyncClientConnect::CleanSequenceQueue(){
   std::list<EventMessage*> clear_list = sync_sequence_.Clear();
-  EventMessage* message = clear_list.front();
-  while (!clear_list.empty() && message) {
+  // front() on an empty list is undefined: check before every access.
+  while (!clear_list.empty()) {
+    EventMessage* message = clear_list.front();
+    clear_list.pop_front();
     if(message->timer_out_id > 0){
       sync_sequence_.CancelTimer(message->timer_out_id);
     }
-    clear_list.pop_front();
     DoSendBack(message, EventMessage::kInternalFailure);
-    message = clear_list.front();
   }
 
 }
