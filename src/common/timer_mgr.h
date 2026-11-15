@@ -28,13 +28,9 @@ public:
 	}
 
   ~TimerMgr(){
-    TimerItem iter = timer_map_.begin();
-    for (; iter != timer_map_.end(); iter++){
-      TimerInfo info = iter->second;
-      timer_id id = info.first;
-      TimerMgrBase *timer = info.second;
-      timer->OnTimer(timer->timer_data_,id);
-    }
+    // Do not fire pending timers here: they resume coroutines of a handler
+    // thread that has already exited, and the destructor runs on another
+    // thread (static destruction) where there is no scheduler -> crash.
     timer_map_.clear();
     id_map_.clear();
   }

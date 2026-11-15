@@ -27,8 +27,7 @@ EventMessage* CoroutineActor::RecieveMessage(uint64_t sequence_id,uint32_t timeo
   CoroTimer* tim = nullptr;
   if (likely(msg_list_.empty())){
     CoroutineServiceHandler* hdl = CoroutineContext::Instance().GetServiceHandler();
-    tim = BDF_NEW (CoroTimer,hdl);
-    tim->timer_data_ = &(CoroutineID::GetInst().GetAllCoroIds()[cur_coro_id]);
+    tim = BDF_NEW (CoroTimer,hdl,cur_coro_id);
     time_id = CoroutineContext::Instance().GetTimerMgr()->AddTimer(tim, timeout_ms);
     TRACE(logger_, "ThreadId:"<< ThreadId::Get()
       <<",RecieveMessage CoroutineYield:" << this<<",sequence_id:"<< sequence_id);
