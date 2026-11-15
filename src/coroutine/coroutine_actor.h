@@ -12,7 +12,7 @@ class CoroutineActor:public CoroContext {
 public:
   CoroutineActor();
 
-  EventMessage* RecieveMessage(EventMessage* message,uint32_t timeout_ms = 0);
+  EventMessage* RecieveMessage(uint64_t sequence_id,uint32_t timeout_ms = 0);
   bool SendMessage(EventMessage* message);
 
   inline void SetWaitingId(const uint64_t& sequence_id) {

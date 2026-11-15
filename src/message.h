@@ -75,7 +75,8 @@ Stream& operator << (Stream& os, const RedisMessage& message) {
 
 struct HttpMessage : public EventMessage {
   HttpMessage() :
-    EventMessage(MessageType::kHttpMessage) {
+    EventMessage(MessageType::kHttpMessage), http_major(1), http_minor(1),
+    status_code(0), keep_alive(true), encode_gzip(false) {
   }
   virtual ~HttpMessage() {
   }

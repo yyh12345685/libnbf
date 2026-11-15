@@ -16,19 +16,14 @@ CoroutineActor::CoroutineActor() :
   msg_list_.clear();
 }
 
-EventMessage* CoroutineActor::RecieveMessage(EventMessage* message,uint32_t timeout_ms){
+EventMessage* CoroutineActor::RecieveMessage(uint64_t sequence_id,uint32_t timeout_ms){
   TRACE(logger_, "CoroutineActor::RecieveMessage,timeout_ms:"
     << timeout_ms<<",msg_list_:"<<msg_list_.size());
   uint64_t time_id = 0;
   CoroutineSchedule* scheduler = CoroutineContext::Instance().GetScheduler();
-  uint64_t seq_id_send_tmp = message->sequence_id;
+  // Only the sequence id is taken: the sent message belongs to the I/O thread.
+  uint64_t seq_id_send_tmp = sequence_id;
   int cur_coro_id = CoroutineContext::GetCurCoroutineId();
-  int coro_id_tmp = message->coroutine_id;
-  if (cur_coro_id != coro_id_tmp){
-    INFO(logger_, "may be send failed in io handle, cur_coro_id:"
-      << cur_coro_id <<",coro_id_tmp:"<< coro_id_tmp);
-    return nullptr;
-  }
   CoroTimer* tim = nullptr;
   if (likely(msg_list_.empty())){
     CoroutineServiceHandler* hdl = CoroutineContext::Instance().GetServiceHandler();
@@ -36,7 +31,7 @@ EventMessage* CoroutineActor::RecieveMessage(EventMessage* message,uint32_t time
     tim->timer_data_ = &(CoroutineID::GetInst().GetAllCoroIds()[cur_coro_id]);
     time_id = CoroutineContext::Instance().GetTimerMgr()->AddTimer(tim, timeout_ms);
     TRACE(logger_, "ThreadId:"<< ThreadId::Get()
-      <<",RecieveMessage CoroutineYield:" << this<<",msg"<< *message);
+      <<",RecieveMessage CoroutineYield:" << this<<",sequence_id:"<< sequence_id);
     scheduler->CoroutineYield(cur_coro_id);
     scheduler->AfterYieldToAvailable(cur_coro_id);
   }else{
@@ -62,7 +57,7 @@ EventMessage* CoroutineActor::RecieveMessage(EventMessage* message,uint32_t time
     return msg;
   } else {
     /*INFO*/TRACE(logger_, "maybe time out:"<< timeout_ms <<",coro id:" <<
-      coro_id_tmp << ",running id:" << scheduler ->GetRunningId()<<",prt:"<< this);
+      cur_coro_id << ",running id:" << scheduler ->GetRunningId()<<",prt:"<< this);
     return nullptr;
   }
 }

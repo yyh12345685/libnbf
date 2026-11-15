@@ -16,13 +16,14 @@ void ServiceHandler::Run( HandleData* data){
   INFO(logger_, "ServiceHandler::Run start.");
   time_t now = time(NULL);
   while (data->is_run) {
-    if (data->data_.empty()){
+    data->lock_.lock();
+    if (data->data_.empty()) {
+      data->lock_.unlock();
       usleep(200);
       continue;
     }
-
+    // Build the batch only when there is work: a std::queue allocates.
     std::queue<EventMessage*> temp;
-    data->lock_.lock();
     temp.swap(data->data_);
     data->lock_.unlock();
     //如有必要这里也可以增加队列超过一定长度的过载保护
@@ -32,7 +33,7 @@ void ServiceHandler::Run( HandleData* data){
       time_t cur_time = time(NULL);
       if ((cur_time - now) > 60 && handle_size == temp.size()) {
         INFO(logger_, "ThreadId:" << ThreadId::Get() << ",msg size:"
-          << data->data_.size() << ",handle size:" << temp.size());
+          << temp.size() << ",handle size:" << temp.size());
         now = cur_time;
       }
 

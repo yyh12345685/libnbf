@@ -172,9 +172,10 @@ EventMessage* Client::DoSendRecieve(EventMessage* message) {
     return nullptr;
   }
   
+  // I/O owns message after enqueue and may destroy it before this thread resumes.
+  const uint64_t sequence_id = message->sequence_id;
   DoSend(message);
-  //TRACE(logger_, "send msg handle_id:" << message->handle_id);
-  EventMessage* response = DoRecieve(message);
+  EventMessage* response = DoRecieve(sequence_id);
   if (response && response->status != EventMessage::kStatusOK) {
     TRACE(logger_, "may be time out,status:" << response->status << ",msg:" << *response);
     MessageFactory::Destroy(response);
@@ -196,7 +197,7 @@ void Client::DoSend(EventMessage* message){
   service::GetServiceManager().SendToNetThread(message);
 }
 
-EventMessage* Client::DoRecieve(EventMessage* message){
+EventMessage* Client::DoRecieve(uint64_t sequence_id){
   if (nullptr != CoroutineContext::Instance().GetScheduler()){
     int coro_id = CoroutineContext::GetCurCoroutineId();
     CoroutineActor* actor = CoroutineContext::GetCurCoroutineCtx();
@@ -205,8 +206,8 @@ EventMessage* Client::DoRecieve(EventMessage* message){
       return nullptr;
     }
     TRACE(logger_, "get coroutine id:" << coro_id << ",ptr:" << actor);
-    actor->SetWaitingId(message->sequence_id);
-    return actor->RecieveMessage(message,timeout_ms_);
+    actor->SetWaitingId(sequence_id);
+    return actor->RecieveMessage(sequence_id,timeout_ms_);
   }else{
     //非协程使用异步调用Invoke，不是用该函数
     WARN(logger_, "use error,not should to here...");
