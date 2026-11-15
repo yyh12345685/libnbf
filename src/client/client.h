@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <atomic>
 #include "common/logger.h"
 #include "net/client_connect.h"
 
@@ -39,24 +40,28 @@ public:
     return DoSendRecieve(message);
   }
 
+  // connect_ is cleared by Stop() while other threads may be in here:
+  // load it once and null-check (it used to be read twice / dereferenced).
   int GetClientStatus() const {
-    return connect_ && connect_->GetStatus() == 
+    ClientConnect* con = connect_.load();
+    return con && con->GetStatus() ==
       ClientConnect::kConnected ? kWorking : kBroken;
   }
 
   void SetNoBuzy(){
-    if (!sigle_send_sigle_recv_){
+    ClientConnect* con = connect_.load();
+    if (!sigle_send_sigle_recv_ || !con){
       return ;
     }
-    return connect_->SetBuzy(false);
+    return con->SetBuzy(false);
   }
 
   bool TrySetBusy() {
     if (!sigle_send_sigle_recv_) {
       return  true;
     }
-
-    return connect_->TrySetBuzy();
+    ClientConnect* con = connect_.load();
+    return con && con->TrySetBuzy();
   }
 
   void Dump(std::ostream& os) const;
@@ -76,7 +81,7 @@ private:
   uint32_t timeout_ms_;
   uint32_t heartbeat_ms_;
 
-  ClientConnect* connect_;
+  std::atomic<ClientConnect*> connect_;
 
   bool sigle_send_sigle_recv_;
 };

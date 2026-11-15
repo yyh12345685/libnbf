@@ -81,16 +81,12 @@ ClientConnect* Client::CreateClient(const std::string& address, uint32_t heartbe
 }
 
 int Client::Stop() {
-  if (!connect_) {
+  // Unpublish first; the connection deletes itself on its I/O loop.
+  ClientConnect* con = connect_.exchange(nullptr);
+  if (!con) {
     return 0;
   }
-
-  //ConnectManager::Instance().UnRegisterConnect((uint64_t)connect_);
-  int ret = connect_->Stop();
-  //may be a bug
-  //connect_->Destroy();
-  connect_ = nullptr;
-  return ret;
+  return con->Stop();
 }
 
 void Client::Dump(std::ostream& os) const {
@@ -98,7 +94,7 @@ void Client::Dump(std::ostream& os) const {
     << ", \"address\": \"" << address_ << "\""
     << ", \"timeout\": " << timeout_ms_
     << ", \"heartbeat\": " << heartbeat_ms_
-    << ", \"status\": \"" << connect_->GetStatus() << "\""
+    << ", \"status\": \"" << (connect_.load() ? connect_.load()->GetStatus() : -1) << "\""
     << "}" << std::endl;
 }
 
@@ -120,7 +116,7 @@ bool Client::Send(EventMessage* message) {
     return false;
   }
 
-  message->descriptor_id = (int64_t)((void*)connect_);
+  message->descriptor_id = (int64_t)((void*)connect_.load());
   if (message->IsSynchronous()){
     message->direction = MessageBase::kSendNoCareResponse;
   }else{
@@ -141,7 +137,7 @@ bool Client::Invoke(EventMessage* message, const InvokerCallback& cb, const std:
   }
 
   message->sequence_id = GetSequenceId();
-  message->descriptor_id = (int64_t)((void*)connect_);
+  message->descriptor_id = (int64_t)((void*)connect_.load());
   message->direction = MessageBase::kOutgoingRequest;
   message->ctx = BDF_NEW(ContextBase);
   message->ctx->callback = cb;
@@ -159,7 +155,7 @@ EventMessage* Client::DoSendRecieve(EventMessage* message) {
   }
 
   message->sequence_id = GetSequenceId();
-  message->descriptor_id = (int64_t)((void*)connect_);
+  message->descriptor_id = (int64_t)((void*)connect_.load());
   message->direction = MessageBase::kOutgoingRequest;
   if (ForTest::Inst().GetForTest()){
     TRACE(logger_, "for test_client_server,only send.");
