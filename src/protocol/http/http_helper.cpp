@@ -2,6 +2,7 @@
 #include <iostream>
 #include <sstream>
 #include <string.h>
+#include <strings.h>
 
 #include "protocol/http/http_helper.h"
 #include "common/string_util.h"
@@ -71,7 +72,12 @@ int HttpParser::OnUrl(http_parser *parser, const char *at, size_t length){
 int HttpParser::OnHeaderField(http_parser *parser, const char *at, size_t length){
 	HttpAgent* agent = (HttpAgent*)parser->data;
   HttpRequestInfo& request_info = agent->http_request_;
-  request_info.new_field.assign(at, length);
+  // A field may arrive in several callbacks when it spans two reads.
+  if (request_info.parsing_header_value) {
+    request_info.new_field.clear();
+    request_info.parsing_header_value = false;
+  }
+  request_info.new_field.append(at, length);
 
   return 0;
 }
@@ -79,7 +85,14 @@ int HttpParser::OnHeaderField(http_parser *parser, const char *at, size_t length
 int HttpParser::OnHeaderValue(http_parser *parser, const char *at, size_t length){
 	HttpAgent* agent = (HttpAgent*)parser->data;
   HttpRequestInfo& request_info = agent->http_request_;
-  request_info.headers[request_info.new_field] = std::string(at, length);
+  std::string& value = request_info.headers[request_info.new_field];
+  if (!request_info.parsing_header_value && !value.empty()) {
+    // Repeated header line: join per RFC 7230 (Cookie uses "; ").
+    value.append(strcasecmp(request_info.new_field.c_str(), "Cookie") == 0 ? "; " : ", ");
+  }
+  // A value may also arrive in several callbacks, so append.
+  value.append(at, length);
+  request_info.parsing_header_value = true;
 
   return 0;
 }
@@ -98,6 +111,12 @@ int HttpParser::OnBody(http_parser *parser, const char *at, size_t length){
     
   // NOTICE:OnBody may be called many times per Reuqest,
   // So not forget to use append but not assign :)
+  // Bytes are no longer re-fed, so bound the body explicitly.
+  static const size_t kMaxHttpBody = 30 * 1024 * 1024;
+  if (request_info.body.size() + length > kMaxHttpBody) {
+    WARN(logger_, "http body too large:" << request_info.body.size() + length);
+    return -1; // makes http_parser fail -> connection is closed
+  }
   request_info.body.append(at, length); 
 
   TRACE(logger_, "HttpParser::OnBody size is:" << length);

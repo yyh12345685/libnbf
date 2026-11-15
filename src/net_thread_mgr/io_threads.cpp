@@ -71,17 +71,24 @@ int IoThreads::AddModrw(
     return -1;
   }
 
+  // On failure undo the Add: callers delete ezfd, and a FdEvent left behind
+  // would point at freed memory and block the fd number for the next Add.
   if (0 != event_threads_[idx]->Modr(fd, set)) {
     WARN(logger_, "event_threads_[idx].Modr failed.");
+    event_threads_[idx]->Del(fd);
     return -2;
   }
 
   if (0 != event_threads_[idx]->Modw(fd, set)) {
     WARN(logger_, "event_threads_[idx].Modw failed.");
+    event_threads_[idx]->Del(fd);
     return -3;
   }
 
-  return event_threads_[idx]->Wakeup();
+  // Registered; a failed wakeup only delays the loop by one poll timeout,
+  // so it must not make the caller delete a live, registered connection.
+  event_threads_[idx]->Wakeup();
+  return 0;
 }
 
 int IoThreads::AddModr(
@@ -95,10 +102,22 @@ int IoThreads::AddModr(
 
   if (0 != event_threads_[idx]->Modr(fd,set)) {
     WARN(logger_, "event_threads_[idx].Modr failed.");
+    event_threads_[idx]->Del(fd);
     return -2;
   }
 
-  return event_threads_[idx]->Wakeup();
+  event_threads_[idx]->Wakeup();
+  return 0;
+}
+
+int IoThreads::GetIoThreadId(EventFunctionBase* ezfd){
+  return static_cast<int>(GetIoThreadIndex(ezfd, event_threads_.size()));
+}
+
+int IoThreads::Modw(EventFunctionBase* ezfd, int fd, bool set){
+  // Same thread selection as AddModr, so this is the connection's own loop.
+  size_t idx = GetIoThreadIndex(ezfd, event_threads_.size());
+  return event_threads_[idx]->Modw(fd, set);
 }
 
 int IoThreads::Del(EventFunctionBase* ezfd, int fd){

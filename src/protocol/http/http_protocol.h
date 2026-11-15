@@ -39,6 +39,10 @@ public:
   virtual EventMessage* HeartBeatRequest();
   virtual EventMessage* HeartBeatResponse(EventMessage* request);
 
+  // A parse error is sticky in http_parser (execute returns 0 forever), so
+  // without this a client stayed broken after reconnecting.
+  virtual void Reset();
+
 private:
   bool WirteToBuf(HttpMessage *msg, Buffer *output);
   LOGGER_CLASS_DECL(logger_);

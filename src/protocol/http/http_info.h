@@ -19,6 +19,7 @@ struct HttpRequestInfo{
 
   Dict headers;
   std::string new_field; //field is waiting for value while parsing:)
+  bool parsing_header_value = false; // last callback was on_header_value
 
   std::string body;
 
@@ -40,6 +41,7 @@ struct HttpRequestInfo{
     url.clear();
     headers.clear();
     new_field.clear();
+    parsing_header_value = false;
     body.clear();
   }
 
