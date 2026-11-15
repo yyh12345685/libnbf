@@ -5,6 +5,9 @@
 #include "message_base.h"
 #include "service/service_manager.h"
 #include "net/connect.h"
+#include "net/server_connect.h"
+#include "net_thread_mgr/net_thread_mgr.h"
+#include "net_thread_mgr/acceptor_thread.h"
 #include "common/thread_id.h"
 #include "common/time.h"
 #include "monitor/matrix_scope.h"
@@ -63,8 +66,8 @@ void IoThreadDataRun::Handle(EventMessage* message){
     HandleIoActiveCloseEvent(message);
     break;
   default:
-    MessageFactory::Destroy(message);
     WARN(logger_, "IoThreadDataRun unknown message:" << message->type_id);
+    MessageFactory::Destroy(message);
     break;
   }
 }
@@ -87,6 +90,26 @@ void IoThreadDataRun::HandleIoMessageEvent(EventMessage* message){
   
   if (!con /*|| reg_con != con*/) {
     ERROR(logger_, "error,con:"<< con /*<<",reg_con:"<< reg_con*/);
+    HandleIoMessageFailed(message);
+    return;
+  }
+
+  if (message->direction == EventMessage::kOutgoingResponse) {
+    // A server reply: its connection may have closed (and be deleted 90s
+    // later) while the handler worked. Check before dereferencing; this runs
+    // on the connection's own I/O thread, so it cannot close meanwhile.
+    AcceptorThread* acceptor =
+      service::GetServiceManager().GetNetThreadManager()->GetAcceptThread();
+    if (nullptr == acceptor
+      || !acceptor->IsLiveConnect(static_cast<ServerConnect*>(con))) {
+      TRACE(logger_, "reply for a closed connection dropped");
+      HandleIoMessageFailed(message);
+      return;
+    }
+  }
+
+  if (con->GetFd() < 0) {
+    // Closed: encoding would only pile data into a buffer nobody sends.
     HandleIoMessageFailed(message);
     return;
   }

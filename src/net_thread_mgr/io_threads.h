@@ -28,6 +28,9 @@ public:
     EventFunctionBase *ezfd,int fd,  bool set,bool lock,int& register_thread_id);
     
   int Del(EventFunctionBase* ezfd, int fd);
+  int Modw(EventFunctionBase* ezfd, int fd, bool set);
+  // The loop a connection belongs to (same choice as AddModr/AddModrw).
+  int GetIoThreadId(EventFunctionBase* ezfd);
 
   void PutMessageToHandle(EventMessage* msg);
 

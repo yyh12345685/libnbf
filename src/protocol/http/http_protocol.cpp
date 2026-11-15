@@ -1,4 +1,6 @@
 ﻿
+#include <strings.h>
+#include <algorithm>
 #include "protocol/http/http_protocol.h"
 #include "message_base.h"
 #include "message.h"
@@ -46,6 +48,15 @@ HttpProtocol::~HttpProtocol() {
   }
 }
 
+void HttpProtocol::Reset(){
+  for (HttpMessage* msg : agent_->msgs_) {
+    MessageFactory::Destroy(msg);
+  }
+  agent_->msgs_.clear();
+  agent_->http_request_.ReSet();
+  agent_->parser_.InitParser(agent_);
+}
+
 EventMessage* HttpProtocol::Decode(Buffer &input, bool& failed){
 	for(;;){
 	  //not first
@@ -77,7 +88,8 @@ EventMessage* HttpProtocol::Decode(Buffer &input, bool& failed){
       size = 1024 * 1024;
 
     TRACE(logger_, "http decode size is: size:"<<size);
-    TRACE(logger_, "http decode info is:"<<input.GetReading());
+    // The buffer is not NUL-terminated; log a bounded copy only.
+    TRACE(logger_, "http decode info is:" << std::string(input.GetReading(), std::min(size, 256)));
     int parsed = agent_->parser_.HttpParseRequest(input.GetReading(), size);
     if (agent_->parser_.GetHttpParser().upgrade){
       failed = true;
@@ -88,7 +100,7 @@ EventMessage* HttpProtocol::Decode(Buffer &input, bool& failed){
       enum http_errno err = (http_errno)agent_->parser_.GetHttpParser().http_errno;
       failed = true;
       ERROR(logger_, ",Read size is:" << size 
-        << ",parsed is" << parsed << ",input:" << input.GetReading());
+        << ",parsed is" << parsed << ",input:" << std::string(input.GetReading(), std::min(size, 256)));
       ERROR(logger_, "[" << http_errno_name(err)<< "]: " << http_errno_description(err)
         << ",msg size is:"<<agent_->msgs_.size());
       input.DrainReading(size);
@@ -97,25 +109,20 @@ EventMessage* HttpProtocol::Decode(Buffer &input, bool& failed){
       TRACE(logger_, "parased ok ,size:" << size);
     }
     
-    //really this not need, but in test python,http_parser.cpp not to OnMessageComplete
-    //so can reslove this bug,but not really good
-    TRACE(logger_, "msg size is:" << agent_->msgs_.size() 
+    // http_parser is stateful and has consumed these bytes, even when the
+    // message is not complete yet. Drain them so they are not fed twice; an
+    // incomplete message is not an error, the rest arrives with the next read.
+    TRACE(logger_, "msg size is:" << agent_->msgs_.size()
       << ",parsed body is:" << agent_->http_request_.body.size());
-    if (agent_->http_request_.is_parsed_complete){
-      input.DrainReading(size);
-    }else{
-      TRACE(logger_,"partly parsed.");
-      //avoid unexcept data
-      if (size > 256 *1024){
-        input.DrainReading(size);
-        WARN(logger_, "http DrainReading invalid data,size:"<<size);
-      }else{
-        TRACE(logger_, "may be not DrainReading,size:" << size);
-      }
-      failed = true;
-    }
-    //input.DrainReading(size);
+    input.DrainReading(size);
 	}
+}
+
+static bool HasHeader(const Dict& headers, const char* name){
+  for (const auto& it : headers) {
+    if (strcasecmp(it.first.c_str(), name) == 0) return true;
+  }
+  return false;
 }
 
 static void GetHeaderStr(const Dict& headers, std::string& str){
@@ -239,7 +246,17 @@ bool HttpProtocol::WirteToBuf(HttpMessage *msg, Buffer *output){
   }
 
   size_t size = msg->http_info.body.size();
-  if (!msg->GetHeader(("Content-Length"), nullptr) && size > 0) {
+  const bool is_response = msg->direction == MessageBase::kOutgoingResponse
+    || msg->direction == MessageBase::kIncomingResponse;
+  // A response without a length is read until EOF, so a keep-alive reply
+  // with an empty body never completed: send "Content-Length: 0". 1xx/204
+  // must not carry it, and it must never be combined with Transfer-Encoding.
+  const bool no_body_status = is_response
+    && (msg->status_code / 100 == 1 || msg->status_code == 204);
+  const bool need_length = is_response ? !no_body_status : size > 0;
+  if (need_length
+    && !HasHeader(msg->http_info.headers, "Content-Length")
+    && !HasHeader(msg->http_info.headers, "Transfer-Encoding")) {
     if (!output->Write("Content-Length", strlen("Content-Length"))) return false;
     if (!output->Write(": ", 2)) return false;
     tmp = common::ToString<uint64_t>(size);
@@ -263,17 +280,19 @@ bool HttpProtocol::WirteToBuf(HttpMessage *msg, Buffer *output){
 }
 
 EventMessage* HttpProtocol::HeartBeatRequest() {
-  HttpMessage* http_message = MessageFactory::Allocate<HttpMessage>();
-  http_message->type_id = MessageType::kHeartBeatMessage;
-  http_message->direction = EventMessage::kOutgoingRequest;
-  http_message->keep_alive = true;
-  return http_message;
+  // Encode() treats kHeartBeatMessage as HeartBeatMessage, so allocate that
+  // type (an HttpMessage here was read through the wrong type).
+  HeartBeatMessage* heartbeat = MessageFactory::Allocate<HeartBeatMessage>();
+  heartbeat->direction = EventMessage::kOutgoingRequest;
+  heartbeat->load_avg = 0;
+  heartbeat->heart_type = MessageType::kHttpMessage;
+  return heartbeat;
 }
 
 EventMessage* HttpProtocol::HeartBeatResponse(EventMessage* request) {
-  HttpMessage* response = (HttpMessage*)request;
+  // Decode produces a HeartBeatMessage; Encode writes the 200 reply itself.
+  EventMessage* response = request;
   response->direction = EventMessage::kOutgoingResponse;
-  response->status_code = 200;
 
   return response;
 }

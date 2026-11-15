@@ -2,6 +2,9 @@
 #pragma once
 
 #include <string.h>
+#include <strings.h>
+#include <stdlib.h>
+#include <string>
 #include <vector>
 #include <netdb.h>
 #include <sys/socket.h>
@@ -13,19 +16,46 @@ namespace bdf{
 
 class ProtocolHelper{
 public:
+  // "proto://host:port"; an IPv6 host must be bracketed: "rapid://[::1]:9091".
   static int ParseSpecAddr(const char *spec, char ip[256], int *port){
-    if (spec && strlen(spec) < 256){
-      char proto[128];
-      int size = sscanf(spec, " %[^:]://%[^:]:%d", proto, ip, port);
-      if (size == 3){
-        if (0 == strcasecmp("http", proto)) 
-          return MessageType::kHttpMessage;
-        if (0 == strcasecmp("rapid", proto)) 
-          return MessageType::kRapidMessage;
-        if (0 == strcasecmp("redis", proto)) 
-          return MessageType::kRedisMessage;
-      }
+    if (!spec || strlen(spec) >= 256) {
+      return MessageType::kUnknownEvent;
     }
+    while (*spec == ' ') ++spec;
+    const char* sep = strstr(spec, "://");
+    if (!sep) return MessageType::kUnknownEvent;
+    std::string proto(spec, sep - spec);
+    const char* host = sep + 3;
+    const char* host_end = nullptr;
+    const char* colon = nullptr;
+    if (*host == '[') {
+      host_end = strchr(host, ']');
+      if (!host_end || host_end[1] != ':') return MessageType::kUnknownEvent;
+      colon = host_end + 1;
+      ++host;
+    } else {
+      colon = strrchr(host, ':');
+      if (!colon || memchr(host, ':', colon - host)) {
+        return MessageType::kUnknownEvent; // bare IPv6 without brackets is ambiguous
+      }
+      host_end = colon;
+    }
+    size_t host_len = host_end - host;
+    char* end = nullptr;
+    long port_value = strtol(colon + 1, &end, 10);
+    if (host_len == 0 || host_len >= 256 || end == colon + 1
+      || port_value < 0 || port_value > 65535) {
+      return MessageType::kUnknownEvent;
+    }
+    memcpy(ip, host, host_len);
+    ip[host_len] = 0;
+    *port = static_cast<int>(port_value);
+    if (0 == strcasecmp("http", proto.c_str()))
+      return MessageType::kHttpMessage;
+    if (0 == strcasecmp("rapid", proto.c_str()))
+      return MessageType::kRapidMessage;
+    if (0 == strcasecmp("redis", proto.c_str()))
+      return MessageType::kRedisMessage;
     return MessageType::kUnknownEvent;
   }
 

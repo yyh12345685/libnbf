@@ -21,6 +21,11 @@ public:
 
   virtual EventMessage* HeartBeatRequest() = 0;
   virtual EventMessage* HeartBeatResponse(EventMessage* request) = 0;
+
+  // Drop per-connection parse state. Called when the connection's socket is
+  // closed (Connecting::Clean): a client reconnects with the same protocol
+  // object and must not inherit a half-parsed message or parser error.
+  virtual void Reset() {}
 };
 
 class ProtocolFactory {
