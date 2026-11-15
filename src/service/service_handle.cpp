@@ -77,9 +77,18 @@ void ServiceHandler::Handle(EventMessage* message) {
     return message->direction == MessageBase::kIncomingRequest
       ? RapidRequestMessage(static_cast<RapidMessage*>(message))
       : RapidResponseMessage(static_cast<RapidMessage*>(message));
+  case MessageType::kRedisMessage:
+    // Redis replies used to hit default and be destroyed as "unknown", so
+    // an Invoke callback on a redis client never ran.
+    if (message->direction == MessageBase::kIncomingRequest) {
+      WARN(logger_, "redis server side is not supported, drop request");
+      MessageFactory::Destroy(message);
+      return;
+    }
+    return RedisResponseMessage(static_cast<RedisMessage*>(message));
   default:
-    MessageFactory::Destroy(message);
     ERROR(logger_,"unkown message,type_id:"<< message->type_id);
+    MessageFactory::Destroy(message);
   }
 }
 
@@ -117,9 +126,26 @@ void ServiceHandler::RapidResponseMessage(RapidMessage* message){
   }
 }
 
-void ServiceHandler::OnHttpRequestMessage(HttpMessage* message){
+void ServiceHandler::RedisResponseMessage(RedisMessage* message){
+  if (nullptr != message->ctx && nullptr != message->ctx->callback) {
+    // A redis error reply ("-ERR ...") is still a delivered response.
+    monitor::GlobalMatrix::Instance().MarkEnd(
+      message->ctx->monitor_id, message->status == EventMessage::kStatusOK);
+    message->ctx->callback(message);
+  } else {
+    OnRedisResponseMessage(message);
+  }
+}
+
+//if use coroutine,should not handle
+void ServiceHandler::OnRedisResponseMessage(RedisMessage* message){
+  TRACE(logger_, "not should here,not implement:" << message->type_id);
   MessageFactory::Destroy(message);
+}
+
+void ServiceHandler::OnHttpRequestMessage(HttpMessage* message){
   WARN(logger_, "not should here,not implement:" << message->type_id);
+  MessageFactory::Destroy(message);
 }
 
 //if use coroutine,should not handle
