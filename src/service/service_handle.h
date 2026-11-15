@@ -8,6 +8,7 @@ namespace bdf{
 class EventMessage;
 class HttpMessage;
 class RapidMessage;
+struct RedisMessage;
 struct HandleData;
 
 class ServiceHandler:public Handler {
@@ -30,12 +31,16 @@ protected:
 
   void RapidRequestMessage(RapidMessage* message);
   void RapidResponseMessage(RapidMessage* message);
+  void RedisResponseMessage(RedisMessage* message);
 
   virtual void OnHttpRequestMessage(HttpMessage* message);
   virtual void OnHttpResponseMessage(HttpMessage* message);
 
   virtual void OnRapidRequestMessage(RapidMessage* message);
   virtual void OnRapidResponseMessage(RapidMessage* message);
+
+  // Redis is client-only: replies without an Invoke callback end up here.
+  virtual void OnRedisResponseMessage(RedisMessage* message);
 
 private:
   LOGGER_CLASS_DECL(logger_);

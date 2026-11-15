@@ -41,6 +41,8 @@ void CoroutineServiceHandler::Run(HandleData* data){
       //想看详细日志可以打开
       //TRACE(logger_, "CoroutineResume available coro id:"<< coro_id);
       if (coro_id < 0){
+        // All coroutines busy and the cap is reached: don't spin a core.
+        usleep(100);
         continue;
       }
       scheduler->CoroutineResume(coro_id);
@@ -101,15 +103,16 @@ void CoroutineServiceHandler::OnTimerCoro(void* function_data, int& coro_id){
 }
 
 void CoroutineServiceHandler::ProcessTask(HandleData* data){
-  if (data->task_.empty()){
-    return;
-  }
-
-  TRACE(logger_, "CoroutineServiceHandler::ProcessTask.");
   std::queue<Task*> temp;
-  data->lock_task_.lock();
-  temp.swap(data->task_);
-  data->lock_task_.unlock();
+  {
+    // task_ is pushed by other threads under lock_task_: read it under it too.
+    std::lock_guard<std::mutex> guard(data->lock_task_);
+    if (data->task_.empty()) {
+      return;
+    }
+    temp.swap(data->task_);
+  }
+  TRACE(logger_, "CoroutineServiceHandler::ProcessTask.");
 
   while (!temp.empty()) {
     Task *task = temp.front();
@@ -121,8 +124,13 @@ void CoroutineServiceHandler::ProcessTask(HandleData* data){
 
 void CoroutineServiceHandler::Process(HandleData* data){
   CoroutineSchedule* scheduler = CoroutineContext::Instance().GetScheduler();
-  int static empty_times = 0;
-  if (data->data_.empty()) {
+  // One counter per handler thread (a function static was shared by all).
+  static thread_local int empty_times = 0;
+  if (pending_.empty()) {
+    std::lock_guard<std::mutex> guard(data->lock_);
+    pending_.swap(data->data_);
+  }
+  if (pending_.empty()) {
     usleep(200);
     empty_times++;
     if (0 == empty_times % 10){
@@ -131,12 +139,7 @@ void CoroutineServiceHandler::Process(HandleData* data){
     return;
   }
   empty_times = 0;
-  std::queue<EventMessage*> temp;
-  data->lock_.lock();
-  temp.swap(data->data_);
-  data->lock_.unlock();
-
-  ProcessMessageHandle(temp);
+  ProcessMessageHandle(pending_);
 }
 
 void CoroutineServiceHandler::ProcessClientItem(EventMessage* msg){
@@ -163,7 +166,6 @@ void CoroutineServiceHandler::ProcessClientItem(EventMessage* msg){
 void CoroutineServiceHandler::ProcessMessageHandle(std::queue<EventMessage*>& msg_list) {
   TRACE(logger_, "handle id:" << GetHandlerId()
     << ",ProcessMessage size:" << msg_list.size());
-  CoroutineSchedule* scheduler = CoroutineContext::Instance().GetScheduler();
   size_t handle_size = msg_list.size();
   while (!msg_list.empty()) {
     //for debug begin-------------
@@ -178,12 +180,15 @@ void CoroutineServiceHandler::ProcessMessageHandle(std::queue<EventMessage*>& ms
     msg_list.pop();
 
     TRACE(logger_, "message is:" << *msg);
-    if (MessageBase::kStatusOK != msg->status){
+    if (MessageBase::kStatusOK != msg->status
+      && msg->direction == MessageBase::kIncomingRequest){
       //超时或者连接被关闭等无效消息
-      scheduler->CoroutineYield();
       MessageFactory::Destroy(msg);
       continue;
     }
+    // A failed client response (connection closed, timeout) still goes to
+    // its waiting coroutine, which sees the status and returns at once
+    // instead of sleeping until its own timeout.
     if (msg->direction == MessageBase::kIncomingRequest){
       //处理服务端接收的消息
       uint64_t birth_to_now = Time::GetCurrentClockTime()- msg->birthtime;

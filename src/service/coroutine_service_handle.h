@@ -3,6 +3,7 @@
 
 #include <queue>
 #include "common/timer_mgr.h"
+#include "message_base.h"
 #include "service/service_handle.h"
 
 namespace bdf { 
@@ -15,6 +16,10 @@ public:
   CoroutineServiceHandler():debug_time_(0){
   }
   virtual ~CoroutineServiceHandler(){
+    while (!pending_.empty()) {
+      MessageFactory::Destroy(pending_.front());
+      pending_.pop();
+    }
   }
 
   virtual void Run(HandleData* data);
@@ -39,6 +44,11 @@ private:
 
   void ProcessMessageHandle(std::queue<EventMessage*>& msg_list);
 
+  // Messages taken from HandleData but not handled yet. A member (one per
+  // handler thread) rather than a local of the running coroutine: when a
+  // handler yields in SendRecieve, the next coroutine keeps draining it.
+  std::queue<EventMessage*> pending_;
+
   void ProcessClientItem(EventMessage* msg);
 
   TimerMgr time_mgr_;
@@ -50,14 +60,19 @@ private:
 
 class CoroTimer : public TimerMgrBase {
 public:
-  CoroTimer(CoroutineServiceHandler* handle):
-    service_handle_(handle){
+  CoroTimer(CoroutineServiceHandler* handle, int coro_id = -1):
+    service_handle_(handle), coro_id_(coro_id){
+    // The callback reads the id through timer_data_; keep it in the timer
+    // itself (it pointed into CoroutineID's fixed 100000-entry table, out of
+    // bounds once more coroutines were created).
+    timer_data_ = &coro_id_;
   }
 
   virtual void OnTimer(void* timer_data, uint64_t time_id);
   virtual ~CoroTimer() { }
 protected:
   CoroutineServiceHandler* service_handle_;
+  int coro_id_;
 };
 
 }
