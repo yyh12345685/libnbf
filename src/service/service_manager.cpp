@@ -22,10 +22,16 @@ int ServiceManager::Init(const ServiceConfig& config){
     return -1;
   }
 
-  monitor::GlobalMatrix::Init(config.monitor_file_name,
+  // The monitor is used unguarded everywhere (MatrixCounter, Invoke...), so
+  // a failed init must fail startup instead of leaving a null instance.
+  if (0 != monitor::GlobalMatrix::Init(config.monitor_file_name,
     config.monitor_token_bucket,
     config.monitor_queue_bucket,
-    config.monitor_queue_size);
+    config.monitor_queue_size)) {
+    BDF_DELETE (net_thread_mgr_);
+    net_thread_mgr_ = nullptr;
+    return -2;
+  }
 
   service_config_ = config;
   return 0;
@@ -54,7 +60,10 @@ int ServiceManager::Start(ServiceHandler* handle){
 int ServiceManager::ThreadWait(){
   INFO(logger_, "ServiceManager::ThreadWait start.");
   for (int cn = 0; cn < service_config_.service_handle_thread_count; cn++){
-    handle_thread_.service_handle_thread_[cn]->join();
+    // Wait() and Stop() both join; joining twice throws std::system_error.
+    if (handle_thread_.service_handle_thread_[cn]->joinable()) {
+      handle_thread_.service_handle_thread_[cn]->join();
+    }
   }
 
   INFO(logger_, "ServiceManager::ThreadWait end.");
@@ -71,14 +80,28 @@ int ServiceManager::ThreadStop(){
   return 0;
 }
 
-int ServiceManager::Stop(){
-  net_thread_mgr_->Stop();
+void ServiceManager::ThreadStopFromSignal(){
+  for (HandleData* data : handle_thread_.service_handle_data_) {
+    data->is_run = false;
+  }
+}
 
+int ServiceManager::StopHandlers(){
   ThreadStop();
-  //ThreadWait();
+  ThreadWait();
+  return 0;
+}
+
+int ServiceManager::Stop(){
+  // Join the handler threads before freeing the net threads: they call
+  // SendToNetThread until they exit.
+  ThreadStop();
+  ThreadWait();
 
   if (net_thread_mgr_ != nullptr) {
+    net_thread_mgr_->Stop();
     BDF_DELETE(net_thread_mgr_);
+    net_thread_mgr_ = nullptr;
   }
 
   monitor::GlobalMatrix::Destroy();
@@ -113,11 +136,21 @@ uint32_t ServiceManager::GetServiceHandleId(EventMessage* msg){
   return (id_hs++) % handle_thread_.service_handle_data_.size();
 }
 
+bool ServiceManager::HasServiceHandle(){
+  return !handle_thread_.service_handle_data_.empty();
+}
+
 uint32_t ServiceManager::GetServiceHandleCount() {
   return handle_thread_.service_handle_thread_.size();
 }
 
 void ServiceManager::SendToServiceHandle(EventMessage* msg){
+  if (!HasServiceHandle()) {
+    // No handler threads configured: avoid "% 0" and drop the message.
+    WARN(logger_, "no service handle thread, drop msg type:" << (int)msg->type_id);
+    MessageFactory::Destroy(msg);
+    return;
+  }
   uint32_t id = GetServiceHandleId(msg);
   TRACE(logger_, "ThreadId:" << ThreadId::Get()
     <<",handle id:" << msg->handle_id << ",Get id:" << id);
@@ -129,6 +162,10 @@ void ServiceManager::SendToServiceHandle(EventMessage* msg){
 
 void ServiceManager::SendTaskToServiceHandle(Task* task){
   static thread_local std::atomic<uint32_t> id_task(0);
+  if (!HasServiceHandle()) {
+    WARN(logger_, "no service handle thread, drop task");
+    return;
+  }
   uint32_t tid = (id_task++) % handle_thread_.service_handle_data_.size();
   HandleData* hd =handle_thread_.service_handle_data_.at(tid);
   hd->lock_task_.lock();

@@ -30,6 +30,7 @@ public:
   ClientMgr* GetClientMgr() { return client_mgr_; }
 
   int AppRun(int argc, char* argv[]);
+  int OnStopHook() { return OnStop(); }
 protected:
   int AppStart(int argc, char* argv[]);
   int AppWait();
