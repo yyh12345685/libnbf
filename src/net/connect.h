@@ -45,11 +45,16 @@ public:
   virtual bool IsServer() = 0;
 
   int64_t GetConnectId() { return connect_id_; }
+  // Clock ms of the last successful read (I/O thread only).
+  uint64_t GetLastReadMs() const { return last_read_ms_; }
   void SetConnectId(int64_t connect_id) { connect_id_ = connect_id; }
 
 protected:
   virtual int RegisterAddModrw(int fd, bool set);
   virtual int RegisterDel(int fd);
+  // Toggle EPOLLOUT on the owning I/O loop (virtual for tests).
+  virtual int SetWriteInterest(bool set);
+  virtual int WriteSocket(const char* data, int size);
 
   virtual void OnDecodeMessage(EventMessage* message) = 0;
 
@@ -60,6 +65,8 @@ protected:
 
 protected:
   int fd_;
+  bool write_interest_ = false;
+  uint64_t last_read_ms_ = 0;
   std::string ip_;
   int port_;
   Buffer inbuf_;
