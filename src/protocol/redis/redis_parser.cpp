@@ -41,7 +41,7 @@ bool RedisParser::ParseInt(const char* data, size_t begin, size_t end, int64_t* 
 }
 
 int RedisParser::ParseElement(const char* data, size_t len, size_t* pos,
-  int depth, RedisReply* out) {
+  int depth, RedisReply* out, size_t* need_hint) {
   size_t start = *pos;
   if (start >= len) return kParseNeedMore;
   if (depth > kMaxNestDepth) return kParseError;
@@ -91,7 +91,10 @@ int RedisParser::ParseElement(const char* data, size_t len, size_t* pos,
     }
     if (str_len < 0 || str_len > kMaxBulkLen) return kParseError;
     size_t need = after_line + (size_t)str_len + 2;
-    if (need > len) return kParseNeedMore;
+    if (need > len) {
+      if (need_hint) *need_hint = need;
+      return kParseNeedMore;
+    }
     if (data[need - 2] != '\r' || data[need - 1] != '\n') return kParseError;
     out->type = RedisReply::kString;
     out->str.assign(data + after_line, (size_t)str_len);
@@ -115,7 +118,7 @@ int RedisParser::ParseElement(const char* data, size_t len, size_t* pos,
       // Need-more is detected before the array is materialized in full; do
       // not reserve array_num up front (it is attacker-controlled).
       out->elements.emplace_back();
-      int ret = ParseElement(data, len, &cur, depth + 1, &out->elements.back());
+      int ret = ParseElement(data, len, &cur, depth + 1, &out->elements.back(), need_hint);
       if (ret != kParseOk) return ret;
     }
     *pos = cur;
@@ -127,12 +130,13 @@ int RedisParser::ParseElement(const char* data, size_t len, size_t* pos,
 }
 
 int RedisParser::ParseReply(
-  const char* data, size_t len, size_t* consumed, RedisReply* out) {
+  const char* data, size_t len, size_t* consumed, RedisReply* out,
+  size_t* need_hint) {
   if (nullptr == data || nullptr == consumed || nullptr == out) return kParseError;
   if (0 == len) return kParseNeedMore;
   RedisReply result;
   size_t pos = 0;
-  int ret = ParseElement(data, len, &pos, 0, &result);
+  int ret = ParseElement(data, len, &pos, 0, &result, need_hint);
   if (ret != kParseOk) return ret;
   *consumed = pos;
   *out = std::move(result);

@@ -1,4 +1,5 @@
 ﻿
+#include <ctype.h>
 #include "string_util.h"
 #include <string.h>
 #include <limits.h>
@@ -134,8 +135,10 @@ std::string UrlDecode(const std::string& str, bool is_unicode){
   size_t length = tmp->length();
   for (size_t i = 0; i < length; i++){
     if ((*tmp)[i] == '+') strTemp += ' ';
-    else if ((*tmp)[i] == '%'){
-      //assert(i + 2 < length);
+    else if ((*tmp)[i] == '%' && i + 2 < length
+      && isxdigit((unsigned char)(*tmp)[i + 1]) && isxdigit((unsigned char)(*tmp)[i + 2])){
+      // Only a complete "%XX" is decoded: a trailing '%' used to read past
+      // the end of the string, and "%zz" decoded to a wrong byte.
       unsigned char high = FromHex((unsigned char)(*tmp)[++i]);
       unsigned char low = FromHex((unsigned char)(*tmp)[++i]);
       strTemp += high * 16 + low;

@@ -129,6 +129,11 @@ public:
   uint64_t sequence_id=0xffffffffffffffff;
   uint64_t birthtime = 0;
   int event_mask = 0;
+
+  // event_mask bit: a server request dropped without a reply (overload
+  // protection, no handler). It travels back to its connection's I/O thread
+  // so the connection stops counting it as outstanding.
+  static const int kEventDropNotice = 0x1;
 };
 
 class EventMessage : public MessageBase {

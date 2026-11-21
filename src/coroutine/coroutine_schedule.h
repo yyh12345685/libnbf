@@ -39,6 +39,10 @@ public:
   int GetRunningId();
 
   void ProcessDebug();
+  // Coroutines that are suspended (not available to take new work).
+  size_t SuspendedCount() const {
+    return all_coro_list_.size() - available_coro_list_.size();
+  }
 protected:
   int CoroutineStatus(int id);
 

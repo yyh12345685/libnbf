@@ -9,8 +9,10 @@ namespace bdf {
 
 LOGGER_CLASS_IMPL(logger_, RedisProtocol);
 
-/// @remark maximal size allowed for buffering: 8M
-static const uint32_t MaxSize_Allowed = 8 * 1024 * 1024;
+/// Largest incomplete reply buffered before the connection is given up. It
+/// must cover the largest value the parser accepts (it was 8MB while bulk
+/// strings up to 512MB were allowed, so 8MB-512MB values could never be read).
+static const size_t MaxSize_Allowed = (size_t)RedisParser::kMaxBulkLen + 1024 * 1024;
 
 
 EventMessage* RedisProtocol::Decode(Buffer &input, bool& failed){
@@ -28,10 +30,15 @@ EventMessage* RedisProtocol::Decode(Buffer &input, bool& failed){
     TRACE(logger_, "RedisProtocol::Decode input size:" << size << ",head:"
       << std::string(data, size < kMaxLogLen ? size : kMaxLogLen));
 
+    if (size < need_bytes_) {
+      return nullptr; // still waiting for the rest of a known-size reply
+    }
     RedisReply reply;
     size_t size_reply(0);
-    int ret = RedisParser::ParseReply(data, size, &size_reply, &reply);
+    size_t need_hint = 0;
+    int ret = RedisParser::ParseReply(data, size, &size_reply, &reply, &need_hint);
     if (RedisParser::kParseNeedMore == ret){
+      need_bytes_ = need_hint;
       if (size > MaxSize_Allowed){
         // an incomplete reply bigger than the limit: give up on this
         // connection, dropping bytes would desync every following reply
@@ -46,6 +53,7 @@ EventMessage* RedisProtocol::Decode(Buffer &input, bool& failed){
       failed = true;
       return nullptr;
     }
+    need_bytes_ = 0;
     input.DrainReading(size_reply);
     partial_replies_.push_back(std::move(reply));
 
@@ -68,6 +76,7 @@ EventMessage* RedisProtocol::Decode(Buffer &input, bool& failed){
 }
 
 void RedisProtocol::Reset(){
+  need_bytes_ = 0;
   expected_replies_.clear();
   partial_replies_.clear();
 }

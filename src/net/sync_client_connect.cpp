@@ -115,7 +115,6 @@ void SyncClientConnect::CleanSequenceQueue(){
     }
     DoSendBack(message, EventMessage::kInternalFailure);
   }
-
 }
 
 int SyncClientConnect::DecodeMsg(){

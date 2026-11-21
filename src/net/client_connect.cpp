@@ -49,7 +49,6 @@ void ClientConnect::OnTimer(void* function_data) {
     if (GetStatus() == kConnecting) {
       // Doubles as the connect timeout: still not connected, start over.
       INFO(logger_, "connect timeout,ip:" << GetIp() << ",port:" << GetPort());
-      NextAddr();
       OnClose();
     } else if (GetStatus() == kBroken) {
       TryConnect();
@@ -86,26 +85,46 @@ int ClientConnect::TryConnect(){
   }
 
   SetStatus(kConnecting);
-  const Socket::ResolvedAddr& target = addrs_[addr_index_];
-  std::pair<int, bool> connet_info = Socket::Connect(
-    reinterpret_cast<const sockaddr*>(&target.addr), target.len);
-  if (connet_info.first < 0) {
-    WARN(logger_, "connect failed,ip:" << GetIp() << ",port:" << GetPort() << ",errno:" << errno);
+  // Startup tries every resolved address before giving up (Client::Start
+  // fails otherwise); a reconnect makes one attempt and rotates on failure.
+  const size_t attempts = initial ? addrs_.size() : 1;
+  int fd = -1;
+  bool pending = false;
+  for (size_t attempt = 0; attempt < attempts; ++attempt) {
+    const Socket::ResolvedAddr& target = addrs_[addr_index_];
+    std::pair<int, bool> connet_info = Socket::Connect(
+      reinterpret_cast<const sockaddr*>(&target.addr), target.len);
+    if (connet_info.first < 0) {
+      WARN(logger_, "connect failed,ip:" << GetIp() << ",port:" << GetPort() << ",errno:" << errno);
+      NextAddr();
+      continue;
+    }
+    fd = connet_info.first;
+    // Do not look at errno: after an immediate success it holds a stale value.
+    pending = !connet_info.second;
+    if (pending && initial) {
+      if (IsConnected(20, 9)) {
+        // Startup only: callers expect a usable client right after Start.
+        pending = false;
+      } else if (0 != Socket::GetConnectError(fd)) {
+        // Refused / unreachable: try the next address now.
+        Socket::Close(fd);
+        fd = -1;
+        NextAddr();
+        continue;
+      }
+      // else still in progress: finish asynchronously (OnConnectWrite).
+    }
+    break;
+  }
+  if (fd < 0) {
     SetFd(-1);
     SetStatus(kBroken);
-    NextAddr();
     if (!initial)
       StartReconnectTimer();
     return -1;
   }
-  const int fd = connet_info.first;
   SetFd(fd);
-  // Do not look at errno: after an immediate success it holds a stale value.
-  bool pending = !connet_info.second;
-  if (pending && initial && IsConnected(20, 9)) {
-    // Startup only: callers expect a usable client right after Start.
-    pending = false;
-  }
   SetStatus(pending ? kConnecting : kConnected);
 
   // Arm the timer before the fd becomes visible to the I/O loop, so nothing
@@ -188,6 +207,9 @@ void ClientConnect::OnClose() {
   if (GetStatus() == kStopping) {
     return;
   }
+  if (GetStatus() == kConnecting) {
+    NextAddr(); // this address failed to connect: try the next one
+  }
   if (fd_ >= 0) {
     RegisterDel(fd_);
   }
@@ -212,8 +234,7 @@ void ClientConnect::OnConnectWrite(){
   if (error != 0) {
     INFO(logger_, "connect failed,ip:" << GetIp() << ",port:" << GetPort()
       << ",error:" << strerror(error));
-    NextAddr();
-    OnClose(); // arms the reconnect timer
+    OnClose(); // rotates the address and arms the reconnect timer
     return;
   }
   CancelTimer(); // the connect timeout

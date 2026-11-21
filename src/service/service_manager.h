@@ -48,6 +48,9 @@ public:
   int StopHandlers();
 
   void Reply(EventMessage* message);
+  // Drop a server request without replying. Use instead of Destroy for
+  // incoming requests, so the connection knows it will get no reply.
+  void DropRequest(EventMessage* message);
   void SendToNetThread(EventMessage* msg);
   void SendCloseToNetThread(EventMessage* msg);
   void SendToServiceHandle(EventMessage* msg);

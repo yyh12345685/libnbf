@@ -19,6 +19,7 @@ struct ServiceConfig {
     service_handle_thread_count(2),
     service_count(1),
     coroutine_size(256),
+    max_coroutine_size(10000),
     monitor_token_bucket(16), 
     monitor_queue_bucket(16), 
     monitor_queue_size(1024 * 128) {
@@ -33,6 +34,10 @@ struct ServiceConfig {
 
   // coroutine 
   uint32_t coroutine_size;
+  // Soft cap per handler thread: once this many coroutines are suspended
+  // (waiting on downstream calls), new incoming requests are shed instead
+  // of creating more coroutines, so overload protection still works.
+  uint32_t max_coroutine_size;
 
   // monitor
   std::string monitor_file_name;

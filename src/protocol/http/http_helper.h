@@ -2,6 +2,7 @@
 #pragma once
 
 #include <list>
+#include <deque>
 #include "protocol/http/http_info.h"
 #include "protocol/http/third/http_parser.h"
 #include "common/logger.h"
@@ -44,6 +45,9 @@ struct HttpAgent{
   ~HttpAgent();
   HttpParser parser_;
 	std::list<HttpMessage*> msgs_;
+  // Client side: one entry per request written, true for HEAD, so the
+  // matching response is parsed without a body. Popped on final responses.
+  std::deque<bool> pending_head_;
   HttpRequestInfo http_request_;
 
   LOGGER_CLASS_DECL(logger_);

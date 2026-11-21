@@ -175,7 +175,7 @@ int main() {
   assert(service.Start(new ServiceHandler) == 0);
 
   // heartbeat every 5ms: PINGs interleave with the pipelined requests
-  Client client("redis://127.0.0.1:" + std::to_string(server.port()), 3000, 5, false);
+  Client client("redis://127.0.0.1:" + std::to_string(server.port()), 20000, 5, false); // generous: the fake server trickles bytes
   assert(client.Start() == 0);
   assert(WaitFor([&] { return client.GetClientStatus() == Client::kWorking; }, 3));
 
@@ -193,7 +193,7 @@ int main() {
       RedisMessage* r = dynamic_cast<RedisMessage*>(m);
       std::vector<std::string> want = {"OK", value};
       if (!r || m->status != MessageBase::kStatusOK || r->replies.size() != 2 || r->bodys != want)
-        results.Fail("A " + value + " got " + (r ? Join(r->bodys) : "?"));
+        results.Fail("A " + value + " status " + std::to_string((int)m->status) + " got " + (r ? Join(r->bodys) : "?"));
       { std::lock_guard<std::mutex> g(results.lock); ++results.done; }
       MessageFactory::Destroy(m);
     }, "redis_pipeline_a"));

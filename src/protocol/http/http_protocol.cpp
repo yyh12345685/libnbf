@@ -53,28 +53,42 @@ void HttpProtocol::Reset(){
     MessageFactory::Destroy(msg);
   }
   agent_->msgs_.clear();
+  agent_->pending_head_.clear();
   agent_->http_request_.ReSet();
   agent_->parser_.InitParser(agent_);
+}
+
+EventMessage* HttpProtocol::PopMessage(){
+  if (agent_->msgs_.empty()) {
+    return nullptr;
+  }
+  HttpMessage* msg = agent_->msgs_.front();
+  agent_->msgs_.pop_front();
+  if (msg->http_info.url == "/favicon.ico"){
+    volatile static uint64_t idx = 0;
+    HeartBeatMessage* hmsg =  MessageFactory::Allocate<HeartBeatMessage>();
+    hmsg->load_avg = __sync_add_and_fetch(&idx, 1);
+    hmsg->heart_type = MessageType::kHttpMessage;
+    hmsg->direction = msg->direction;
+    MessageFactory::Destroy(msg);
+    return hmsg;
+  }
+  return msg;
+}
+
+EventMessage* HttpProtocol::OnEof(){
+  // A response without Content-Length / chunking ends at EOF; http_parser
+  // completes it only when told about EOF with a zero-length execute.
+  agent_->parser_.HttpParseRequest(nullptr, 0);
+  return PopMessage();
 }
 
 EventMessage* HttpProtocol::Decode(Buffer &input, bool& failed){
 	for(;;){
 	  //not first
 		if(agent_->msgs_.size()){
-			HttpMessage* msg = agent_->msgs_.front();
-			agent_->msgs_.pop_front();
-      if (msg->http_info.url == "/favicon.ico"){
-        volatile static uint64_t idx = 0;
-        HeartBeatMessage* hmsg =  MessageFactory::Allocate<HeartBeatMessage>(); 
-        hmsg->load_avg = __sync_add_and_fetch(&idx, 1);
-        hmsg->heart_type = MessageType::kHttpMessage;
-        hmsg->direction = msg->direction;
-        MessageFactory::Destroy(msg);
-        return hmsg;
-      }
-			return msg;
+			return PopMessage();
 		}
-
 	  //first
     int size = input.GetReadingSize();
     if (0 == size || failed) {
@@ -118,6 +132,24 @@ EventMessage* HttpProtocol::Decode(Buffer &input, bool& failed){
 	}
 }
 
+// No CR/LF/NUL: a header value or url containing them would split the
+// message (header injection / response splitting / request smuggling).
+static bool IsSafeText(const std::string& text){
+  for (unsigned char ch : text) {
+    if (ch == '\r' || ch == '\n' || ch == '\0') return false;
+  }
+  return true;
+}
+
+// RFC 7230 token: visible ASCII except separators.
+static bool IsToken(const std::string& text){
+  if (text.empty()) return false;
+  for (unsigned char ch : text) {
+    if (ch <= 32 || ch >= 127 || strchr("()<>@,;:\\\"/[]?={}", ch)) return false;
+  }
+  return true;
+}
+
 static bool HasHeader(const Dict& headers, const char* name){
   for (const auto& it : headers) {
     if (strcasecmp(it.first.c_str(), name) == 0) return true;
@@ -158,7 +190,9 @@ const char *ConvertStatusCode(int status, std::string& tmp) {
   case 502: return "502 Bad Gateway";
   case 503: return "503 Service Unavailable";
   default:
+    // A status line needs a reason phrase; strict clients reject "418".
     tmp = common::ToString(status);
+    tmp.append(" Unknown");
     return tmp.c_str();
   }
 }
@@ -219,9 +253,22 @@ bool HttpProtocol::WirteToBuf(HttpMessage *msg, Buffer *output){
     ERROR(logger_, "http_version is error,http_minor:" << msg->http_minor);
     return false;
   }
+  const bool response = msg->direction == MessageBase::kOutgoingResponse
+    || msg->direction == MessageBase::kIncomingResponse;
+  for (const auto& it : msg->http_info.headers) {
+    if (!IsToken(it.first) || !IsSafeText(it.second)) {
+      ERROR(logger_, "invalid http header refused, name:" << it.first);
+      return false;
+    }
+  }
+  if (!response && (!IsToken(msg->http_info.method) || msg->http_info.url.empty()
+      || !IsSafeText(msg->http_info.url)
+      || msg->http_info.url.find(' ') != std::string::npos)) {
+    ERROR(logger_, "invalid http request line refused, method:" << msg->http_info.method);
+    return false;
+  }
   std::string tmp;
-  if (msg->direction == MessageBase::kOutgoingResponse
-    || msg->direction == MessageBase::kIncomingResponse) {
+  if (response) {
     //as http server response 
     if (!output->Write(http_version, strlen(http_version))) return false;
     if (!output->Write(" ", 1)) return false;
@@ -275,8 +322,14 @@ bool HttpProtocol::WirteToBuf(HttpMessage *msg, Buffer *output){
   }
 
   if (!output->Write("\r\n", 2)) return false;
-  if (0 == size) return true;
-  return output->Write(msg->http_info.body.c_str(), msg->http_info.body.size());
+  if (0 != size
+    && !output->Write(msg->http_info.body.c_str(), msg->http_info.body.size())) {
+    return false;
+  }
+  if (!response) {
+    agent_->pending_head_.push_back(strcasecmp(msg->http_info.method.c_str(), "HEAD") == 0);
+  }
+  return true;
 }
 
 EventMessage* HttpProtocol::HeartBeatRequest() {

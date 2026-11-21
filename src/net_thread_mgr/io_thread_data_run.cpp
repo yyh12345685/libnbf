@@ -29,13 +29,15 @@ void IoThreadDataRun::PutMessage(EventMessage* message){
 }
 
 void IoThreadDataRun::CallRun(){
-  if (hd_data_->data_.empty()){
-    return;
-  }
-  
   static time_t log_time = time(NULL);
   std::queue<EventMessage*> temp;
+  // Check emptiness under the lock too: producers push concurrently and an
+  // unlocked std::queue read is a data race.
   hd_data_->lock_.lock();
+  if (hd_data_->data_.empty()){
+    hd_data_->lock_.unlock();
+    return;
+  }
   temp.swap(hd_data_->data_);
   hd_data_->lock_.unlock();
 
@@ -45,8 +47,8 @@ void IoThreadDataRun::CallRun(){
     //for debug
     time_t cur_time = time(NULL);
     if ((cur_time - log_time) > 60 && handle_size == temp.size()) {
-      INFO(logger_, "ThreadId:" << ThreadId::Get() << ",msg size:"
-        << hd_data_->data_.size() << ",handle size:" << temp.size());
+      INFO(logger_, "ThreadId:" << ThreadId::Get()
+        << ",handle size:" << temp.size());
       log_time = cur_time;
     }
 
@@ -74,24 +76,26 @@ void IoThreadDataRun::Handle(EventMessage* message){
 
 void IoThreadDataRun::HandleIoMessageEvent(EventMessage* message){
   TRACE(logger_, "HandleIoMessageEvent");
+  Connecting* con = Connecting::DescriptorConnect(message->descriptor_id);
+  if (!con /*|| reg_con != con*/) {
+    ERROR(logger_, "error,con:"<< con /*<<",reg_con:"<< reg_con*/);
+    HandleIoMessageFailed(message);
+    return;
+  }
+  const bool client_send = message->direction == EventMessage::kOnlySend
+    || message->direction == EventMessage::kOutgoingRequest
+    || message->direction == EventMessage::kSendNoCareResponse;
   //客户端过载保护
-  if (message->direction == EventMessage::kOnlySend
-    || message->direction == EventMessage::kOutgoingRequest){
+  if (client_send){
     uint64_t birth_to_now = Time::GetCurrentClockTime() - message->birthtime;
     if (birth_to_now > INNER_QUERY_SEND_PROTECT_TIME) {
       monitor::MatrixCounter::Add("client_send_queue_overload", 1);
       //从发送到io handle处理超过100ms,过载保护
       INFO(logger_, "birth_to_now:" << birth_to_now << ",msg:" << *message);
+      con->OnSendDropped();
       HandleIoMessageFailed(message);
       return;
     }
-  }
-  Connecting* con = (Connecting*)((void*)(message->descriptor_id));
-  
-  if (!con /*|| reg_con != con*/) {
-    ERROR(logger_, "error,con:"<< con /*<<",reg_con:"<< reg_con*/);
-    HandleIoMessageFailed(message);
-    return;
   }
 
   if (message->direction == EventMessage::kOutgoingResponse) {
@@ -100,23 +104,43 @@ void IoThreadDataRun::HandleIoMessageEvent(EventMessage* message){
     // on the connection's own I/O thread, so it cannot close meanwhile.
     AcceptorThread* acceptor =
       service::GetServiceManager().GetNetThreadManager()->GetAcceptThread();
+    // The generation check catches a new connection that reuses the address
+    // of the one this reply belongs to (it is deleted 90s after closing).
     if (nullptr == acceptor
-      || !acceptor->IsLiveConnect(static_cast<ServerConnect*>(con))) {
+      || !acceptor->IsLiveConnect(static_cast<ServerConnect*>(con))
+      || (uint16_t)(con->GetConnectId() & 0xFFFF)
+         != Connecting::DescriptorGen(message->descriptor_id)) {
       TRACE(logger_, "reply for a closed connection dropped");
       HandleIoMessageFailed(message);
       return;
     }
   }
 
+  if (message->direction == EventMessage::kOutgoingResponse
+    && (message->event_mask & MessageBase::kEventDropNotice)) {
+    // No reply will come for this request: stop waiting for it (half-close).
+    MessageFactory::Destroy(message);
+    con->OnReplyEncoded();
+    if (con->GetFd() >= 0) con->OnWrite(); // may finish a half-close
+    return;
+  }
+
   if (con->GetFd() < 0) {
     // Closed: encoding would only pile data into a buffer nobody sends.
+    if (client_send) con->OnSendDropped();
     HandleIoMessageFailed(message);
     return;
   }
 
   if (0 != con->EncodeMsg(message)){
+    if (message->direction == EventMessage::kOutgoingResponse) {
+      con->OnReplyEncoded(); // this reply will never be sent either
+    }
     HandleIoMessageFailed(message);
     return;
+  }
+  if (message->direction == EventMessage::kOutgoingResponse) {
+    con->OnReplyEncoded();
   }
   //单向消息encode之后即可释放，双向消息会在返回或者超时的时候释放
   //server答复的消息需要在这里释放掉
@@ -140,7 +164,7 @@ void IoThreadDataRun::HandleIoMessageFailed(EventMessage* message) {
 void IoThreadDataRun::HandleIoActiveCloseEvent(EventMessage* message){
   TRACE(logger_, "HandleIoActiveCloseEvent");
 
-  Connecting* con = (Connecting*)((void*)(message->descriptor_id));
+  Connecting* con = Connecting::DescriptorConnect(message->descriptor_id);
   if (!con) {
     MessageFactory::Destroy(message);
     WARN(logger_, "HandleIoActiveCloseEvent descriptor is not Connecting");

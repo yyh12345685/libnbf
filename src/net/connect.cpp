@@ -23,12 +23,15 @@ Connecting::Connecting():
 }
 
 Connecting::~Connecting(){
-  if (protocol_){
-    protocol_->Release();
-  }
-
+  // Clean() resets the protocol, so it must run before the protocol is
+  // released (the other order called into freed memory at shutdown).
   if (fd_ > 0){
     Clean();
+  }
+
+  if (protocol_){
+    protocol_->Release();
+    protocol_ = nullptr;
   }
 }
 
@@ -44,9 +47,16 @@ void Connecting::OnEvent(EventDriver *poll, int fd, short event){
   if (fd != fd_) {
     return;
   }
-  if (event & (EVENT_CONNECT_CLOSED | EVENT_ERROR)) {
+  if (event & EVENT_ERROR) {
     OnClose();
     return;
+  }
+  if (event & EVENT_CONNECT_CLOSED) {
+    // Only the peer's sending side is closed: it may still wait for replies.
+    OnPeerClosed();
+    if (fd != fd_) {
+      return;
+    }
   }
   if (event & EVENT_WRITE) {
     OnWrite();
@@ -64,6 +74,7 @@ void Connecting::OnRead(){
   int nread = 0;
   int total_read = 0;
   bool rc = true;
+  bool peer_eof = false;
   while (rc){
     nread = Socket::TcpSocketRead(fd_, tmp, sizeof(tmp));
     if (nread < 0){
@@ -84,9 +95,10 @@ void Connecting::OnRead(){
         return;
       }
     } else if (0 == nread){
+      // Decode what arrived before the EOF first (it used to be dropped).
       DEBUG(logger_, "TCP client is closed: fd=" << fd_ << ",ip:" << ip_ << ",port:" << port_);
-      OnReadWriteClose();
-      return;
+      peer_eof = true;
+      break;
     }
 
     total_read += nread;
@@ -99,8 +111,10 @@ void Connecting::OnRead(){
     }
 
     if (!inbuf_.EnsureSize(nread)){
-      WARN(logger_, "Malloc failed, new more=" << nread 
+      // Bytes already read would be lost and the stream desynced.
+      WARN(logger_, "Malloc failed, new more=" << nread
         << ", old capacity=" << inbuf_.GetCapacity());
+      OnReadWriteClose();
       return;
     }
 
@@ -108,9 +122,23 @@ void Connecting::OnRead(){
     inbuf_.PourWriting(nread); // true, absolutely!
   }
   TRACE(logger_, "Read data size is:" << total_read);
-  if (0!= DecodeMsg()){
+  if (total_read > 0 && 0!= DecodeMsg()){
     OnReadWriteClose();
+    return;
   }
+  if (peer_eof && fd_ >= 0) {
+    OnPeerClosed();
+  }
+}
+
+void Connecting::OnPeerClosed(){
+  if (protocol_ != nullptr) {
+    EventMessage* msg = protocol_->OnEof();
+    if (msg != nullptr) {
+      OnDecodeMessage(msg);
+    }
+  }
+  OnReadWriteClose();
 }
 
 int Connecting::DecodeMsg(){
@@ -246,7 +274,11 @@ void Connecting::OnReadWriteClose(){
 }
 
 void Connecting::Clean(){
-  if (!Socket::SetSoLinger(fd_, 0)){
+  if (graceful_close_) {
+    struct linger off = {0, 0};
+    setsockopt(fd_, SOL_SOCKET, SO_LINGER, &off, sizeof(off));
+    graceful_close_ = false;
+  } else if (!Socket::SetSoLinger(fd_, 0)){
     TRACE(logger_, "SocketHelper::SetSoLinger failed.");
   }
 

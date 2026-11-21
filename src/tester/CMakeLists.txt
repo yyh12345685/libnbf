@@ -25,5 +25,8 @@ add_test(t_connection_lifecycle t_connection_lifecycle)
 add_executable(t_redis_protocol t_redis_protocol.cpp)
 add_test(t_redis_protocol t_redis_protocol)
 
+add_executable(t_fix_regression t_fix_regression.cpp)
+add_test(t_fix_regression t_fix_regression)
+
 add_executable(t_redis_pipeline t_redis_pipeline.cpp)
 add_test(t_redis_pipeline t_redis_pipeline)

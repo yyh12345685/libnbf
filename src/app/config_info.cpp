@@ -12,6 +12,7 @@ void ServiceConfig::Dump(std::ostream& os) const {
     << ", \"service_handle_thread_count\": " << service_handle_thread_count
     << ", \"service_count\": " << service_count
     << ", \"coroutine_size\": " << coroutine_size
+    << ", \"max_coroutine_size\": " << max_coroutine_size
     << ", \"services_config\": ";
     for(const auto& srv_conf:server_config){
       os << "{\"name\":"<< srv_conf.name
@@ -117,6 +118,13 @@ int ConfigInfo::LoadServiceConfig(CIniFileS& ini, ServiceConfig* config){
     return -1;
   }
   config->coroutine_size = static_cast<uint32_t>(coroutine_size);
+  int max_coroutine_size = ini.GetValueInt("io_service", "max_coroutine_size",
+    coroutine_size > 10000 ? coroutine_size : 10000);
+  if (max_coroutine_size < coroutine_size) {
+    ERROR(logger_, "max_coroutine_size must be >= coroutine_size, got " << max_coroutine_size);
+    return -1;
+  }
+  config->max_coroutine_size = static_cast<uint32_t>(max_coroutine_size);
   return 0;
 }
 

@@ -20,7 +20,9 @@ public:
   };
 
   // limits used to reject hostile / corrupt input instead of buffering forever
-  static const int64_t kMaxBulkLen = 512 * 1024 * 1024;
+  // 64MB: a buggy or hostile server must not make every pooled connection
+  // buffer half a gigabyte (the protocol cap is tied to this value).
+  static const int64_t kMaxBulkLen = 64 * 1024 * 1024;
   static const int64_t kMaxArrayLen = 1024 * 1024;
   static const int kMaxNestDepth = 32;
 
@@ -29,8 +31,12 @@ public:
   // return kParseError(-1): malformed input, the stream can not be resynced;
   //        kParseOk(0): one reply parsed into *out, *consumed is its size;
   //        kParseNeedMore(1): reply is incomplete, nothing consumed.
+  // need_hint (optional): on kParseNeedMore, a lower bound of the total
+  // bytes the reply needs (known once a bulk length header is parsed), so
+  // the caller can skip re-parsing until that much is buffered.
   static int ParseReply(
-    const char* data, size_t len, size_t* consumed, RedisReply* out);
+    const char* data, size_t len, size_t* consumed, RedisReply* out,
+    size_t* need_hint = nullptr);
 
   // Encode one command given as kSep-separated arguments ("SET\1k\1v").
   // Consecutive kSep give an empty argument ("SET\1k\1\1" sets k to "");
@@ -48,7 +54,7 @@ private:
   static bool ParseInt(const char* data, size_t begin, size_t end, int64_t* val);
   // parse one element starting at data[*pos]; on kParseOk *pos is advanced.
   static int ParseElement(const char* data, size_t len, size_t* pos,
-    int depth, RedisReply* out);
+    int depth, RedisReply* out, size_t* need_hint);
 };
 
 }

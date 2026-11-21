@@ -49,8 +49,7 @@ bool AcceptorThread::Init(
       continue;
     }
 
-    if (0!=event_thread_.Add(fd, this) 
-      || 0!= event_thread_.Modr(fd, true)){
+    if (0!=event_thread_.Add(fd, this, false, EVENT_READ)){
       WARN(logger_, "AcceptorThread::Init Add or Modr error, ip:"
 					<< ip << "port:" << port <<",fd:"<<fd);
       Socket::Close(fd);

@@ -20,6 +20,9 @@ struct HttpRequestInfo{
   Dict headers;
   std::string new_field; //field is waiting for value while parsing:)
   bool parsing_header_value = false; // last callback was on_header_value
+  // Parse-time only: lowercase name -> name as first received, so repeated
+  // headers that differ in case ("Host" / "host") are joined, not split.
+  std::unordered_map<std::string, std::string> header_index;
 
   std::string body;
 
@@ -42,6 +45,7 @@ struct HttpRequestInfo{
     headers.clear();
     new_field.clear();
     parsing_header_value = false;
+    header_index.clear();
     body.clear();
   }
 
