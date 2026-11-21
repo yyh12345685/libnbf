@@ -73,14 +73,20 @@ int AppBase::AppStart(int argc, char* argv[]) {
   }
 
   if (0 != StartService()) {
+    AppStop(); // net threads may already be running
     return -1;
   }
 
+  // From here on threads are running: a failure must stop them before
+  // returning, or ~AppBase and static destructors free objects those threads
+  // still use and destroy joinable std::threads (std::terminate).
   if (0 != StartClientManager()){
+    AppStop();
     return -1;
   }
 
   if (0 != OnAfterStart()) {
+    AppStop();
     return -1;
   }
 

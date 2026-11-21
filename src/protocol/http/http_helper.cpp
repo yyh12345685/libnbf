@@ -85,6 +85,18 @@ int HttpParser::OnHeaderField(http_parser *parser, const char *at, size_t length
 int HttpParser::OnHeaderValue(http_parser *parser, const char *at, size_t length){
 	HttpAgent* agent = (HttpAgent*)parser->data;
   HttpRequestInfo& request_info = agent->http_request_;
+  if (!request_info.parsing_header_value) {
+    // First chunk of a new header line: header names are case-insensitive,
+    // so file it under the spelling seen first for this name.
+    std::string lower(request_info.new_field);
+    for (auto& ch : lower) ch = (char)tolower((unsigned char)ch);
+    auto it = request_info.header_index.find(lower);
+    if (it == request_info.header_index.end()) {
+      request_info.header_index.emplace(lower, request_info.new_field);
+    } else {
+      request_info.new_field = it->second;
+    }
+  }
   std::string& value = request_info.headers[request_info.new_field];
   if (!request_info.parsing_header_value && !value.empty()) {
     // Repeated header line: join per RFC 7230 (Cookie uses "; ").
@@ -97,11 +109,35 @@ int HttpParser::OnHeaderValue(http_parser *parser, const char *at, size_t length
   return 0;
 }
 
+// Return 0: parse the body as framed; 1: the message has no body;
+// anything else aborts the parse (the connection is closed).
 int HttpParser::OnHeadersComplete(http_parser *parser){
-  // This callback seems to have no meanning for us,
-  // just reserved for future need.
-
+  HttpAgent* agent = (HttpAgent*)parser->data;
+  HttpRequestInfo& request_info = agent->http_request_;
   TRACE(logger_, "HttpParser::OnHeadersComplete...");
+
+  // The bundled http_parser (2.7) only recognizes exactly "chunked" and
+  // treats anything else ("gzip, chunked", "xchunked") as no body, so the
+  // body would be parsed as a second, smuggled message (CVE-2020-8287).
+  auto te = request_info.header_index.find("transfer-encoding");
+  if (te != request_info.header_index.end()) {
+    std::string value = request_info.headers[te->second];
+    size_t b = value.find_first_not_of(" \t");
+    size_t e = value.find_last_not_of(" \t");
+    value = (b == std::string::npos) ? std::string() : value.substr(b, e - b + 1);
+    if (strcasecmp(value.c_str(), "chunked") != 0) {
+      WARN(logger_, "unsupported Transfer-Encoding:" << value);
+      return 3;
+    }
+  }
+
+  if (parser->type == HTTP_RESPONSE) {
+    // 1xx / 204 / 304 never have a body, and neither does the response to a
+    // HEAD request even though it carries the Content-Length of the GET.
+    const int status = parser->status_code;
+    if (status / 100 == 1 || status == 204 || status == 304) return 1;
+    if (!agent->pending_head_.empty() && agent->pending_head_.front()) return 1;
+  }
   return 0;
 }
 
@@ -132,6 +168,19 @@ int HttpParser::OnMessageComplete(http_parser *parser){
   TRACE(logger_, "http event,body:" << request_info.body 
     << ",body size:" << request_info.body.size()<<",type:"<< parser->type);
   
+  if (parser->type == HTTP_RESPONSE) {
+    if (parser->status_code / 100 == 1) {
+      // Interim response (100 Continue, 103 ...): not the answer to the
+      // request; delivering it would shift every later response by one.
+      TRACE(logger_, "drop interim response:" << parser->status_code);
+      request_info.ReSet();
+      return 0;
+    }
+    if (!agent->pending_head_.empty()) {
+      agent->pending_head_.pop_front();
+    }
+  }
+
   HttpMessage *msg = MessageFactory::Allocate<HttpMessage>();
   msg->http_major = parser->http_major;
   msg->http_minor = parser->http_minor;

@@ -1,4 +1,5 @@
 
+#include <strings.h>
 #include "http_util.h"
 #include "message.h"
 #include "common/string_util.h"
@@ -66,13 +67,14 @@ void HttpUtil::BuildHttpRequest(HttpMessage* ev, HttpParsedInfo& info){
   info.method = ev->http_info.method;
 
   for (const auto& it:ev->http_info.headers){
-    if (it.first == "Cookie"){
+    // header names are case-insensitive (proxies often lowercase them)
+    if (strcasecmp(it.first.c_str(), "Cookie") == 0){
       info.cookies_str = it.second;
     }
-    else if (it.first == "X-Real-IP"){
+    else if (strcasecmp(it.first.c_str(), "X-Real-IP") == 0){
       info.x_real_ip = it.second;
     }
-    else if (it.first == "X-Forwarded-For"){
+    else if (strcasecmp(it.first.c_str(), "X-Forwarded-For") == 0){
       info.x_forward_for = it.second;
     }
     info.headers.insert(it);
@@ -90,9 +92,19 @@ void HttpUtil::BuildHttpRequest(HttpMessage* ev, HttpParsedInfo& info){
     first_pos = 0;
   }
 
-  size_t param_pos = ev->http_info.url.find("?");
+  // Only '?' starts the query. (Falling back to the second '/' cut
+  // "/api/v1/users" down to "/api" and parsed "v1/users" as parameters.)
+  size_t param_pos = ev->http_info.url.find("?", first_pos);
   if (param_pos == std::string::npos){
-    param_pos = ev->http_info.url.find("/",1);
+    // Legacy tracking URLs carry parameters after a second '/', without
+    // '?': "/c/a=1&click=...". Only those prefixes; "/api/v1/x" is a path.
+    size_t slash = ev->http_info.url.find("/", first_pos + 1);
+    if (slash != std::string::npos) {
+      std::string head = ev->http_info.url.substr(first_pos, slash - first_pos);
+      if (head == "/ac" || head == "/as" || head == "/c" || head == "/w") {
+        param_pos = slash;
+      }
+    }
   }
   if (param_pos != std::string::npos){
     info.path = ev->http_info.url.substr(first_pos, param_pos-first_pos);

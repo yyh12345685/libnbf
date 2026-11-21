@@ -4,6 +4,7 @@
 #include <unordered_set>
 #include <deque>
 #include <mutex>
+#include <atomic>
 #include "event/event_data.h"
 #include "event/event_notifier.h"
 #include "event/timer/timer.h"
@@ -20,7 +21,11 @@ public:
   int Run();
   int Stop();
   int ShutDown();
-  int Add(int fd, EventFunctionBase *ezfd,bool lock = false);
+  // events: initial EVENT_READ/EVENT_WRITE interest, registered in the same
+  // EPOLL_CTL_ADD. (Adding with no interest and setting it afterwards left a
+  // window where EPOLLERR/HUP - always reported - closed the connection on
+  // the loop thread while the adding thread still worked on it.)
+  int Add(int fd, EventFunctionBase *ezfd,bool lock = false, short events = EVENT_NONE);
   int Del(int fd);
   int Modr(int fd, bool set);
   int Modw(int fd, bool set);
@@ -46,7 +51,10 @@ private:
 
   int Mod(int fd);
   
-  bool run_;
+  // Set before the loop thread starts, cleared by Stop() from another
+  // thread. Run() must not set it: a Stop() issued before the new thread
+  // reached the loop would be overwritten and join() would hang.
+  std::atomic<bool> run_;
   bool inloop_;
   int epfd_;
   int maxfd_;

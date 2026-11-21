@@ -49,8 +49,8 @@ void EventLoopThread::Main(){
   poll_.Run();
 }
 
-int EventLoopThread::Add(int fd, EventFunctionBase *ezfd, bool lock) {
-  return poll_.Add(fd, ezfd, lock);
+int EventLoopThread::Add(int fd, EventFunctionBase *ezfd, bool lock, short events) {
+  return poll_.Add(fd, ezfd, lock, events);
 }
 int EventLoopThread::Del(int fd) {
   return poll_.Del(fd);

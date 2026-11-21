@@ -3,6 +3,7 @@
 
 #include <type_traits>
 #include <iostream>
+#include <new>
 #include "matrix.h"
 
 #define __MATRIX_TRACE(file, line) "mcheck:"#file":"#line
@@ -87,11 +88,18 @@ struct PerfHeader {
 template <typename T, typename ...Args>
 T* AllocPerf(const char* message, const Args&... args) {
   uint8_t* p = (uint8_t*)malloc(sizeof(PerfHeader) + sizeof(T));
+  if (p == nullptr) {
+    throw std::bad_alloc();
+  }
   PerfHeader* header = (PerfHeader*)p;
 
+  // Objects allocated before the monitor is ready must not be counted on
+  // release either: leaving message uninitialized made DestroyPerf pass a
+  // garbage pointer to PersistentSub.
+  header->message = nullptr;
+  header->mem_size = sizeof(T);
   if (GlobalMatrix::Ready()) {
     header->message = message;
-    header->mem_size = sizeof(T);
     GlobalMatrix::Instance().PersistentAdd(message, sizeof(T));
   }
 

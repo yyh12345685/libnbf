@@ -5,6 +5,7 @@
 #include "service/service_manager.h"
 #include "net/connect_manager.h"
 #include "net_thread_mgr/net_thread_mgr.h"
+#include "net_thread_mgr/io_threads.h"
 
 namespace bdf {
 
@@ -16,6 +17,9 @@ ServerConnect::ServerConnect(){
 }
 
 ServerConnect::~ServerConnect(){
+  // Shutdown deletes still-open connections (delay release manager); a
+  // pending linger timer would otherwise fire on freed memory.
+  CancelLinger();
 }
 
 void ServerConnect::OnClose() {
@@ -24,6 +28,7 @@ void ServerConnect::OnClose() {
   }
   //as server,if connect is closed,can delete Connecting
   //as client,if connect is closed,only closed fd
+  CancelLinger();
   RegisterDel(fd_);
   Clean();
   //if (ConnectManager::Instance().GetConnect((uint64_t)this)){
@@ -36,6 +41,7 @@ void ServerConnect::Destroy(){
   // Also reached from kIoActiveCloseEvent with the fd still open: unregister
   // and close it first, or the fd stays registered with a pointer that
   // dangles once the delayed delete runs.
+  CancelLinger();
   if (fd_ >= 0) {
     RegisterDel(fd_);
     Clean();
@@ -64,9 +70,57 @@ void ServerConnect::OnDecodeMessage(EventMessage* message) {
   message->birthtime = Time::GetCurrentClockTime();
   message->status = MessageBase::kStatusOK;
   message->direction = MessageBase::kIncomingRequest;
-  message->descriptor_id = (int64_t)((void*)this);
+  message->descriptor_id = MakeDescriptor(this, GetConnectId());
 
+  ++in_flight_;
   service::GetServiceManager().SendToServiceHandle(message);
+}
+
+void ServerConnect::OnPeerClosed(){
+  if (peer_closed_ || fd_ < 0) {
+    return;
+  }
+  peer_closed_ = true;
+  if (in_flight_ == 0 && outbuf_.GetReadingSize() == 0) {
+    graceful_close_ = true;
+    OnClose();
+    return;
+  }
+  // Bound the wait: a handler may never answer (e.g. overload protection).
+  TimerData td;
+  td.time_out_ms = kHalfCloseLingerMs;
+  td.time_proc = this;
+  td.function_data = nullptr;
+  NetThreadManager* net = service::GetServiceManager().GetNetThreadManager();
+  linger_timer_ = net->StartTimer(td, net->GetIoThreads()->GetIoThreadId(this));
+}
+
+void ServerConnect::OnTimer(void* function_data){
+  linger_timer_ = 0;
+  if (fd_ >= 0) {
+    INFO(logger_, "half-closed connection timed out waiting for replies,fd:" << fd_);
+    OnClose();
+  }
+}
+
+void ServerConnect::CancelLinger(){
+  if (linger_timer_ != 0) {
+    NetThreadManager* net = service::GetServiceManager().GetNetThreadManager();
+    if (net) net->CancelTimer(linger_timer_, net->GetIoThreads()->GetIoThreadId(this));
+    linger_timer_ = 0;
+  }
+}
+
+void ServerConnect::OnWrite(){
+  Connecting::OnWrite();
+  MaybeFinishHalfClose();
+}
+
+void ServerConnect::MaybeFinishHalfClose(){
+  if (peer_closed_ && fd_ >= 0 && in_flight_ == 0 && outbuf_.GetReadingSize() == 0) {
+    graceful_close_ = true; // let the kernel deliver what is queued
+    OnClose();
+  }
 }
 
 int ServerConnect::RegisterDel(int fd){

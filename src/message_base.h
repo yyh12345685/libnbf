@@ -126,11 +126,15 @@ public:
   uint8_t type_io_event;
   uint8_t direction = 0;
   uint8_t status = kStatusOK;
-  uint64_t sequence_id = 0xffffffffffffffff;
+  uint64_t sequence_id=0xffffffffffffffff;
   uint64_t birthtime = 0;
-  int event_mask = 0;`r`n`r`n  static const int kEventDropNotice = 0x1;`r`n};
+  int event_mask = 0;
 
-class CoroContext;
+  // event_mask bit: a server request dropped without a reply (overload
+  // protection, no handler). It travels back to its connection's I/O thread
+  // so the connection stops counting it as outstanding.
+  static const int kEventDropNotice = 0x1;
+};
 
 class EventMessage : public MessageBase {
  public:
@@ -140,17 +144,18 @@ class EventMessage : public MessageBase {
     handle_id(-1),
     timer_out_id(0),
     ctx(nullptr),
-    msg_coro(nullptr),
-    handle_svr(nullptr) {
+    coroutine_id(-1){
   }
 
+  // Delegate so ctx/handle_id/coroutine_id are initialised: ctx used to be
+  // left uninitialised and the destructor deleted a garbage pointer.
   EventMessage(uint8_t type_id_, int64_t descriptor_id_) :
-    EventMessage(type_id_) {
+    EventMessage(type_id_){
     descriptor_id = descriptor_id_;
   }
 
   virtual ~EventMessage() {
-    if (nullptr !=ctx) {
+    if (nullptr !=ctx){
       BDF_DELETE(ctx);
       ctx = nullptr;
     }
@@ -160,7 +165,7 @@ class EventMessage : public MessageBase {
 
   void Dump(std::ostream& os) const;
 
-  void SetDescriptorId(const int64_t& desc_id) {
+  void SetDescriptorId(const int64_t& desc_id){
     descriptor_id = desc_id;
   }
 
@@ -173,9 +178,7 @@ class EventMessage : public MessageBase {
   uint64_t timer_out_id;//for sync message
 
   ContextBase* ctx;
-  CoroContext* msg_coro; //当前发送消息的协程
-
-  void* handle_svr; // 作为客户端时，处理的service handle对象
+  int coroutine_id;
 };
 
 class MessageFactory {
@@ -193,4 +196,3 @@ class MessageFactory {
 std::ostream& operator << (std::ostream& os, const EventMessage& message);
 
 }
-

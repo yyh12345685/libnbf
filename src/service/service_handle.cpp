@@ -1,3 +1,4 @@
+#include "service/service_manager.h"
 #include <unistd.h>
 #include <sys/prctl.h>
 #include "service/service_handle.h"
@@ -61,7 +62,7 @@ void ServiceHandler::Handle(EventMessage* message) {
       monitor::MatrixCounter::Add("server_request_queue_overload", 1);
       //从io handle到service handle超过100ms,过载保护
       INFO(logger_, "birth_to_now:" << birth_to_now << ",msg:" << *message);
-      MessageFactory::Destroy(message);
+      service::GetServiceManager().DropRequest(message);
       return;//不返回结果
     }
   }
@@ -145,7 +146,7 @@ void ServiceHandler::OnRedisResponseMessage(RedisMessage* message){
 
 void ServiceHandler::OnHttpRequestMessage(HttpMessage* message){
   WARN(logger_, "not should here,not implement:" << message->type_id);
-  MessageFactory::Destroy(message);
+  service::GetServiceManager().DropRequest(message);
 }
 
 //if use coroutine,should not handle
@@ -156,7 +157,7 @@ void ServiceHandler::OnHttpResponseMessage(HttpMessage* message){
 
 void ServiceHandler::OnRapidRequestMessage(RapidMessage* message){
   WARN(logger_, "not should here,not implement:" << message->type_id);
-  MessageFactory::Destroy(message);
+  service::GetServiceManager().DropRequest(message);
 }
 
 //if use coroutine,should not handle

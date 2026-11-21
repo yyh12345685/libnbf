@@ -26,6 +26,10 @@ public:
   // closed (Connecting::Clean): a client reconnects with the same protocol
   // object and must not inherit a half-parsed message or parser error.
   virtual void Reset() {}
+
+  // The peer closed its side. Return a message that the EOF completes (an
+  // HTTP response whose body ends at EOF), or nullptr.
+  virtual EventMessage* OnEof() { return nullptr; }
 };
 
 class ProtocolFactory {

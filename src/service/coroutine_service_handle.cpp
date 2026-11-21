@@ -12,6 +12,8 @@
 #include "net/connect.h"
 #include "service/service_manager.h"
 #include "common/time.h"
+#include "monitor/matrix_scope.h"
+#include "context.h"
 
 namespace bdf {
 
@@ -23,6 +25,7 @@ void CoroutineServiceHandler::Run(HandleData* data){
   CoroutineContext::Instance().Init(this,&time_mgr_);
   CoroutineSchedule* scheduler = CoroutineContext::Instance().GetScheduler();
   int coroutine_size = service::GetServiceManager().GetServiceConfig().coroutine_size;
+  max_coroutine_size_ = service::GetServiceManager().GetServiceConfig().max_coroutine_size;
   scheduler->InitCoroSchedule(
     &CoroutineServiceHandler::ProcessCoroutine, data, coroutine_size);
   int coro_id = scheduler->GetAvailableCoroId();
@@ -147,7 +150,6 @@ void CoroutineServiceHandler::ProcessClientItem(EventMessage* msg){
   if (msg->coroutine_id <0){
     //not to here,否则会丢消息
     ERROR(logger_, "error coro_id:" << msg->coroutine_id);
-    scheduler->CoroutineYield();
     MessageFactory::Destroy(msg);
     return;
   }
@@ -166,6 +168,7 @@ void CoroutineServiceHandler::ProcessClientItem(EventMessage* msg){
 void CoroutineServiceHandler::ProcessMessageHandle(std::queue<EventMessage*>& msg_list) {
   TRACE(logger_, "handle id:" << GetHandlerId()
     << ",ProcessMessage size:" << msg_list.size());
+  CoroutineSchedule* scheduler = CoroutineContext::Instance().GetScheduler();
   size_t handle_size = msg_list.size();
   while (!msg_list.empty()) {
     //for debug begin-------------
@@ -183,7 +186,7 @@ void CoroutineServiceHandler::ProcessMessageHandle(std::queue<EventMessage*>& ms
     if (MessageBase::kStatusOK != msg->status
       && msg->direction == MessageBase::kIncomingRequest){
       //超时或者连接被关闭等无效消息
-      MessageFactory::Destroy(msg);
+      service::GetServiceManager().DropRequest(msg);
       continue;
     }
     // A failed client response (connection closed, timeout) still goes to
@@ -195,9 +198,28 @@ void CoroutineServiceHandler::ProcessMessageHandle(std::queue<EventMessage*>& ms
       if (birth_to_now > INNER_QUERY_SEND_PROTECT_TIME){
         //从io handle到service handle超过100ms,服务端过载保护
         INFO(logger_, "birth_to_now:"<< birth_to_now <<",msg:" << *msg);
-        MessageFactory::Destroy(msg);
+        service::GetServiceManager().DropRequest(msg);
         continue;
       }
+      // Coroutines are created on demand, so a slow downstream would grow
+      // them (and their stacks) without bound while the queue still drains
+      // fast enough that the age check above never fires. Shed instead.
+      if (scheduler->SuspendedCount() >= max_coroutine_size_) {
+        monitor::MatrixCounter::Add("server_coroutine_overload", 1);
+        static thread_local time_t last_log = 0;
+        if (time(NULL) != last_log) {
+          last_log = time(NULL);
+          WARN(logger_, "coroutine limit reached, shed request,suspended:"
+            << scheduler->SuspendedCount());
+        }
+        service::GetServiceManager().DropRequest(msg);
+        continue;
+      }
+      Handle(msg);
+    }else if (nullptr != msg->ctx && nullptr != msg->ctx->callback){
+      // Invoke() response: run the callback (and MarkEnd) like the plain
+      // handler does. It used to go to ProcessClientItem, which found no
+      // waiting coroutine and destroyed it, so the callback never ran.
       Handle(msg);
     }else{
       //处理客户端接收的消息

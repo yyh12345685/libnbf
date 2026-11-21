@@ -1,78 +1,72 @@
 #pragma once
 
 #include <vector>
+//#include <set>
 #include <unordered_set>
 #include <queue>
 #include <mutex>
-#include <atomic>
-#include "common/logger.h"
 #include "common/common.h"
-#include "coroutine.h"
-#include "coroutine_release.h"
+#include "coroutine/coroutine_impl.h"
 
 namespace bdf {
 
-class CoroContext;
+class CoroutineActor;
 
-class CoroutineSchedule : public CoroRelease {
+class CoroutineSchedule {
 public:
-  CoroutineSchedule():
-    receiving_cnt_(0),
-    coro_func_(nullptr),
-    coro_data_(nullptr){
-    }
-    
-  virtual ~CoroutineSchedule();
+  ~CoroutineSchedule();
 
-  void InitCoroSchedule(CoroutineFunc func, void* data, int coroutine_size, int coroutine_type, int stack_size = 0);
+  void InitCoroSchedule(CoroutineFunc func, void* data,int coroutine_size);
 
-  // 支持使用InitCoroSchedule中的值，或者新传入的值
-  void CoroutineStart(CoroutineFunc func = nullptr, void* data = nullptr);
+  void CoroutineYield(int coro_id);
 
-  // 准备接收数据挂起当前运行的协程
-  void ReceiveCoroutineYield();
-
-  //挂起当前运行的协程
+  //挂起运行中的协程
   void CoroutineYield();
 
-  bool CoroutineYieldToActive(CoroContext* coro);
+  bool CoroutineYieldToActive(int coro_id);
 
-  CoroContext* GetCurrentCoroutine();
+  bool AfterYieldToAvailable(int coro_id);
 
-  //启动协程或者恢复挂起的协程
-  bool ScCoroutineResume(CoroContext* coro);
+  int GetAvailableCoroId();
 
-  // 尝试切换到一个已经接收数据就绪的协程
+  CoroutineActor* GetCoroutineCtx(int id);
+
+  //启动协程或者恢复有返回的协程
   bool CoroutineResumeActive();
-
-  CoroContext* GetAvailableCoro();
+  //启动协程或者恢复挂起的协程
+  void CoroutineResume(int id);
+  //获取正在运行的协程id
+  int GetRunningId();
 
   void ProcessDebug();
-
-  virtual bool ReleaseResource(CoroContext* coro);
-
+  // Coroutines that are suspended (not available to take new work).
+  size_t SuspendedCount() const {
+    return all_coro_list_.size() - available_coro_list_.size();
+  }
 protected:
-  int CoroutineStatus();
+  int CoroutineStatus(int id);
 
-  int CoroutineSize() {
-    return coro_impl_->CoroutineSize();
+  int CoroutineSize(){
+    return coro_sche_->cap;
   }
 
-  void CoroutineStart(CoroContext* coro, CoroutineFunc func = nullptr, void* data = nullptr);
+private:
+  int AddNewCoroutine();
+  CoroutineFunc func_ = nullptr;
+  void* data_ = nullptr;
+  //int max_coro_id_ = -1;
 
 private:
 
-  std::unordered_set<CoroContext*> free_list_; //空闲可用的协程/或者随时可以resume进去的
+  std::vector<int> all_coro_list_;//全部
 
-  // 任务结束的协程，客户端答复了，或者超时了，待处理的协程
-  std::queue<CoroContext*> active_coro_list_;
+  std::unordered_set<int> available_coro_list_;//可用的
 
-  std::atomic<uint32_t> receiving_cnt_; //正在接收请求的协程数量
+  //任务结束的协程，客户端答复了，或者超时了
+  std::queue<int> active_coro_list_;
 
-  Coroutine* coro_impl_;
-
-  CoroutineFunc coro_func_;
-  void* coro_data_;
+  CoroutineImpl coro_impl_;
+  CoroSchedule* coro_sche_;
 
   //for debug begin
   //struct  YieldTimeDebug{
@@ -83,6 +77,29 @@ private:
   //for debug end
 
   LOGGER_CLASS_DECL(logger_);
+};
+
+class CoroutineID{
+public:
+  static CoroutineID& GetInst() {
+    static CoroutineID inst;
+    return inst;
+  }
+  ~CoroutineID(){
+  }
+
+  void InitMaxIds(int max_coro_id);
+
+  std::vector<int>& GetAllCoroIds() { 
+    return all_coro_ids_tmp_;
+  }
+private:
+  std::mutex lock_;
+
+  std::vector<int> all_coro_ids_tmp_;
+  DISALLOW_COPY_AND_ASSIGN(CoroutineID)
+  CoroutineID(){
+  }
 };
 
 }

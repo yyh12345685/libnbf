@@ -44,6 +44,32 @@ public:
 
   virtual bool IsServer() = 0;
 
+  // A request for this connection was dropped before it was encoded
+  // (overload protection, closed socket). Lets a single-send client release
+  // its busy flag. Runs on the connection's I/O thread.
+  virtual void OnSendDropped() {}
+
+  // A reply for this connection was encoded into outbuf_ (I/O thread).
+  virtual void OnReplyEncoded() {}
+
+  // Server replies carry the connection as descriptor_id. The upper 16 bits
+  // hold a generation (low bits of connect_id) so a reply that outlives its
+  // connection is not delivered to a new connection that happens to reuse
+  // the same address. Heap pointers fit in 48 bits: on Linux, 57-bit (LA57)
+  // or 52-bit arm64 addresses are only handed out to mmap calls that ask
+  // for them with a high hint, which malloc never does.
+  static int64_t MakeDescriptor(Connecting* con, int64_t connect_id) {
+    return (int64_t)(((uint64_t)(uintptr_t)con & kDescriptorPtrMask)
+      | ((uint64_t)(connect_id & 0xFFFF) << 48));
+  }
+  static Connecting* DescriptorConnect(int64_t descriptor) {
+    return (Connecting*)(uintptr_t)((uint64_t)descriptor & kDescriptorPtrMask);
+  }
+  static uint16_t DescriptorGen(int64_t descriptor) {
+    return (uint16_t)((uint64_t)descriptor >> 48);
+  }
+  static const uint64_t kDescriptorPtrMask = 0x0000FFFFFFFFFFFFULL;
+
   int64_t GetConnectId() { return connect_id_; }
   // Clock ms of the last successful read (I/O thread only).
   uint64_t GetLastReadMs() const { return last_read_ms_; }
@@ -61,11 +87,17 @@ protected:
   void RegisterDel(EventDriver *poll, int fd);
 
   void OnReadWriteClose();
+  // The peer finished sending (read returned 0, or RDHUP). Default: deliver
+  // what the EOF completes, then close.
+  virtual void OnPeerClosed();
   void Clean();
 
 protected:
   int fd_;
   bool write_interest_ = false;
+  // Next Clean() closes normally (queued data is still sent) instead of
+  // with SO_LINGER 0, which resets the connection and drops it.
+  bool graceful_close_ = false;
   uint64_t last_read_ms_ = 0;
   std::string ip_;
   int port_;

@@ -16,6 +16,7 @@ namespace bdf {
 LOGGER_CLASS_IMPL(logger_, EventDriver);
 
 EventDriver::EventDriver() :
+  run_(true),
   event_in_(EPOLLIN | EPOLLHUP | EPOLLERR | EPOLLRDHUP),
   event_out_(EPOLLOUT | EPOLLHUP | EPOLLERR | EPOLLRDHUP),
   event_notifier_(this),
@@ -38,7 +39,6 @@ EventDriver::~EventDriver(){
 
 int EventDriver::Run(){
   event_notifier_.SetEventThreadId(ThreadId::Get());
-  run_ = true;
   while (run_){
     this->Poll(1);
     if(thread_data_run_!=nullptr){
@@ -82,7 +82,7 @@ int EventDriver::ShutDown()
   return 0;
 }
 
-int EventDriver::Add(int fd, EventFunctionBase *ezfd,bool lock){
+int EventDriver::Add(int fd, EventFunctionBase *ezfd,bool lock, short events){
   std::lock_guard<std::recursive_mutex> guard(fd_lock_);
   if (fd > 0 && fd < event_data_.fd2data_size_ 
     && nullptr != event_data_.fd2data_[fd]){
@@ -94,7 +94,7 @@ int EventDriver::Add(int fd, EventFunctionBase *ezfd,bool lock){
   FdEvent *data = new FdEvent();
   data->fd_ = fd;
   data->ezfd_ = ezfd;
-  data->event_ = EVENT_NONE;
+  data->event_ = events & (EVENT_READ | EVENT_WRITE);
   data->closed_ = false;
   if (fd > maxfd_){
     if (fd > event_data_.fd2data_size_ 
@@ -108,6 +108,8 @@ int EventDriver::Add(int fd, EventFunctionBase *ezfd,bool lock){
 
   struct epoll_event event = { 0 };
   event.data.ptr = (void *)(data);
+  event.events = (data->event_ & EVENT_READ ? event_in_ : 0)
+    | (data->event_ & EVENT_WRITE ? event_out_ : 0);
   if (epoll_ctl(epfd_, EPOLL_CTL_ADD, fd, &event) == -1){
     WARN(logger_, "EventDriver::Add epoll_ctl error.");
     delete data;

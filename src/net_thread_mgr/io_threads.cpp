@@ -66,23 +66,13 @@ int IoThreads::AddModrw(
   EventFunctionBase *ezfd, int fd, bool set, bool lock,int& register_thread_id){
   int idx = GetIoThreadIndex(ezfd, event_threads_.size());
   register_thread_id = idx;
-  if (0 != event_threads_[idx]->Add(fd, ezfd, lock)) {
+  // One atomic registration with the final interest: the connection may be
+  // handled (even closed) by the loop the moment this returns, so the caller
+  // must not rely on anything after a successful call.
+  if (0 != event_threads_[idx]->Add(fd, ezfd, lock,
+      set ? (EVENT_READ | EVENT_WRITE) : EVENT_NONE)) {
     WARN(logger_, "event_threads_[idx].Add failed.");
     return -1;
-  }
-
-  // On failure undo the Add: callers delete ezfd, and a FdEvent left behind
-  // would point at freed memory and block the fd number for the next Add.
-  if (0 != event_threads_[idx]->Modr(fd, set)) {
-    WARN(logger_, "event_threads_[idx].Modr failed.");
-    event_threads_[idx]->Del(fd);
-    return -2;
-  }
-
-  if (0 != event_threads_[idx]->Modw(fd, set)) {
-    WARN(logger_, "event_threads_[idx].Modw failed.");
-    event_threads_[idx]->Del(fd);
-    return -3;
   }
 
   // Registered; a failed wakeup only delays the loop by one poll timeout,
@@ -95,15 +85,9 @@ int IoThreads::AddModr(
   EventFunctionBase* ezfd,int fd,  bool set, bool lock,int& register_thread_id){
   int idx = GetIoThreadIndex(ezfd, event_threads_.size());
   register_thread_id= idx;
-  if (0!= event_threads_[idx]->Add(fd, ezfd, lock)){
+  if (0!= event_threads_[idx]->Add(fd, ezfd, lock, set ? EVENT_READ : EVENT_NONE)){
     WARN(logger_, "event_threads_[idx].Add failed,fd:"<<fd);
     return -1;
-  }
-
-  if (0 != event_threads_[idx]->Modr(fd,set)) {
-    WARN(logger_, "event_threads_[idx].Modr failed.");
-    event_threads_[idx]->Del(fd);
-    return -2;
   }
 
   event_threads_[idx]->Wakeup();
@@ -133,7 +117,7 @@ void IoThreads::PutMessageToHandle(EventMessage* msg){
   static thread_local std::atomic<uint32_t> id_io(0);
   uint32_t id = 0;
   if (0!= msg->descriptor_id){
-    Connecting* con = reinterpret_cast<Connecting*>(msg->descriptor_id);
+    Connecting* con = Connecting::DescriptorConnect(msg->descriptor_id);
     id = GetIoThreadIndex(con, io_thread_data_run_.size());
   } else {
     id = (id_io++) % io_thread_data_run_.size();

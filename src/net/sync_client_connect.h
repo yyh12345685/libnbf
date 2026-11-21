@@ -23,6 +23,7 @@ public:
   virtual void CleanSequenceQueue();
 
   virtual bool IsServer() { return false; }
+  virtual void OnSendDropped() { SetBuzy(false); }
   void CleanSyncClient();
 
   //仅仅用于单发单收

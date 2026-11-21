@@ -18,7 +18,7 @@ public:
   void Main();
   static void *Run(void *arg);
 
-  int Add(int fd, EventFunctionBase *ezfd, bool lock = false);
+  int Add(int fd, EventFunctionBase *ezfd, bool lock = false, short events = EVENT_NONE);
   int Del(int fd);
   int Modr(int fd, bool set);
   int Modw(int fd, bool set);

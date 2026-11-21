@@ -1,5 +1,6 @@
 #pragma once
 
+#include <strings.h>
 #include "protocol/redis/redis_reply.h"
 #include "message_base.h"
 #include "protocol/http/http_info.h"
@@ -117,8 +118,14 @@ struct HttpMessage : public EventMessage {
     http_info.headers.clear();
   }
 
+  // Header names are case-insensitive ("content-type" == "Content-Type").
   inline bool GetHeader(const std::string& field, std::string *value){
-    const auto& it = http_info.headers.find(field);
+    auto it = http_info.headers.find(field);
+    if (it == http_info.headers.end()) {
+      for (it = http_info.headers.begin(); it != http_info.headers.end(); ++it) {
+        if (strcasecmp(it->first.c_str(), field.c_str()) == 0) break;
+      }
+    }
     if (it != http_info.headers.end()){
       if (value != nullptr){
         *value = it->second;

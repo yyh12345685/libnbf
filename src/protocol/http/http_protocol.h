@@ -42,9 +42,11 @@ public:
   // A parse error is sticky in http_parser (execute returns 0 forever), so
   // without this a client stayed broken after reconnecting.
   virtual void Reset();
+  virtual EventMessage* OnEof();
 
 private:
   bool WirteToBuf(HttpMessage *msg, Buffer *output);
+  EventMessage* PopMessage();
   LOGGER_CLASS_DECL(logger_);
   HttpAgent* agent_;
 };

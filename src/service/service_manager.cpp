@@ -122,6 +122,17 @@ void ServiceManager::Reply(EventMessage* message){
   SendToNetThread(message);
 }
 
+void ServiceManager::DropRequest(EventMessage* message){
+  if (message->direction != MessageBase::kIncomingRequest
+    || 0 == message->descriptor_id || nullptr == net_thread_mgr_) {
+    MessageFactory::Destroy(message);
+    return;
+  }
+  message->event_mask |= MessageBase::kEventDropNotice;
+  message->direction = EventMessage::kOutgoingResponse;
+  SendToNetThread(message);
+}
+
 void ServiceManager::SendToNetThread(EventMessage* msg){
   msg->type_io_event = MessageType::kIoHandleEventMsg;
   SendToNetThreadInner(msg);

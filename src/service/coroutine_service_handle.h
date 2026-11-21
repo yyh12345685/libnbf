@@ -51,6 +51,7 @@ private:
   // handler thread) rather than a local of the running coroutine: when a
   // handler yields in SendRecieve, the next coroutine keeps draining it.
   std::queue<EventMessage*> pending_;
+  size_t max_coroutine_size_ = 10000;
 
   void ProcessClientItem(EventMessage* msg);
 

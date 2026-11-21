@@ -1,6 +1,7 @@
 #include <unistd.h>
 #include "connect_manager.h"
 #include "net/server_connect.h"
+#include "monitor/mem_profile.h"
 
 namespace bdf {
 
@@ -24,7 +25,7 @@ void ServerConnectDelayReleaseMgr::Release(){
   for (const auto& it : connected_list_){
     TRACE(logger_, "connect id:" << it.first << ", addr:" << it.second);
     if (it.second != NULL){
-      delete it.second;
+      BDF_DELETE(it.second); // allocated with BDF_NEW (MEM_PROFILE header)
     }
   }
   connected_list_.clear();
@@ -88,7 +89,7 @@ void ServerConnectDelayReleaseMgr::DeleteDalayCon(){
     while (ls != delay_delete_connect_list_.end()){
       if ((cur_time - ls->second.first) > delay_delete_times) {
         ServerConnect* s_con = ls->second.second; 
-        delete s_con;
+        BDF_DELETE(s_con); // allocated with BDF_NEW (MEM_PROFILE header)
         ls = delay_delete_connect_list_.erase(ls);
       } else {
         ls++;

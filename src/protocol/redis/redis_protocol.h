@@ -50,6 +50,10 @@ private:
   // Encode and Decode both run on the connection's I/O thread.
   std::deque<size_t> expected_replies_;
   std::vector<RedisReply> partial_replies_;
+  // Bytes the incomplete reply at the buffer head needs at least; parsing is
+  // skipped until that much has arrived (a large reply used to be re-parsed
+  // from scratch on every read).
+  size_t need_bytes_ = 0;
 };
 
 }
