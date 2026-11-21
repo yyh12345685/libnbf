@@ -38,6 +38,11 @@
     <None Include="examples\coroutine_stress_testing\conf\stress_testing_server.conf" />
     <None Include="examples\coroutine_stress_testing\conf\logger_cli.conf" />
     <None Include="examples\coroutine_stress_testing\conf\logger_svr.conf" />
+    <None Include="src\tester\run_coroutine_regression.py" />
+    <None Include="third\lib\gperftools-2.7.zip" />
+    <None Include="third\lib\libunwind-1.2.tar.gz" />
+    <None Include="doc\server&amp;&amp;client v1.vsd" />
+    <None Include="doc\framework design.docx" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />
@@ -245,6 +250,18 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="src\net_thread_mgr\net_thread_mgr.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tester\t_connection_lifecycle.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tester\t_network_regression.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tester\t_redis_pipeline.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tester\t_redis_protocol.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

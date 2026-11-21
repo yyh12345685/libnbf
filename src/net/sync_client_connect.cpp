@@ -115,6 +115,10 @@ void SyncClientConnect::CleanSequenceQueue(){
     }
     DoSendBack(message, EventMessage::kInternalFailure);
   }
+  // Every close path (peer close, error, heartbeat or request timeout) ends
+  // here: nothing is in flight any more. Without this a single-send client
+  // stayed busy after reconnecting and the router never picked it again.
+  SetBuzy(false);
 }
 
 int SyncClientConnect::DecodeMsg(){
