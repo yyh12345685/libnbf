@@ -5,6 +5,8 @@
 #include <cstdint>
 #include <mutex>
 #include <atomic>
+#include <chrono>
+#include <deque>
 #include "common/logger.h"
 #include "common/spin_lock.h"
 
@@ -15,8 +17,7 @@ class ServerConnect;
 class ServerConnectDelayReleaseMgr{
 public:
   ServerConnectDelayReleaseMgr() :
-    connect_squency_(0), 
-    del_time_(0){
+    connect_squency_(0){
   }
 
   ~ServerConnectDelayReleaseMgr(){
@@ -33,12 +34,10 @@ public:
   // I/O thread must check this before touching the pointer.
   bool IsLive(ServerConnect* con);
 
-  void DeleteDalayCon();
+  void DeleteDelayedConnections();
 protected:
-  typedef std::pair<time_t, ServerConnect*> ConnInfo;
-  typedef std::unordered_map<int64_t, ConnInfo> DelayDeleteList;
-  typedef std::pair<int64_t, ConnInfo> DelayDeletePair;
-  typedef std::unordered_map<int64_t, ConnInfo>::iterator DelayDeleteListIt;
+  typedef std::chrono::steady_clock Clock;
+  typedef std::pair<Clock::time_point, ServerConnect*> ConnInfo;
 private:
   std::atomic<int64_t> connect_squency_;
   std::mutex mutex_lock_;
@@ -60,10 +59,8 @@ private:
   void SetLive(ServerConnect* con, bool live);
 
   //for delay delete
-  DelayDeleteList delay_delete_connect_list_;
+  std::deque<ConnInfo> delay_delete_connect_list_;
   std::mutex con_mutex_lock_;
-
-  time_t del_time_;
 
   LOGGER_CLASS_DECL(logger_);
 };

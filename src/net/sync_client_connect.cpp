@@ -28,6 +28,9 @@ void SyncClientConnect::OnDecodeMessage(EventMessage* message) {
     return;
   }
 
+  if (keeper_message->type_id != MessageType::kHeartBeatMessage) {
+    SetBuzy(false);
+  }
   if (keeper_message->type_id == MessageType::kHeartBeatMessage
     || keeper_message->direction == EventMessage::kSendNoCareResponse
     || keeper_message->direction == EventMessage::kOnlySend) {
@@ -45,7 +48,7 @@ void SyncClientConnect::OnDecodeMessage(EventMessage* message) {
   message->status = EventMessage::kStatusOK;
   message->direction = EventMessage::kIncomingResponse;
   message->sequence_id = keeper_message->sequence_id;
-  message->msg_coro = keeper_message->msg_coro;
+  message->coroutine_id = keeper_message->coroutine_id;
   message->handle_id = keeper_message->handle_id;
   message->descriptor_id = (int64_t)((void*)(this));
   if (nullptr != keeper_message->ctx && nullptr != keeper_message->ctx->callback) {
@@ -60,10 +63,11 @@ void SyncClientConnect::OnDecodeMessage(EventMessage* message) {
 }
 
 int SyncClientConnect::EncodeMsg(EventMessage* message){
+  const bool heartbeat = message->type_id == MessageType::kHeartBeatMessage;
 
   if (GetStatus() != kConnected) {
-    INFO(logger, "SyncClientConnect::EncodeMsg ChannelBroken:" << GetStatus());
-    SetBuzy(false);
+    DEBUG(logger, "SyncClientConnect::EncodeMsg ChannelBroken:" << GetStatus());
+    if (!heartbeat) SetBuzy(false);
     return -1;
   }
   TRACE(logger, "EncodeMsg msg type:" << (int)(message->type_id)
@@ -71,14 +75,14 @@ int SyncClientConnect::EncodeMsg(EventMessage* message){
 
   if (sigle_send_sigle_recv_ && sync_sequence_.Size()>1) {
     //可能还有一个心跳包
-    INFO(logger, "SyncClientConnect::EncodeMsg,size:"<<sync_sequence_.Size());
+    INFO(logger, "22222222,size:"<<sync_sequence_.Size());
   }
 
   //test_lock1_.lock();
   if (unlikely(!GetProtocol()->Encode(message, &outbuf_))) {
     WARN(logger, "SyncClientConnect::Encode() encode fail");
     //test_lock1_.unlock();
-    SetBuzy(false);
+    if (!heartbeat) SetBuzy(false);
     return -2;
   }
   //test_lock1_.unlock();
@@ -89,7 +93,7 @@ int SyncClientConnect::EncodeMsg(EventMessage* message){
   //  && message->direction != EventMessage::kOnlySend){
     if (0 != sync_sequence_.Put(message)) {
       WARN(logger, "SyncClientConnect::EncodeMsg put fail");
-      SetBuzy(false);
+      if (!heartbeat) SetBuzy(false);
       return -3;
     }
   //}
@@ -129,7 +133,7 @@ int SyncClientConnect::DecodeMsg(){
     //test_lock_.unlock();
     if (failed) {
       failed = true;
-      WARN(logger_, "Connecting::Decode,base->Decode failed.");
+      TRACE(logger_, "Connecting::Decode,base->Decode failed.");
       if (msg != nullptr) {
         MessageFactory::Destroy(msg);
       }
@@ -137,14 +141,12 @@ int SyncClientConnect::DecodeMsg(){
     }
 
     if (nullptr == msg) {
-      // 可能出现nullptr，粘包的时候???
       TRACE(logger_, "event is nullptr.");
       break;
     }
 
     OnDecodeMessage(msg);
   }
-  SetBuzy(false);
   if (failed) {
     return -1;
   }

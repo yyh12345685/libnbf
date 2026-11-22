@@ -33,6 +33,8 @@ Client::~Client(){
 }
 
 int Client::Start() {
+  std::lock_guard<std::mutex> guard(connect_lock_);
+  if (connect_) return 0;
   ClientConnect* con = CreateClient(address_, heartbeat_ms_);
   if (!con) {
     ERROR(logger_, "Client::Start CreateClient fail"<< ", address:" << address_);
@@ -81,8 +83,9 @@ ClientConnect* Client::CreateClient(const std::string& address, uint32_t heartbe
 }
 
 int Client::Stop() {
-  // Unpublish first; the connection deletes itself on its I/O loop.
-  ClientConnect* con = connect_.exchange(nullptr);
+  std::lock_guard<std::mutex> guard(connect_lock_);
+  ClientConnect* con = connect_;
+  connect_ = nullptr;
   if (!con) {
     return 0;
   }
@@ -90,11 +93,12 @@ int Client::Stop() {
 }
 
 void Client::Dump(std::ostream& os) const {
+  std::lock_guard<std::mutex> guard(connect_lock_);
   os << "{\"type\": \"Client\""
     << ", \"address\": \"" << address_ << "\""
     << ", \"timeout\": " << timeout_ms_
     << ", \"heartbeat\": " << heartbeat_ms_
-    << ", \"status\": \"" << (connect_.load() ? connect_.load()->GetStatus() : -1) << "\""
+    << ", \"status\": \"" << (connect_ ? connect_->GetStatus() : -1) << "\""
     << "}" << std::endl;
 }
 
@@ -109,14 +113,16 @@ int64_t Client::GetSequenceId(){
 }
 
 bool Client::Send(EventMessage* message) {
-  if (GetClientStatus() != kWorking) {
+  std::unique_lock<std::mutex> guard(connect_lock_);
+  if (!connect_ || connect_->GetStatus() != ClientConnect::kConnected) {
+    if (connect_) connect_->SetBuzy(false);
+    guard.unlock();
     INFO(logger_, "Client::Send Channel Broken" << *this);
     MessageFactory::Destroy(message);
-    SetNoBuzy();
     return false;
   }
 
-  message->descriptor_id = (int64_t)((void*)connect_.load());
+  message->descriptor_id = (int64_t)((void*)connect_);
   if (message->IsSynchronous()){
     message->direction = MessageBase::kSendNoCareResponse;
   }else{
@@ -128,16 +134,18 @@ bool Client::Send(EventMessage* message) {
 }
 
 bool Client::Invoke(EventMessage* message, const InvokerCallback& cb, const std::string& name){
-  if (GetClientStatus() != kWorking) {
+  std::unique_lock<std::mutex> guard(connect_lock_);
+  if (!connect_ || connect_->GetStatus() != ClientConnect::kConnected) {
+    if (connect_) connect_->SetBuzy(false);
+    guard.unlock();
     INFO(logger_, "Client::Send Channel Broken" << *this);
     message->status = MessageBase::kInvokeError;
     cb(message);
-    SetNoBuzy();
     return false;
   }
 
   message->sequence_id = GetSequenceId();
-  message->descriptor_id = (int64_t)((void*)connect_.load());
+  message->descriptor_id = (int64_t)((void*)connect_);
   message->direction = MessageBase::kOutgoingRequest;
   message->ctx = BDF_NEW(ContextBase);
   message->ctx->callback = cb;
@@ -147,15 +155,17 @@ bool Client::Invoke(EventMessage* message, const InvokerCallback& cb, const std:
 }
 
 EventMessage* Client::DoSendRecieve(EventMessage* message) {
-  if (GetClientStatus() != kWorking) {
+  std::unique_lock<std::mutex> guard(connect_lock_);
+  if (!connect_ || connect_->GetStatus() != ClientConnect::kConnected) {
+    if (connect_) connect_->SetBuzy(false);
+    guard.unlock();
     INFO(logger_, "Client::DoSendRecieve Channel Broken" << *this);
     MessageFactory::Destroy(message);
-    SetNoBuzy();
     return nullptr;
   }
 
   message->sequence_id = GetSequenceId();
-  message->descriptor_id = (int64_t)((void*)connect_.load());
+  message->descriptor_id = (int64_t)((void*)connect_);
   message->direction = MessageBase::kOutgoingRequest;
   if (ForTest::Inst().GetForTest()){
     TRACE(logger_, "for test_client_server,only send.");
@@ -171,6 +181,7 @@ EventMessage* Client::DoSendRecieve(EventMessage* message) {
   // I/O owns message after enqueue and may destroy it before this thread resumes.
   const uint64_t sequence_id = message->sequence_id;
   DoSend(message);
+  guard.unlock();
   EventMessage* response = DoRecieve(sequence_id);
   if (response && response->status != EventMessage::kStatusOK) {
     TRACE(logger_, "may be time out,status:" << response->status << ",msg:" << *response);

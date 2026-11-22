@@ -14,6 +14,7 @@ EventLoopThread::EventLoopThread() :
 }
 
 EventLoopThread::~EventLoopThread(){
+  Stop();
 }
 
 int EventLoopThread::Start(ThreadDataRun* thread_data_run){
@@ -33,6 +34,7 @@ int EventLoopThread::Stop(){
   is_run_ = false;
   thread_->join();
   delete thread_;
+  thread_ = nullptr;
     
   return 0;
 }

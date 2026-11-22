@@ -49,8 +49,6 @@ public:
   // its busy flag. Runs on the connection's I/O thread.
   virtual void OnSendDropped() {}
 
-  // A reply for this connection was encoded into outbuf_ (I/O thread).
-  virtual void OnReplyEncoded() {}
 
   // Server replies carry the connection as descriptor_id. The upper 16 bits
   // hold a generation (low bits of connect_id) so a reply that outlives its

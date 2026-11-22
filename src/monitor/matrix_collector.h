@@ -35,7 +35,7 @@ class MatrixCollector {
   int Send(const MatrixItem* item);
 
   inline MatrixStatMapPtr GetMatrixStatMap() {
-    return stat_map_;
+    return std::atomic_load(&stat_map_);
   }
 
  private:
@@ -67,7 +67,7 @@ class MatrixCollector {
   uint32_t bucket_count_;
   uint32_t queue_size_;
   std::thread* thread_;
-  bool running_;
+  std::atomic<bool> running_;
   std::string monitor_file_name_pre_;
   std::string monitor_file_name_;
   MatrixStatMapPtr stat_map_;

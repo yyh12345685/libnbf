@@ -42,7 +42,7 @@ public:
   int Start(ServiceHandler* handle);
   int Stop();
   int Wait();
-  // Async-signal-safe: only stores to atomics.
+  // Async-signal-safe: uses lock-free atomics.
   void ThreadStopFromSignal();
   // Stop and join the service handler threads (idempotent).
   int StopHandlers();
@@ -56,7 +56,7 @@ public:
   void SendToServiceHandle(EventMessage* msg);
   void SendTaskToServiceHandle(Task* task);
 
-  const std::string& GetMonitorReport();
+  std::string GetMonitorReport();
 
   int EventAddModrw(EventFunctionBase* ezfd, int fd,int& register_thread_id);
   int EventAddModr(EventFunctionBase* ezfd, int fd,int& register_thread_id);
@@ -82,13 +82,18 @@ private:
   int ThreadWait();
   int ThreadStop();
   bool HasServiceHandle();
+  void ResetHandlers();
   LOGGER_CLASS_DECL(logger_);
 
   ServiceConfig service_config_;
 
   HandleThread handle_thread_;
 
-  NetThreadManager* net_thread_mgr_;
+  std::atomic<bool> handlers_ready_{false};
+  std::atomic<bool> stop_requested_{false};
+  std::atomic<unsigned> signal_readers_{0};
+  std::mutex monitor_lock_;
+  NetThreadManager* net_thread_mgr_ = nullptr;
 
   DISALLOW_COPY_ASSIGN_CONSTRUCTION(ServiceManager)
 };

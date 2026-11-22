@@ -137,6 +137,10 @@ struct HttpMessage : public EventMessage {
 
   inline void InitReply(HttpMessage *ev,
     uint16_t status, bool encode_gzip = false, bool keep_alive = true){
+    if (ev) {
+      descriptor_id = ev->descriptor_id;
+      sequence_id = ev->sequence_id;
+    }
     this->http_major = ev ? ev->http_major : 1;
     this->http_minor = ev ? ev->http_minor : (keep_alive ? 1 : 0);
     this->status_code = status;

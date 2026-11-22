@@ -29,7 +29,7 @@ void IoThreadDataRun::PutMessage(EventMessage* message){
 }
 
 void IoThreadDataRun::CallRun(){
-  static time_t log_time = time(NULL);
+  static thread_local time_t log_time = time(NULL);
   std::queue<EventMessage*> temp;
   // Check emptiness under the lock too: producers push concurrently and an
   // unlocked std::queue read is a data race.
@@ -114,14 +114,7 @@ void IoThreadDataRun::HandleIoMessageEvent(EventMessage* message){
       HandleIoMessageFailed(message);
       return;
     }
-  }
-
-  if (message->direction == EventMessage::kOutgoingResponse
-    && (message->event_mask & MessageBase::kEventDropNotice)) {
-    // No reply will come for this request: stop waiting for it (half-close).
-    MessageFactory::Destroy(message);
-    con->OnReplyEncoded();
-    if (con->GetFd() >= 0) con->OnWrite(); // may finish a half-close
+    static_cast<ServerConnect*>(con)->SendReply(message);
     return;
   }
 
@@ -133,19 +126,11 @@ void IoThreadDataRun::HandleIoMessageEvent(EventMessage* message){
   }
 
   if (0 != con->EncodeMsg(message)){
-    if (message->direction == EventMessage::kOutgoingResponse) {
-      con->OnReplyEncoded(); // this reply will never be sent either
-    }
     HandleIoMessageFailed(message);
     return;
   }
-  if (message->direction == EventMessage::kOutgoingResponse) {
-    con->OnReplyEncoded();
-  }
-  //单向消息encode之后即可释放，双向消息会在返回或者超时的时候释放
-  //server答复的消息需要在这里释放掉
   if (message->direction == EventMessage::kOnlySend
-    || message->direction == EventMessage::kOutgoingResponse) {
+      && !con->GetProtocol()->IsSynchronous()) {
     MessageFactory::Destroy(message);
   }
 

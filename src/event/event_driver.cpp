@@ -73,11 +73,10 @@ int EventDriver::Init(){
 
 int EventDriver::ShutDown()
 {
-  this->Poll(0); // only for handle the left timeout timers/events once
-  
+  timer_.Clear();
   maxfd_ = -1;
   inloop_ = false;
-  close(epfd_);
+  if (epfd_ >= 0) close(epfd_);
   epfd_ = -1;
   return 0;
 }

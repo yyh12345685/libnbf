@@ -1,4 +1,3 @@
-#include <unistd.h>
 #include "connect_manager.h"
 #include "net/server_connect.h"
 #include "monitor/mem_profile.h"
@@ -7,28 +6,18 @@ namespace bdf {
 
 LOGGER_CLASS_IMPL(logger_, ServerConnectDelayReleaseMgr);
 
-//延迟时间
-const static int delay_delete_times = 90;//second
-//最小的删除执行间隔
-const static int delete_interval_times = 10;//second
+static const std::chrono::seconds delay_delete_time(90);
 
 void ServerConnectDelayReleaseMgr::Release(){
-  if (connected_list_.size() > 0){
-    INFO(logger_, "may be memory leak:" << connected_list_.size());
-  }
-
-  //sleep(5); for wait connection release
-  sleep(5);
-
-  DeleteDalayCon();
-
   for (const auto& it : connected_list_){
-    TRACE(logger_, "connect id:" << it.first << ", addr:" << it.second);
-    if (it.second != NULL){
-      BDF_DELETE(it.second); // allocated with BDF_NEW (MEM_PROFILE header)
-    }
+    SetLive(it.second, false);
+    BDF_DELETE(it.second);
   }
   connected_list_.clear();
+  for (const auto& entry : delay_delete_connect_list_) {
+    BDF_DELETE(entry.second);
+  }
+  delay_delete_connect_list_.clear();
 }
 
 bool ServerConnectDelayReleaseMgr::SetRelease(ServerConnect* con){
@@ -38,23 +27,14 @@ bool ServerConnectDelayReleaseMgr::SetRelease(ServerConnect* con){
   SetLive(con, false);
   TRACE(logger_, "erase id:" << con->GetConnectId() << ", ret:" << ret);
   if (0 == ret){
-    WARN(logger_, "connected_list_.size():" << connected_list_.size() 
-      << ",fd:" << con->GetFd()<< ",erase failed,may be memory leak,id:" 
+    WARN(logger_, "fd:" << con->GetFd()<< ",erase failed,may be memory leak,id:"
       << con->GetConnectId());
     return false;
   }
 
-  bool ret_v = true;
-  //add to delay list
-  con_mutex_lock_.lock();
-  if (!delay_delete_connect_list_.insert(
-    DelayDeletePair(con->GetConnectId(), ConnInfo(time(NULL), con))).second){
-    WARN(logger_, "insert failed, will be momory leak:" << ",fd:"
-      << con->GetFd() << ",key:" << con->GetConnectId());
-    ret_v = false;
-  }
-  con_mutex_lock_.unlock();
-  return ret_v;
+  std::lock_guard<std::mutex> guard(con_mutex_lock_);
+  delay_delete_connect_list_.emplace_back(Clock::now(), con);
+  return true;
 }
 
 void ServerConnectDelayReleaseMgr::Remove(ServerConnect* con){
@@ -78,31 +58,20 @@ bool ServerConnectDelayReleaseMgr::IsLive(ServerConnect* con){
   return shard.set.count(con) > 0;
 }
 
-void ServerConnectDelayReleaseMgr::DeleteDalayCon(){
-  int cur_time = time(NULL);
-  if ((cur_time - del_time_) > delete_interval_times && 
-    !delay_delete_connect_list_.empty()){
-    INFO(logger_, "delay_delete_connect_list_ size:" << delay_delete_connect_list_.size()
-      << ",connected_list_ size:" << connected_list_.size());
-    con_mutex_lock_.lock();
-    DelayDeleteListIt ls = delay_delete_connect_list_.begin();
-    while (ls != delay_delete_connect_list_.end()){
-      if ((cur_time - ls->second.first) > delay_delete_times) {
-        ServerConnect* s_con = ls->second.second; 
-        BDF_DELETE(s_con); // allocated with BDF_NEW (MEM_PROFILE header)
-        ls = delay_delete_connect_list_.erase(ls);
-      } else {
-        ls++;
-      }
-    }
-    con_mutex_lock_.unlock();
-    del_time_ = cur_time;
+void ServerConnectDelayReleaseMgr::DeleteDelayedConnections(){
+  const auto now = Clock::now();
+  std::unique_lock<std::mutex> guard(con_mutex_lock_);
+  while (!delay_delete_connect_list_.empty()
+         && now - delay_delete_connect_list_.front().first >= delay_delete_time) {
+    ServerConnect* connection = delay_delete_connect_list_.front().second;
+    delay_delete_connect_list_.pop_front();
+    guard.unlock();
+    BDF_DELETE(connection);
+    guard.lock();
   }
 }
 
 void ServerConnectDelayReleaseMgr::AddConnect(ServerConnect* connect){
-  DeleteDalayCon();
-
   if (connect_squency_ < 0){
     connect_squency_ = 0;
   }
