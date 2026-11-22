@@ -27,15 +27,7 @@ bool NetThreadManager::Init(){
 }
 
 bool NetThreadManager::Start() {
-
-  bool ret = acceptor_thread_->Start();
-  if (!ret){
-    return false;
-  }
-
-  io_threads_->Start();
-  
-  return true;
+  return io_threads_->Start() && acceptor_thread_->Start();
 }
 
 void NetThreadManager::Stop(){

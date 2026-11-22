@@ -28,6 +28,9 @@ void SyncClientConnect::OnDecodeMessage(EventMessage* message) {
     return;
   }
 
+  if (keeper_message->type_id != MessageType::kHeartBeatMessage) {
+    SetBuzy(false);
+  }
   if (keeper_message->type_id == MessageType::kHeartBeatMessage
     || keeper_message->direction == EventMessage::kSendNoCareResponse
     || keeper_message->direction == EventMessage::kOnlySend) {
@@ -60,10 +63,11 @@ void SyncClientConnect::OnDecodeMessage(EventMessage* message) {
 }
 
 int SyncClientConnect::EncodeMsg(EventMessage* message){
+  const bool heartbeat = message->type_id == MessageType::kHeartBeatMessage;
 
   if (GetStatus() != kConnected) {
     DEBUG(logger, "SyncClientConnect::EncodeMsg ChannelBroken:" << GetStatus());
-    SetBuzy(false);
+    if (!heartbeat) SetBuzy(false);
     return -1;
   }
   TRACE(logger, "EncodeMsg msg type:" << (int)(message->type_id)
@@ -78,7 +82,7 @@ int SyncClientConnect::EncodeMsg(EventMessage* message){
   if (unlikely(!GetProtocol()->Encode(message, &outbuf_))) {
     WARN(logger, "SyncClientConnect::Encode() encode fail");
     //test_lock1_.unlock();
-    SetBuzy(false);
+    if (!heartbeat) SetBuzy(false);
     return -2;
   }
   //test_lock1_.unlock();
@@ -89,7 +93,7 @@ int SyncClientConnect::EncodeMsg(EventMessage* message){
   //  && message->direction != EventMessage::kOnlySend){
     if (0 != sync_sequence_.Put(message)) {
       WARN(logger, "SyncClientConnect::EncodeMsg put fail");
-      SetBuzy(false);
+      if (!heartbeat) SetBuzy(false);
       return -3;
     }
   //}
@@ -143,7 +147,6 @@ int SyncClientConnect::DecodeMsg(){
 
     OnDecodeMessage(msg);
   }
-  SetBuzy(false);
   if (failed) {
     return -1;
   }

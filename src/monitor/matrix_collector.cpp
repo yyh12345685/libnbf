@@ -159,10 +159,10 @@ void MatrixCollector::Run() {
       const std::string& dump = stat_map->ToStringSimple();
       fwrite(dump.c_str(), dump.size(), 1, fp);
       fflush(fp);
-      stat_map_ = stat_map;
-      //std::atomic_store(&stat_map_, stat_map);
+      const auto previous = stat_map;
+      std::atomic_store(&stat_map_, previous);
       stat_map = MatrixStatMapPtr(new MatrixStatMap(time(nullptr)));
-      stat_map->Inherit(*stat_map_);
+      stat_map->Inherit(*previous);
     }
     ProcessQueueList(stat_map);
     

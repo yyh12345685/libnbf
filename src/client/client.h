@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include <atomic>
+#include <mutex>
 #include "common/logger.h"
 #include "net/client_connect.h"
 
@@ -40,28 +40,27 @@ public:
     return DoSendRecieve(message);
   }
 
-  // connect_ is cleared by Stop() while other threads may be in here:
-  // load it once and null-check (it used to be read twice / dereferenced).
   int GetClientStatus() const {
-    ClientConnect* con = connect_.load();
-    return con && con->GetStatus() ==
+    std::lock_guard<std::mutex> guard(connect_lock_);
+    return connect_ && connect_->GetStatus() ==
       ClientConnect::kConnected ? kWorking : kBroken;
   }
 
   void SetNoBuzy(){
-    ClientConnect* con = connect_.load();
-    if (!sigle_send_sigle_recv_ || !con){
+    std::lock_guard<std::mutex> guard(connect_lock_);
+    if (!sigle_send_sigle_recv_ || !connect_){
       return ;
     }
-    return con->SetBuzy(false);
+    connect_->SetBuzy(false);
   }
 
   bool TrySetBusy() {
     if (!sigle_send_sigle_recv_) {
       return  true;
     }
-    ClientConnect* con = connect_.load();
-    return con && con->TrySetBuzy();
+    std::lock_guard<std::mutex> guard(connect_lock_);
+    return connect_ && connect_->GetStatus() == ClientConnect::kConnected
+      && connect_->TrySetBuzy();
   }
 
   void Dump(std::ostream& os) const;
@@ -81,7 +80,8 @@ private:
   uint32_t timeout_ms_;
   uint32_t heartbeat_ms_;
 
-  std::atomic<ClientConnect*> connect_;
+  mutable std::mutex connect_lock_;
+  ClientConnect* connect_;
 
   bool sigle_send_sigle_recv_;
 };

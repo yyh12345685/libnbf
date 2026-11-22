@@ -160,6 +160,7 @@ int Connecting::DecodeMsg(){
     }
 
     OnDecodeMessage(msg);
+    if (fd_ < 0) break;
   }
   if (failed){
     INFO(logger_, "DecodeMsg failed, fd is:" << fd_ << ",ip:" << GetIp() << ",port:"

@@ -22,6 +22,11 @@ AcceptorThread::AcceptorThread() :
 }
 
 AcceptorThread::~AcceptorThread() {
+  Stop();
+  for (const auto& entry : listened_fd_list_) {
+    event_thread_.Del(entry.first);
+    Socket::Close(entry.first);
+  }
   if (release_mgr_ != nullptr){
     delete release_mgr_;
   }
@@ -145,11 +150,24 @@ bool AcceptorThread::AreaseReleasedConnect(ServerConnect* con){
 }
 
 bool AcceptorThread::Start() {
+  ScheduleConnectionSweep();
   int ret = event_thread_.Start();
   if (0!=ret) {
     return false;
   }
   return true;
+}
+
+void AcceptorThread::ScheduleConnectionSweep() {
+  TimerData timer = {};
+  timer.time_out_ms = 10000;
+  timer.time_proc = this;
+  event_thread_.StartTimer(timer);
+}
+
+void AcceptorThread::OnTimer(void*) {
+  release_mgr_->DeleteDelayedConnections();
+  ScheduleConnectionSweep();
 }
 
 void AcceptorThread::Stop() {

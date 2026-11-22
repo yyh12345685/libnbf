@@ -13,7 +13,7 @@ class NetThreadManager;
 class ServerConnectDelayReleaseMgr;
 class ServerConnect;
 
-class AcceptorThread:public EventFunctionBase {
+class AcceptorThread : public EventFunctionBase, public OnTimerBase {
 public:
   AcceptorThread();
   virtual ~AcceptorThread();
@@ -23,6 +23,7 @@ public:
   void Stop();
 
   virtual void OnEvent(EventDriver *poll, int fd, short event);
+  void OnTimer(void* function_data) override;
 
   bool AreaseReleasedConnect(ServerConnect* con);
   bool IsLiveConnect(ServerConnect* con);
@@ -30,6 +31,7 @@ protected:
   void AcceptClient(EventDriver *poll,int fd,std::pair<int,int>& server_cate_port);
   void AcceptClientV1(EventDriver *poll,int fd,std::pair<int,int>& server_cate_port);
 private:
+  void ScheduleConnectionSweep();
 
   const ServiceConfig* conf_;
   const NetThreadManager* net_thread_mgr_;
