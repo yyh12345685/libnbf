@@ -91,8 +91,8 @@ int CoroutineImplc::CoroutineSize() {
 CoroContext* CoroutineImplc::CoroutineNew(
   CoroutineFunc func, void *ud, CoroRelease* release, int stack_size) {
   assert(coro_ls_ != nullptr);
-  if (coro_ls_->cap >= MAX_CORO_IDS) {
-    WARN(logger_, "coroutine is limited:" << coro_ls_->cap);
+  if (coro_ls_->coctxs.size() >= MAX_CORO_IDS) {
+    WARN(logger_, "coroutine is limited:" << coro_ls_->coctxs.size());
     return nullptr;
   }
   if (stack_size <= 0) {
@@ -121,10 +121,7 @@ static void MainFunc(uint32_t low32, uint32_t hi32) {
   if (coctx->release != nullptr) {
     coctx->release->ReleaseResource(coctx);
   }
-  corotine_ls->coctxs.erase(coctx);
-  CoDelete(coctx);
-  
-  --corotine_ls->cap;
+  coctx->status = Coroutine::kCoroutineInvalid;
   corotine_ls->running = nullptr;
 }
 
@@ -155,6 +152,10 @@ void CoroutineImplc::CoroutineStart(CoroContext* coro, CoroutineFunc func, void*
     uintptr_t ptr = (uintptr_t)coro_ls_;
     makecontext(coctx->ctx, (void(*)(void))MainFunc, 2, (uint32_t)ptr, (uint32_t)(ptr >> 32));
     swapcontext(&coro_ls_->main_ctx, coctx->ctx);
+    if (coctx->status == kCoroutineInvalid) {
+      coro_ls_->coctxs.erase(coctx);
+      CoDelete(coctx);
+    }
   } else {
     WARN(logger_, "CoroutineStart unkown status:" << status);
   }
@@ -183,14 +184,22 @@ bool CoroutineImplc::CoroutineResume(CoroContext* coro) {
     coctx->status = kCoroutineRunning;
     uintptr_t ptr = (uintptr_t)coro_ls_;
     makecontext(coctx->ctx, (void(*)(void))MainFunc, 2, (uint32_t)ptr, (uint32_t)(ptr >> 32));
-    swapcontext(&coro_ls_->main_ctx, coctx->ctx); // 对称协程，从线程对应的主协程切换到coro来运行
+    swapcontext(&coro_ls_->main_ctx, coctx->ctx);
+    if (coctx->status == kCoroutineInvalid) {
+      coro_ls_->coctxs.erase(coctx);
+      CoDelete(coctx);
+    }
     break; 
   }
   case kCoroutineSuspend:
     //memcpy(coro_ls_->stack + STACK_SIZE - coctx->size, coctx->stack, coctx->size);
     coro_ls_->running = coro;
     coctx->status = kCoroutineRunning;
-    swapcontext(&coro_ls_->main_ctx, coctx->ctx); // 对称协程，从线程对应的主协程切换到coro来运行
+    swapcontext(&coro_ls_->main_ctx, coctx->ctx);
+    if (coctx->status == kCoroutineInvalid) {
+      coro_ls_->coctxs.erase(coctx);
+      CoDelete(coctx);
+    }
     break; 
   default:
     WARN(logger_, "ThreadId:" << ThreadId::Get() << ",unkown status:" << status << ",coro:" << coro);
@@ -199,6 +208,11 @@ bool CoroutineImplc::CoroutineResume(CoroContext* coro) {
   }
   //想看详细日志可以打开
   //TRACE(logger_, "changed status:" << status << ",running id:" << coro_ls_->running);
+  // The coroutine has switched back to the scheduler stack.
+  if (coctx->status == kCoroutineInvalid) {
+    coro_ls_->coctxs.erase(coctx);
+    CoDelete(coctx);
+  }
   return true;
 }
 

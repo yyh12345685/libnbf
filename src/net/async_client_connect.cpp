@@ -18,7 +18,7 @@ AsyncClientConnect::~AsyncClientConnect(){
 //由io线程触发
 void AsyncClientConnect::OnDecodeMessage(EventMessage* message){
   EventMessage* keeper_message = async_sequence_.Get(message->sequence_id);
-  TRACE(logger_, "OnDecodeMessage get sequence_id:" << message->sequence_id);
+  TRACE(logger, "OnDecodeMessage get sequence_id:" << message->sequence_id);
   if (nullptr == keeper_message) {
     DEBUG(logger, "OnDecodeMessage sequence not found or oneway msg:"
       <<*message << ", sequence_id:" << message->sequence_id

@@ -5,7 +5,8 @@
 #include "net/async_client_connect.h"
 #include "net/sync_client_connect.h"
 #include "coroutine/coroutine_actor.h"
-#include "coroutine/coroutine_context.h"
+#include "coroutine/coroutine_manager.h"
+#include "coroutine/coro_context.h"
 #include "service/coroutine_service_handle.h"
 #include "client/client_mgr.h"
 #include "net/connect_manager.h"
@@ -192,10 +193,11 @@ EventMessage* Client::DoSendRecieve(EventMessage* message) {
 }
 
 void Client::DoSend(EventMessage* message){
-  if (nullptr != CoroutineContext::Instance().GetServiceHandler()){
+  if (nullptr != CoroutineManager::GetServiceHandler()){
     //使用协程handle的时候不为空，非协程框架使用异步调用Invoke
-    message->handle_id = CoroutineContext::Instance().GetServiceHandler()->GetHandlerId();
-    message->coroutine_id = CoroutineContext::GetCurCoroutineId();
+    message->handle_id = CoroutineManager::GetServiceHandler()->GetHandlerId();
+    message->msg_coro = CoroutineManager::GetCurrentCoroutine();
+    message->handle_svr = CoroutineManager::GetServiceHandler();
   }
   
   message->birthtime = Time::GetCurrentClockTime();
@@ -204,23 +206,15 @@ void Client::DoSend(EventMessage* message){
   service::GetServiceManager().SendToNetThread(message);
 }
 
-EventMessage* Client::DoRecieve(uint64_t sequence_id){
-  if (nullptr != CoroutineContext::Instance().GetScheduler()){
-    int coro_id = CoroutineContext::GetCurCoroutineId();
-    CoroutineActor* actor = CoroutineContext::GetCurCoroutineCtx();
-    if (nullptr == actor || coro_id < 0){
-      WARN(logger_, "no valid coroutine id:" << coro_id);
-      return nullptr;
-    }
-    TRACE(logger_, "get coroutine id:" << coro_id << ",ptr:" << actor);
-    actor->SetWaitingId(sequence_id);
-    return actor->RecieveMessage(sequence_id,timeout_ms_);
-  }else{
-    //非协程使用异步调用Invoke，不是用该函数
-    WARN(logger_, "use error,not should to here...");
+EventMessage* Client::DoRecieve(uint64_t sequence_id) {
+  CoroContext* coro = CoroutineManager::GetCurrentCoroutine();
+  if (!coro || !coro->actor) {
+    WARN(logger_, "SendRecieve requires a running coroutine");
     return nullptr;
   }
-  
+
+  coro->actor->SetWaitingId(sequence_id);
+  return coro->actor->RecieveMessage(sequence_id, timeout_ms_);
 }
 
 std::ostream& operator << (std::ostream& os, const Client& client) {

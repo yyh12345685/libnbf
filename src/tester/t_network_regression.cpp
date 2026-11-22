@@ -166,6 +166,6 @@ int main() {
   MessageFactory::Destroy(result);
   hb = http.HeartBeatRequest(); Buffer httpheart;
   assert(http.Encode(hb, &httpheart)); MessageFactory::Destroy(hb);
-  EventMessage initialized(0, 123); assert(initialized.ctx == nullptr && initialized.coroutine_id == -1);
+  EventMessage initialized(0, 123); assert(initialized.ctx == nullptr && initialized.msg_coro == nullptr);
   std::cout << "timer cancellation, HTTP/Rapid fragmentation, message initialization passed\n";
 }

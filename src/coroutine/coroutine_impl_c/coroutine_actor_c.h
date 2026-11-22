@@ -12,8 +12,9 @@ class EventMessage;
 class CoroutineActorc : public CoroutineActor {
 public:
   CoroutineActorc();
+  ~CoroutineActorc() override;
 
-  virtual EventMessage* RecieveMessage(EventMessage* message,uint32_t timeout_ms = 0);
+  EventMessage* RecieveMessage(uint64_t sequence_id, uint32_t timeout_ms = 0) override;
   virtual bool SendMessage(EventMessage* message);
 
   virtual void SetWaitingId(const uint64_t& sequence_id) {

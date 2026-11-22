@@ -13,6 +13,8 @@ namespace bdf {
 
 class Coroutine {
 public:
+  virtual ~Coroutine() = default;
+
   enum {
     kCoroutineInvalid = 0,
     kCoroutineReady = 1,

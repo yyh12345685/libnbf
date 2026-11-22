@@ -67,19 +67,16 @@ private:
 
 class CoroTimer : public TimerMgrBase {
 public:
-  CoroTimer(CoroutineServiceHandler* handle, int coro_id = -1):
-    service_handle_(handle), coro_id_(coro_id){
-    // The callback reads the id through timer_data_; keep it in the timer
-    // itself (it pointed into CoroutineID's fixed 100000-entry table, out of
-    // bounds once more coroutines were created).
-    timer_data_ = &coro_id_;
+  CoroTimer(CoroutineServiceHandler* handle, CoroContext* coro)
+    : service_handle_(handle) {
+    timer_data_ = coro;
   }
 
   virtual void OnTimer(void* timer_data, uint64_t time_id);
   virtual ~CoroTimer() { }
 protected:
   CoroutineServiceHandler* service_handle_;
-  int coro_id_;
+
 };
 
 }

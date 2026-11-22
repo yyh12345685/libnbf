@@ -23,9 +23,9 @@ IoThreadDataRun::~IoThreadDataRun(){
 }
 
 void IoThreadDataRun::PutMessage(EventMessage* message){
-  hd_data_->lock_.lock();
+  hd_data_->data_lock_.lock();
   hd_data_->data_.emplace(message);
-  hd_data_->lock_.unlock();
+  hd_data_->data_lock_.unlock();
 }
 
 void IoThreadDataRun::CallRun(){
@@ -33,13 +33,13 @@ void IoThreadDataRun::CallRun(){
   std::queue<EventMessage*> temp;
   // Check emptiness under the lock too: producers push concurrently and an
   // unlocked std::queue read is a data race.
-  hd_data_->lock_.lock();
+  hd_data_->data_lock_.lock();
   if (hd_data_->data_.empty()){
-    hd_data_->lock_.unlock();
+    hd_data_->data_lock_.unlock();
     return;
   }
   temp.swap(hd_data_->data_);
-  hd_data_->lock_.unlock();
+  hd_data_->data_lock_.unlock();
 
   //如有必要这里也可以增加队列超过一定长度的过载保护
   size_t handle_size = temp.size();

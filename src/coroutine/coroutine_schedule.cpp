@@ -9,13 +9,17 @@ namespace bdf {
 LOGGER_CLASS_IMPL(logger_, CoroutineSchedule);
 
 CoroutineSchedule::~CoroutineSchedule(){
-  coro_impl_->Release();
+  if (coro_impl_) {
+    coro_impl_->Release();
+    delete coro_impl_;
+  }
 }
 
 void CoroutineSchedule::InitCoroSchedule(
   CoroutineFunc func, void* data, int coroutine_size, int coroutine_type, int stack_size) {
   coro_func_ = func;
   coro_data_ = data;
+  stack_size_ = stack_size;
   switch (coroutine_type)
   {
   case Coroutine::kCoroutineTypeC:
@@ -30,27 +34,30 @@ void CoroutineSchedule::InitCoroSchedule(
 }
 
 CoroContext* CoroutineSchedule::GetAvailableCoro() {
+  if (!coro_impl_) return nullptr;
   // 用来接收消息的协程是暂时不可用的，其他的协程都是可用的
   for (CoroContext* coro : free_list_) {
     return coro;
   }
 
   // 不够用，创建新协程
-  CoroContext* ret = coro_impl_->CoroutineNew(coro_func_, coro_data_, this);
+  CoroContext* ret = coro_impl_->CoroutineNew(coro_func_, coro_data_, this, stack_size_);
+  if (!ret) return nullptr;
   auto ok = free_list_.insert(ret);
   INFO(logger_, "ThreadId:" << ThreadId::Get() << ",AddNewCoroutine:" << ret << ",ok" << ok.second);
   return ret;
 }
 
 CoroContext* CoroutineSchedule::GetCurrentCoroutine() {
-  return coro_impl_->GetCurrentCoroutine();
+  return coro_impl_ ? coro_impl_->GetCurrentCoroutine() : nullptr;
 }
 
 // 支持使用InitCoroSchedule中的值，或者新传入的值
 void CoroutineSchedule::CoroutineStart(CoroutineFunc func, void* data) {
   CoroutineFunc func1 = func != nullptr ? func : coro_func_;
   void* data1 = data != nullptr ? data : coro_data_;
-  CoroContext* coro = coro_impl_->CoroutineNew(func1, data1, this);
+  CoroContext* coro = coro_impl_->CoroutineNew(func1, data1, this, stack_size_);
+  if (!coro) return;
   //free_list_.erase(coro);
   coro_impl_->CoroutineResume(coro);
 }
@@ -75,34 +82,20 @@ void CoroutineSchedule::ProcessDebug(){
 bool CoroutineSchedule::ReleaseResource(CoroContext* coro) {
   INFO(logger_, "ThreadId:" << ThreadId::Get() << ",should release when exit coro:" << coro);
   free_list_.erase(coro);
+  waiting_coroutines_.erase(coro);
   return true;
 }
 
 //挂起当前协程，并将收到消息的协程激活，下次有限切入
 bool CoroutineSchedule::CoroutineYieldToActive(CoroContext* coro) {
-  if (nullptr == coro) {
-    WARN(logger_, "CoroutineYieldToActive coro is nullptr");
+  if (!coro || !waiting_coroutines_.erase(coro)) {
     return false;
   }
-
-  if (GetCurrentCoroutine() == coro) {
-    //先返回了，马上又收到了timeout么?
-    WARN(logger_, "CoroutineYieldToActive may be timeout,running coro:" << coro);
-    //return false;
-  }
-
-  //说明要切换协程，切换回来之后可能是收到了客户端的消息或者超时
   active_coro_list_.emplace(coro);
-  //receiving_cnt_--;
-  if (nullptr != GetCurrentCoroutine()) {
-    //当前是在协程中，切出去
-    TRACE(logger_, "cur coro ptr:" << GetCurrentCoroutine() << ",will change to coro ptr:" << coro);
+  if (GetCurrentCoroutine()) {
     CoroutineYield();
-    return true;
-  } else {
-    WARN(logger_, "warn CoroutineYieldToActive coro ptr:" << coro);
-    return false;
   }
+  return true;
 }
 
 bool CoroutineSchedule::ScCoroutineResume(CoroContext* coro) {
@@ -156,9 +149,11 @@ void CoroutineSchedule::ReceiveCoroutineYield() {
     WARN(logger_, "ThreadId:" << ThreadId::Get() << ",ReceiveCoroutineYield free_list_ not found coro:" << cur);
   }
 
+  waiting_coroutines_.insert(cur);
   receiving_cnt_++;
   coro_impl_->CoroutineYield();
   receiving_cnt_--;
+  waiting_coroutines_.erase(cur);
 
   // 协程切回来之后又可以用了
   free_list_.insert(cur);

@@ -4,6 +4,7 @@
 
 #include <queue>
 #include <mutex>
+#include <atomic>
 #include <condition_variable>
 
 namespace bdf{
@@ -23,7 +24,7 @@ struct HandleData {
 
   std::mutex data_lock_;
   std::mutex task_lock_;
-  bool is_run = false;
+  std::atomic<bool> is_run{false};
 
   Handler* handle_ = nullptr;
 

@@ -136,6 +136,8 @@ public:
   static const int kEventDropNotice = 0x1;
 };
 
+class CoroContext;
+
 class EventMessage : public MessageBase {
  public:
   EventMessage(uint8_t type_id): 
@@ -144,10 +146,11 @@ class EventMessage : public MessageBase {
     handle_id(-1),
     timer_out_id(0),
     ctx(nullptr),
-    coroutine_id(-1){
+    msg_coro(nullptr),
+    handle_svr(nullptr){
   }
 
-  // Delegate so ctx/handle_id/coroutine_id are initialised: ctx used to be
+  // Delegate so ctx/handle_id/msg_coro are initialised: ctx used to be
   // left uninitialised and the destructor deleted a garbage pointer.
   EventMessage(uint8_t type_id_, int64_t descriptor_id_) :
     EventMessage(type_id_){
@@ -178,7 +181,8 @@ class EventMessage : public MessageBase {
   uint64_t timer_out_id;//for sync message
 
   ContextBase* ctx;
-  int coroutine_id;
+  CoroContext* msg_coro;
+  void* handle_svr;
 };
 
 class MessageFactory {

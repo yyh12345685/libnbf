@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -185,8 +185,8 @@
     <ClCompile Include="src\common\buffer.cpp" />
     <ClCompile Include="src\common\string_util.cpp" />
     <ClCompile Include="src\common\timer_mgr.cpp" />
-    <ClCompile Include="src\coroutine\coroutine_impl_c\coroutine_actor_c.cpp" />
     <ClCompile Include="src\coroutine\coroutine_manager.cpp" />
+    <ClCompile Include="src\coroutine\coroutine_impl_c\coroutine_actor_c.cpp" />
     <ClCompile Include="src\coroutine\coroutine_impl_c\coroutine_impl_c.cpp" />
     <ClCompile Include="src\coroutine\coroutine_schedule.cpp" />
     <ClCompile Include="src\event\event_data.cpp" />

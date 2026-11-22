@@ -10,8 +10,8 @@ class CoroutineSchedule;
 class CoroutineServiceHandler;
 class TimerMgr;
 
-// Ã¿Ò»¸öÓÃµ½µÄÏß³ÌÒ»¸öCoroutineManager¶ÔÏó
-// ËùÒÔ¾Í×¢¶¨ÁËÊ¹ÓÃCoroutineManagerµÄ¶ÔÏóÐèÒªÔÚÏß³ÌÖÐÔËÐÐ
+// Ã¿Ò»ï¿½ï¿½ï¿½Ãµï¿½ï¿½ï¿½ï¿½ß³ï¿½Ò»ï¿½ï¿½CoroutineManagerï¿½ï¿½ï¿½ï¿½
+// ï¿½ï¿½ï¿½Ô¾ï¿½×¢ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½CoroutineManagerï¿½Ä¶ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ß³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 struct CoroutineManager {
  public:
 
@@ -20,13 +20,14 @@ struct CoroutineManager {
     return context_;
   }
 
-  // Ã¿Ò»¸öCoroutineManager¿ÉÒÔÅäºÏÒ»¸ö¶¨Ê±Æ÷À´ÓÃ
+  // Ã¿Ò»ï¿½ï¿½CoroutineManagerï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
   static void Init(
     CoroutineServiceHandler* service_handle,
     TimerMgr* time_mgr);
 
   inline static CoroContext* GetCurrentCoroutine() {
-    return Instance().scheduler_->GetCurrentCoroutine();
+    auto* scheduler = GetScheduler();
+    return scheduler ? scheduler->GetCurrentCoroutine() : nullptr;
   }
 
   inline static CoroutineSchedule* GetScheduler() {
