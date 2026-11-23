@@ -1,3 +1,4 @@
+#include <atomic>
 #include <sys/prctl.h>
 #include <unistd.h>
 #include <thread>
@@ -12,7 +13,7 @@ LOGGER_STATIC_DECL_IMPL(logger, "root");
 
 //valgrind --tool=memcheck --leak-check=full --show-reachable=yes --log-file=test.log ./test_client_server -c ../conf/test_client_server.conf -l ../conf/logger.conf
 
-static bool thread_exit = false;
+static std::atomic<bool> thread_exit{false};
 
 void RecordClientError(const std::string& name, int status) {
   const char* reason = "unknown";

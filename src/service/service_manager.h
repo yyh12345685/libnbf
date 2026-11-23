@@ -40,6 +40,7 @@ public:
 
   int Init(const ServiceConfig& config);
   int Start(ServiceHandler* handle);
+  int Start(ServiceHandler* handle, bool start_acceptor);
   int Stop();
   int Wait();
   // Async-signal-safe: uses lock-free atomics.

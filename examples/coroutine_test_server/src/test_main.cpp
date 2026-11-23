@@ -1,3 +1,4 @@
+#include <atomic>
 #include <unistd.h>
 #include <sys/prctl.h>
 #include "app/app.h"
@@ -11,7 +12,7 @@
 
 LOGGER_STATIC_DECL_IMPL(logger_, "root");
 
-static bool thread_exit = false;
+static std::atomic<bool> thread_exit{false};
 
 void CreateCoroTest(void* data) {
   std::string* str = (std::string*)(data);

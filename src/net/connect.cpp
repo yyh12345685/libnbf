@@ -25,7 +25,7 @@ Connecting::Connecting():
 Connecting::~Connecting(){
   // Clean() resets the protocol, so it must run before the protocol is
   // released (the other order called into freed memory at shutdown).
-  if (fd_ > 0){
+  if (fd_ >= 0){
     Clean();
   }
 
@@ -64,7 +64,7 @@ void Connecting::OnEvent(EventDriver *poll, int fd, short event){
 }
 
 void Connecting::OnRead(){
-  if (fd_ <= 0){
+  if (fd_ < 0){
     TRACE(logger_, "invalid sock:" << fd_);
     return;
   }
@@ -171,7 +171,7 @@ int Connecting::DecodeMsg(){
 }
 
 void Connecting::OnWrite(){
-  if (fd_ <= 0){
+  if (fd_ < 0){
     TRACE(logger_, "invalid sock:" << fd_);
     return ;
   }

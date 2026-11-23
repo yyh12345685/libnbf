@@ -1,6 +1,8 @@
 #pragma once
 
+#include <atomic>
 #include <functional>
+#include <thread>
 #include "app/config_info.h"
 #include "app/app_cmd_parser.h"
 
@@ -62,7 +64,14 @@ private:
   int StopClientManager();
   int StopService();
 
-  void HandleSignal();
+  int HandleSignal();
+  void StopSignalThread();
+  void CallOnStopOnce();
+
+  std::atomic<bool> on_stop_called_{false};
+  std::atomic<bool> stopped_{false};
+  std::atomic<bool> signal_thread_done_{false};
+  std::thread signal_thread_;
   static void StopApp(int signal);
 
   static AppBase* application_;

@@ -272,9 +272,9 @@ int Socket::WriteVecNonBlock(int fd, iovec* iov, size_t& num_iov){
       if (0==num_iov){
         return bytes_write;
       }else{
-        memcpy(iov, iov+pos_iov, num_iov * sizeof(iovec));
-        iov[pos_iov].iov_base = reinterpret_cast<char*>(iov[pos_iov].iov_base) + tmp_cnt;
-        iov[pos_iov].iov_len -= tmp_cnt;
+        memmove(iov, iov + pos_iov, num_iov * sizeof(iovec));
+        iov[0].iov_base = reinterpret_cast<char*>(iov[0].iov_base) + tmp_cnt;
+        iov[0].iov_len -= tmp_cnt;
       }
     }else if (tmp_cnt<0){
       if (EAGAIN==errno || EWOULDBLOCK==errno || EINTR==errno){

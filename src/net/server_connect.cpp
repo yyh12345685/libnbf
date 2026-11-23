@@ -276,7 +276,7 @@ void ServerConnect::MaybeFinishHalfClose(){
 }
 
 int ServerConnect::RegisterDel(int fd){
-  if (fd <= 0){
+  if (fd < 0){
     return -1;
   }
   return service::GetServiceManager().EventDel(this, fd);

@@ -83,7 +83,8 @@ int EventDriver::ShutDown()
 
 int EventDriver::Add(int fd, EventFunctionBase *ezfd,bool lock, short events){
   std::lock_guard<std::recursive_mutex> guard(fd_lock_);
-  if (fd > 0 && fd < event_data_.fd2data_size_ 
+  if (fd < 0) return -1;
+  if (fd <= event_data_.fd2data_size_
     && nullptr != event_data_.fd2data_[fd]){
     WARN(logger_, "repeated add fd:" << fd);
     return -1;
@@ -101,7 +102,7 @@ int EventDriver::Add(int fd, EventFunctionBase *ezfd,bool lock, short events){
       delete data;
       return -2;
     }
-    maxfd_ = fd; // ÕâÀï¿ÉÄÜÓÐ¶àÏß³ÌµÄ²¢·¢ÎÊÌâ
+    maxfd_ = fd; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½ï¿½ß³ÌµÄ²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
   }
   event_data_.fd2data_[fd] = data;
 

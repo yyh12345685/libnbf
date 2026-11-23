@@ -185,10 +185,6 @@ bool CoroutineImplc::CoroutineResume(CoroContext* coro) {
     uintptr_t ptr = (uintptr_t)coro_ls_;
     makecontext(coctx->ctx, (void(*)(void))MainFunc, 2, (uint32_t)ptr, (uint32_t)(ptr >> 32));
     swapcontext(&coro_ls_->main_ctx, coctx->ctx);
-    if (coctx->status == kCoroutineInvalid) {
-      coro_ls_->coctxs.erase(coctx);
-      CoDelete(coctx);
-    }
     break; 
   }
   case kCoroutineSuspend:
@@ -196,10 +192,6 @@ bool CoroutineImplc::CoroutineResume(CoroContext* coro) {
     coro_ls_->running = coro;
     coctx->status = kCoroutineRunning;
     swapcontext(&coro_ls_->main_ctx, coctx->ctx);
-    if (coctx->status == kCoroutineInvalid) {
-      coro_ls_->coctxs.erase(coctx);
-      CoDelete(coctx);
-    }
     break; 
   default:
     WARN(logger_, "ThreadId:" << ThreadId::Get() << ",unkown status:" << status << ",coro:" << coro);

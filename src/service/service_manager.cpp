@@ -5,6 +5,7 @@
 #include "service/service_manager.h"
 #include "net_thread_mgr/net_thread_mgr.h"
 #include "service/service_handle.h"
+#include "coroutine/coroutine.h"
 #include "net/connect.h"
 #include "message_base.h"
 #include "monitor/matrix.h"
@@ -21,6 +22,10 @@ static_assert(ATOMIC_BOOL_LOCK_FREE == 2 && ATOMIC_INT_LOCK_FREE == 2,
 
 int ServiceManager::Init(const ServiceConfig& config){
   if (net_thread_mgr_) return -1;
+  if (config.coroutine_type != Coroutine::kCoroutineTypeC) {
+    ERROR(logger_, "Unsupported coroutine_type: " << config.coroutine_type);
+    return -1;
+  }
   service_config_ = config;
   net_thread_mgr_ = BDF_NEW(NetThreadManager,&service_config_);
   if (!net_thread_mgr_->Init()){
@@ -45,6 +50,10 @@ int ServiceManager::Init(const ServiceConfig& config){
 }
 
 int ServiceManager::Start(ServiceHandler* handle){
+  return Start(handle, true);
+}
+
+int ServiceManager::Start(ServiceHandler* handle, bool start_acceptor){
   std::unique_ptr<ServiceHandler> prototype(handle);
   if (!net_thread_mgr_ || !handle || handlers_ready_) return -1;
 
@@ -68,7 +77,7 @@ int ServiceManager::Start(ServiceHandler* handle){
         handle_thread_.service_handle_thread_[index] =
           new std::thread(std::bind(&Handler::Run, data->handle_, data));
       }
-      if (net_thread_mgr_->Start()) return 0;
+      if (net_thread_mgr_->Start(start_acceptor)) return 0;
     }
   } catch (const std::exception& error) {
     ERROR(logger_, "service startup failed: " << error.what());

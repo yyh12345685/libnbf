@@ -16,28 +16,22 @@ void ServiceHandler::Run( HandleData* data){
   prctl(PR_SET_NAME, "ServiceHandlerThread");
   INFO(logger_, "ServiceHandler::Run start.");
   time_t now = time(NULL);
+  std::queue<EventMessage*> temp;
   while (data->is_run) {
-    if (data->data_.empty()){
+
+
+    if (!data->PopAllData(temp, -1)) {
       usleep(100);
       continue;
     }
-
-    std::queue<EventMessage*> temp;
-    /*if (!data->PopAllData(temp, 1)) {
-      continue;
-    }*/
-    
-    data->data_lock_.lock();
-    temp.swap(data->data_);
-    data->data_lock_.unlock();
     //如有必要这里也可以增加队列超过一定长度的过载保护
     size_t handle_size = temp.size();
     while (!temp.empty()){
       //for debug
       time_t cur_time = time(NULL);
       if ((cur_time - now) > 60 && handle_size == temp.size()) {
-        INFO(logger_, "ThreadId:" << ThreadId::Get() << ",msg size:"
-          << data->data_.size() << ",handle size:" << temp.size());
+        INFO(logger_, "ThreadId:" << ThreadId::Get() << ",handle size:"
+          << temp.size());
         now = cur_time;
       }
 

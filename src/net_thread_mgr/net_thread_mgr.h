@@ -21,7 +21,8 @@ public:
   NetThreadManager(const ServiceConfig* conf);
 
   bool Init();
-  bool Start();
+  bool Start(bool start_acceptor = true);
+  bool StartAccepting();
 
   void Stop();
   virtual ~NetThreadManager();

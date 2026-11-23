@@ -1,4 +1,5 @@
 
+#include <exception>
 #include "net_thread_mgr/net_thread_mgr.h"
 #include "net_thread_mgr/acceptor_thread.h"
 #include "net_thread_mgr/io_threads.h"
@@ -26,8 +27,17 @@ bool NetThreadManager::Init(){
   return acceptor_thread_->Init(conf_,this);
 }
 
-bool NetThreadManager::Start() {
-  return io_threads_->Start() && acceptor_thread_->Start();
+bool NetThreadManager::Start(bool start_acceptor) {
+  return io_threads_->Start() && (!start_acceptor || StartAccepting());
+}
+
+bool NetThreadManager::StartAccepting() {
+  try {
+    return acceptor_thread_->Start();
+  } catch (const std::exception& error) {
+    ERROR(logger_, "Acceptor startup failed: " << error.what());
+    return false;
+  }
 }
 
 void NetThreadManager::Stop(){
