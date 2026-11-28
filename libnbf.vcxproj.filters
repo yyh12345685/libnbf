@@ -43,6 +43,12 @@
     <None Include="third\lib\libunwind-1.2.tar.gz" />
     <None Include="doc\server&amp;&amp;client v1.vsd" />
     <None Include="doc\framework design.docx" />
+    <None Include="examples\invoke_stress_testing\conf\invoke_stress_client.conf" />
+    <None Include="examples\invoke_stress_testing\conf\logger_cli.conf" />
+    <None Include="examples\invoke_stress_testing\conf\router.conf" />
+    <None Include="examples\invoke_stress_client\conf\invoke_stress_client.conf" />
+    <None Include="examples\invoke_stress_client\conf\logger_cli.conf" />
+    <None Include="examples\invoke_stress_client\conf\router.conf" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />
@@ -55,6 +61,8 @@
     <Text Include="examples\README.txt" />
     <Text Include="examples\coroutine_test_server\CMakeLists.txt" />
     <Text Include="examples\coroutine_stress_testing\CMakeLists.txt" />
+    <Text Include="examples\invoke_stress_testing\CMakeLists.txt" />
+    <Text Include="examples\invoke_stress_client\CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\monitor\matrix.cpp">
@@ -262,6 +270,18 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="src\tester\t_redis_protocol.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tester\t_fix_regression.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="examples\invoke_stress_testing\src\invoke_stress_client.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="examples\invoke_stress_client\src\invoke_stress_client.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="examples\invoke_stress_client\src\invoke_stress_main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -507,6 +527,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="src\coroutine\coroutine_actor.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\coroutine\coroutine_release.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="examples\invoke_stress_client\src\invoke_stress_client.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

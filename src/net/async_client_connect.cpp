@@ -42,9 +42,8 @@ void AsyncClientConnect::OnDecodeMessage(EventMessage* message){
   message->handle_id = keeper_message->handle_id;
   message->descriptor_id = (int64_t)((void*)(this));
   if (nullptr != keeper_message->ctx && nullptr != keeper_message->ctx->callback){
-    message->ctx = BDF_NEW(ContextBase);
-    message->ctx->callback = keeper_message->ctx->callback;
-    message->ctx->monitor_id = keeper_message->ctx->monitor_id;
+    message->ctx = keeper_message->ctx;
+    keeper_message->ctx = nullptr;
   }
 
   TRACE(logger, "AsyncClientConnect::OnDecodeMessage " << *message);

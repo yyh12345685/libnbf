@@ -17,7 +17,11 @@ namespace bdf{
 LOGGER_CLASS_IMPL(logger_, IoThreadDataRun);
 
 IoThreadDataRun::~IoThreadDataRun(){
-  if(nullptr  != hd_data_){
+  if (hd_data_) {
+    while (!hd_data_->data_.empty()) {
+      MessageFactory::Destroy(hd_data_->data_.front());
+      hd_data_->data_.pop();
+    }
     delete hd_data_;
   }
 }

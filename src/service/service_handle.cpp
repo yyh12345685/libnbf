@@ -95,14 +95,18 @@ void ServiceHandler::RapidRequestMessage(RapidMessage* message){
   OnRapidRequestMessage(message);
 }
 
+static void CompleteInvoke(EventMessage* message) {
+  const auto token = message->ctx->monitor_id;
+  message->ctx->monitor_id = 0;
+  if (token) {
+    monitor::GlobalMatrix::Instance().MarkEnd(token, message->status == EventMessage::kStatusOK);
+  }
+  message->ctx->callback(message);
+}
+
 void ServiceHandler::HttpResponseMessage(HttpMessage* message){
   if (nullptr != message->ctx && nullptr != message->ctx->callback){
-    if (message->status == EventMessage::kStatusOK){
-      monitor::GlobalMatrix::Instance().MarkEnd(message->ctx->monitor_id, true);
-    }else{
-      monitor::GlobalMatrix::Instance().MarkEnd(message->ctx->monitor_id, false);
-    }
-    message->ctx->callback(message);
+    CompleteInvoke(message);
   }else{
     OnHttpResponseMessage(message);
   }
@@ -110,12 +114,7 @@ void ServiceHandler::HttpResponseMessage(HttpMessage* message){
 
 void ServiceHandler::RapidResponseMessage(RapidMessage* message){
   if (nullptr != message->ctx && nullptr != message->ctx->callback){
-    if (message->status == EventMessage::kStatusOK) {
-      monitor::GlobalMatrix::Instance().MarkEnd(message->ctx->monitor_id, true);
-    } else {
-      monitor::GlobalMatrix::Instance().MarkEnd(message->ctx->monitor_id, false);
-    }
-    message->ctx->callback(message);
+    CompleteInvoke(message);
   } else {
     OnRapidResponseMessage(message);
   }
@@ -124,9 +123,7 @@ void ServiceHandler::RapidResponseMessage(RapidMessage* message){
 void ServiceHandler::RedisResponseMessage(RedisMessage* message){
   if (nullptr != message->ctx && nullptr != message->ctx->callback) {
     // A redis error reply ("-ERR ...") is still a delivered response.
-    monitor::GlobalMatrix::Instance().MarkEnd(
-      message->ctx->monitor_id, message->status == EventMessage::kStatusOK);
-    message->ctx->callback(message);
+    CompleteInvoke(message);
   } else {
     OnRedisResponseMessage(message);
   }

@@ -48,8 +48,6 @@ int GlobalMatrix::Init(
 
   if (0 != collector->Start()) {
     ERROR(logger_, "GlobalMatrix::Init Collector start fail");
-    delete item_map;
-    delete collector;
     delete global_matrix;
     return -1;
   }

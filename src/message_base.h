@@ -157,12 +157,7 @@ class EventMessage : public MessageBase {
     descriptor_id = descriptor_id_;
   }
 
-  virtual ~EventMessage() {
-    if (nullptr !=ctx){
-      BDF_DELETE(ctx);
-      ctx = nullptr;
-    }
-  }
+  virtual ~EventMessage();
 
   virtual bool IsSynchronous() { return false; }
 

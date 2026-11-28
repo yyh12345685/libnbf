@@ -49,6 +49,10 @@ MatrixCollector::~MatrixCollector() {
   Stop();
 
   for (auto& queue : queue_) {
+    const MatrixItem* item = nullptr;
+    while (queue->pop(item)) {
+      delete item;
+    }
     delete queue;
   }
   queue_.clear();

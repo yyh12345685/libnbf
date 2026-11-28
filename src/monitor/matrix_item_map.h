@@ -20,6 +20,7 @@ class MatrixBucketItemMap {
   //typedef SpinLock LockType;
   typedef std::mutex LockType;
 
+  ~MatrixBucketItemMap();
   int GenerateToken(uint64_t token, const std::string& name);
   int FetchToken(uint64_t token, MatrixItem** item);
 

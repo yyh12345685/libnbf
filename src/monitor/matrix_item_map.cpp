@@ -12,6 +12,12 @@ LOGGER_CLASS_IMPL(logger_, MatrixBucketItemMap);
 LOGGER_CLASS_IMPL(logger_, MatrixItemMap);
 thread_local std::atomic<uint32_t> MatrixItemMap::token_id_(0);
 
+MatrixBucketItemMap::~MatrixBucketItemMap() {
+  for (const auto& entry : map_) {
+    delete entry.second;
+  }
+}
+
 int MatrixBucketItemMap::GenerateToken(uint64_t token, const std::string& name) {
   lock_.lock();
   MatrixItem* add_item = 

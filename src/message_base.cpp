@@ -21,6 +21,15 @@ void MessageBase::Dump(std::ostream& os) const {
     << "}";
 };
 
+EventMessage::~EventMessage() {
+  if (ctx) {
+    if (ctx->monitor_id && monitor::GlobalMatrix::Ready()) {
+      monitor::GlobalMatrix::Instance().MarkEnd(ctx->monitor_id, false);
+    }
+    BDF_DELETE(ctx);
+  }
+}
+
 void EventMessage::Dump(std::ostream& os) const {
   os << "{\"type\": \"EventMessage\""
     << ", \"descriptor_id\": " << descriptor_id
