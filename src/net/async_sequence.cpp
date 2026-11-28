@@ -5,6 +5,7 @@
 #include "net/async_client_connect.h"
 #include "service/coroutine_service_handle.h"
 #include "coroutine/coroutine_manager.h"
+#include "common/rate_limiter.h"
 
 namespace bdf{
 
@@ -62,17 +63,26 @@ EventMessage* AsyncSequence::Get(uint64_t sequence_id){
 void AsyncSequence::OnTimer(void* function_data){
   uint64_t sequence_id = *((uint64_t*)(function_data));
   EventMessage* msg = Get(sequence_id);
-  INFO(logger, "AsyncSequence::OnTimer,seq id:"<< sequence_id <<",msg:"<< *msg);
-  if (nullptr != msg) {
-    /*if (msg->msg_coro != nullptr) {
-      CoroutineServiceHandler* hdl = (CoroutineServiceHandler*)msg->handle_svr;
-      //CoroutineServiceHandler* hdl =  CoroutineManager::Instance().GetServiceHandler() 不能这样获取，因为在不同的线程
-      if (hdl != nullptr) {
-        hdl->AddTimeOutFromClient(msg->msg_coro);
-      }
-    }*/
-    async_client_con_->OnTimeout(msg);
+  if (nullptr == msg) {
+    // Already answered or cleared; *msg used to be logged before this check.
+    return;
   }
+  // Rate limited: under overload every request times out, and one log line
+  // per timeout slows the I/O thread that has to process them.
+  static common::RateLimiter timeout_log;
+  uint64_t suppressed = 0;
+  if (timeout_log.Allow(&suppressed)) {
+    INFO(logger, "AsyncSequence::OnTimer,seq id:" << sequence_id
+      << ",suppressed since last log:" << suppressed << ",msg:" << *msg);
+  }
+  /*if (msg->msg_coro != nullptr) {
+    CoroutineServiceHandler* hdl = (CoroutineServiceHandler*)msg->handle_svr;
+    //CoroutineServiceHandler* hdl =  CoroutineManager::Instance().GetServiceHandler() 不能这样获取，因为在不同的线程
+    if (hdl != nullptr) {
+      hdl->AddTimeOutFromClient(msg->msg_coro);
+    }
+  }*/
+  async_client_con_->OnTimeout(msg);
 }
 
 std::list<EventMessage*> AsyncSequence::Clear(){

@@ -3,6 +3,7 @@
 #include "app/config_info.h"
 #include "monitor/matrix_scope.h"
 #include "monitor/mem_profile.h"
+#include "common/rate_limiter.h"
 
 namespace bdf{
 
@@ -40,24 +41,33 @@ int ClientRouter::Stop(){
   return 0;
 }
 
-Client* ClientRouter::GetValidClient() {
+Client* ClientRouter::GetValidClient(bool for_invoke) {
   size_t loop_cnt = 0;
   while ((loop_cnt++) < clients_.size()){
     int idx = current_++;
     Client* cli = clients_[idx%clients_.size()];
-    if (cli && cli->GetClientStatus() == Client::kWorking && cli->TrySetBusy()){
+    // HasCapacity also checks the connection is up.
+    if (cli && cli->HasCapacity(for_invoke) && cli->TrySetBusy()){
       return cli;
     }
-    TRACE(logger_, "status:" << cli->GetClientStatus()
+    TRACE(logger_, "status:" << (cli ? cli->GetClientStatus() : -1)
       <<",sigle_send_sigle_recv_:"<< sigle_send_sigle_recv_);
   }
-  INFO(logger_, "no valid client,name:" << name_<<",loop times:"<< loop_cnt);
+  // Every connection is down or saturated. This runs on each call while it
+  // lasts, so count it and log at most once per second.
+  monitor::MatrixCounter::Add("client_no_valid_client", 1);
+  static common::RateLimiter none_log;
+  uint64_t suppressed = 0;
+  if (none_log.Allow(&suppressed)) {
+    INFO(logger_, "no valid client (all down or at their limits),name:" << name_
+      << ",clients:" << clients_.size() << ",suppressed since last log:" << suppressed);
+  }
   return nullptr;
 }
 
 bool ClientRouter::Send(EventMessage * message){
   monitor::MatrixScope matrix_scope(name_, monitor::MatrixScope::kModeAutoSuccess);
-  Client* cli = GetValidClient();
+  Client* cli = GetValidClient(false);
   //当sigle_send_sigle_recv=1的时候,连接数需要比较多，如果获取不到cli，需重新send
   if (!cli) {
     matrix_scope.SetOkay(false);
@@ -68,7 +78,7 @@ bool ClientRouter::Send(EventMessage * message){
 }
 
 bool ClientRouter::Invoke(EventMessage * message, const InvokerCallback& cb){
-  Client* cli = GetValidClient();
+  Client* cli = GetValidClient(true);
   //当sigle_send_sigle_recv=1的时候,连接数需要比较多，如果获取不到cli，需重新send
   if (!cli) {
     message->status = MessageBase::kInvokeError;
@@ -80,7 +90,7 @@ bool ClientRouter::Invoke(EventMessage * message, const InvokerCallback& cb){
 
 EventMessage* ClientRouter::DoSendRecieve(EventMessage* message){
   monitor::MatrixScope matrix_scope(name_, monitor::MatrixScope::kModeAutoFail);
-  Client* cli = GetValidClient();
+  Client* cli = GetValidClient(false);
   if (!cli) {
     DEBUG(logger_, "ClientRouter::DoSendRecieve no avaliable client:" << name_);
     MessageFactory::Destroy(message);

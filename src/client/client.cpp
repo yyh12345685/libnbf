@@ -11,6 +11,10 @@
 #include "client/client_mgr.h"
 #include "net/connect_manager.h"
 #include "monitor/matrix.h"
+#include "monitor/matrix_scope.h"
+#include "net_thread_mgr/net_thread_mgr.h"
+#include "net_thread_mgr/io_threads.h"
+#include "common/rate_limiter.h"
 #include "common/time.h"
 
 namespace bdf{
@@ -26,6 +30,7 @@ Client::Client(
   timeout_ms_(timeout_ms), 
   heartbeat_ms_(heartbeat_ms), 
   connect_(nullptr),
+  inflight_(std::make_shared<std::atomic<int64_t> >(0)),
   sigle_send_sigle_recv_(sigle_send_sigle_recv){
 }
 
@@ -49,6 +54,7 @@ int Client::Start() {
   }
 
   connect_ = con;
+  synchronous_ = con->GetProtocol() && con->GetProtocol()->IsSynchronous();
   //ConnectManager::Instance().RegisterConnect((uint64_t)con, con);
   return 0;
 }
@@ -113,12 +119,101 @@ int64_t Client::GetSequenceId(){
   return ret;
 }
 
+uint32_t Client::InflightLimit() const {
+  const uint32_t limit = service::GetServiceManager().GetServiceConfig().client_max_inflight;
+  if (synchronous_ && (0 == limit || limit > kMaxSyncInflight)) {
+    return kMaxSyncInflight;
+  }
+  return limit;
+}
+
+bool Client::InflightAtLimit() const {
+  const uint32_t limit = InflightLimit();
+  return 0 != limit
+    && inflight_->load(std::memory_order_relaxed) >= static_cast<int64_t>(limit);
+}
+
+bool Client::QueueAtLimit(size_t* pending) const {
+  const uint32_t limit = service::GetServiceManager().GetServiceConfig().client_send_queue_limit;
+  NetThreadManager* net = service::GetServiceManager().GetNetThreadManager();
+  if (0 == limit || nullptr == net) {
+    return false;
+  }
+  // Same pointer value PutMessageToHandle hashes (descriptor_id), so this is
+  // the queue the message would go to.
+  Connecting* con = Connecting::DescriptorConnect((int64_t)((void*)connect_));
+  *pending = net->GetIoThreads()->PendingSize(con);
+  return *pending >= limit;
+}
+
+bool Client::HasCapacity(bool for_invoke) const {
+  std::lock_guard<std::mutex> guard(connect_lock_);
+  if (!connect_ || connect_->GetStatus() != ClientConnect::kConnected) {
+    return false;
+  }
+  size_t pending = 0;
+  return !(for_invoke && InflightAtLimit()) && !QueueAtLimit(&pending);
+}
+
+bool Client::SendQueueFull() {
+  size_t pending = 0;
+  if (!QueueAtLimit(&pending)) {
+    return false;
+  }
+  const uint32_t limit = service::GetServiceManager().GetServiceConfig().client_send_queue_limit;
+  monitor::MatrixCounter::Add("client_send_queue_full", 1);
+  static common::RateLimiter full_log;
+  uint64_t suppressed = 0;
+  if (full_log.Allow(&suppressed)) {
+    WARN(logger_, "client send queue full, reject, pending:" << pending << ",limit:" << limit
+      << ",address:" << address_ << ",suppressed since last log:" << suppressed);
+  }
+  return true;
+}
+
+bool Client::InflightFull() {
+  if (!InflightAtLimit()) {
+    return false;
+  }
+  monitor::MatrixCounter::Add("client_inflight_full", 1);
+  static common::RateLimiter full_log;
+  uint64_t suppressed = 0;
+  if (full_log.Allow(&suppressed)) {
+    WARN(logger_, "client in-flight limit reached, reject invoke, inflight:"
+      << inflight_->load(std::memory_order_relaxed) << ",limit:" << InflightLimit()
+      << ",address:" << address_ << ",suppressed since last log:" << suppressed);
+  }
+  return true;
+}
+
+void Client::LogBroken(const char* where) {
+  // Called without connect_lock_ (Dump takes it). While a backend is down
+  // every call fails here, so log at most once per second.
+  static common::RateLimiter broken_log;
+  uint64_t suppressed = 0;
+  if (broken_log.Allow(&suppressed)) {
+    INFO(logger_, where << " Channel Broken" << *this
+      << ",suppressed since last log:" << suppressed);
+  }
+}
+
+// Called with connect_lock_ held. Returns false (and releases the busy flag)
+// when the request cannot be queued: not connected, or the I/O backlog is
+// at client_send_queue_limit.
+static bool CanQueue(ClientConnect* con, bool queue_full) {
+  if (con && con->GetStatus() == ClientConnect::kConnected && !queue_full) {
+    return true;
+  }
+  if (con) con->SetBuzy(false);
+  return false;
+}
+
 bool Client::Send(EventMessage* message) {
   std::unique_lock<std::mutex> guard(connect_lock_);
-  if (!connect_ || connect_->GetStatus() != ClientConnect::kConnected) {
-    if (connect_) connect_->SetBuzy(false);
+  const bool connected = connect_ && connect_->GetStatus() == ClientConnect::kConnected;
+  if (!CanQueue(connect_, connected && SendQueueFull())) {
     guard.unlock();
-    INFO(logger_, "Client::Send Channel Broken" << *this);
+    if (!connected) LogBroken("Client::Send");
     MessageFactory::Destroy(message);
     return false;
   }
@@ -136,10 +231,10 @@ bool Client::Send(EventMessage* message) {
 
 bool Client::Invoke(EventMessage* message, const InvokerCallback& cb, const std::string& name){
   std::unique_lock<std::mutex> guard(connect_lock_);
-  if (!connect_ || connect_->GetStatus() != ClientConnect::kConnected) {
-    if (connect_) connect_->SetBuzy(false);
+  const bool connected = connect_ && connect_->GetStatus() == ClientConnect::kConnected;
+  if (!CanQueue(connect_, connected && (InflightFull() || SendQueueFull()))) {
     guard.unlock();
-    INFO(logger_, "Client::Send Channel Broken" << *this);
+    if (!connected) LogBroken("Client::Invoke");
     message->status = MessageBase::kInvokeError;
     cb(message);
     return false;
@@ -151,16 +246,19 @@ bool Client::Invoke(EventMessage* message, const InvokerCallback& cb, const std:
   message->ctx = BDF_NEW(ContextBase);
   message->ctx->callback = cb;
   message->ctx->monitor_id = monitor::GlobalMatrix::Instance().MarkBegin(name);
+  // Released in ~ContextBase, i.e. when the response message is destroyed.
+  inflight_->fetch_add(1, std::memory_order_relaxed);
+  message->ctx->inflight = inflight_;
   DoSend(message);
   return true;
 }
 
 EventMessage* Client::DoSendRecieve(EventMessage* message) {
   std::unique_lock<std::mutex> guard(connect_lock_);
-  if (!connect_ || connect_->GetStatus() != ClientConnect::kConnected) {
-    if (connect_) connect_->SetBuzy(false);
+  const bool connected = connect_ && connect_->GetStatus() == ClientConnect::kConnected;
+  if (!CanQueue(connect_, connected && SendQueueFull())) {
     guard.unlock();
-    INFO(logger_, "Client::DoSendRecieve Channel Broken" << *this);
+    if (!connected) LogBroken("Client::DoSendRecieve");
     MessageFactory::Destroy(message);
     return nullptr;
   }

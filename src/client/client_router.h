@@ -29,7 +29,11 @@ public:
   }
 
 protected:
-  Client* GetValidClient();
+  // Next connected client with spare capacity (round robin). Saturated
+  // clients are skipped so one slow connection does not fail its share of
+  // requests while the others are idle. for_invoke: also require room under
+  // the in-flight limit (which only Invoke uses).
+  Client* GetValidClient(bool for_invoke);
 
 private:
   LOGGER_CLASS_DECL(logger_);

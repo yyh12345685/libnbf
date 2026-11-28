@@ -4,6 +4,7 @@
 #include <unistd.h>
 
 #include "client/client_mgr.h"
+#include "common/rate_limiter.h"
 #include "message.h"
 
 namespace {
@@ -33,7 +34,14 @@ void RecordInvokeResult(bdf::EventMessage* message, const char* metric_name) {
     completed.fetch_add(1);
   } else {
     failed.fetch_add(1);
-    WARN(logger, metric_name << " invoke failed,status:" << (int)message->status);
+    // Callbacks run on the service-handler threads: one log line per failure
+    // slows them down exactly when failures pile up.
+    static bdf::common::RateLimiter failure_log;
+    uint64_t suppressed = 0;
+    if (failure_log.Allow(&suppressed)) {
+      WARN(logger, metric_name << " invoke failed,status:" << (int)message->status
+        << ",suppressed since last log:" << suppressed);
+    }
   }
 
   bdf::MessageFactory::Destroy(message);

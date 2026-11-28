@@ -22,7 +22,9 @@ struct ServiceConfig {
     coroutine_type(0),
     coroutine_stack_size(0),
     max_coroutine_size(10000),
-    monitor_token_bucket(16), 
+    client_send_queue_limit(30000),
+    client_max_inflight(3000),
+    monitor_token_bucket(16),
     monitor_queue_bucket(16), 
     monitor_queue_size(1024 * 128) {
   }
@@ -42,6 +44,19 @@ struct ServiceConfig {
   // (waiting on downstream calls), new incoming requests are shed instead
   // of creating more coroutines, so overload protection still works.
   uint32_t max_coroutine_size;
+
+  // Client backpressure: Send/Invoke/SendRecieve fail fast once the I/O
+  // thread owning the connection has this many messages queued. Without a
+  // bound an open-loop caller grows the queue (and memory) without limit
+  // while the I/O thread only drops what it eventually dequeues. 0 = off.
+  uint32_t client_send_queue_limit;
+
+  // Client backpressure for Invoke: at most this many requests per client
+  // connection between Invoke and the destruction of their response
+  // message (callback done). This bounds every queue on the way, including
+  // the service-handler queue that runs callbacks, which has no age-based
+  // shedding. Invoke fails fast (kInvokeError) beyond it. 0 = off.
+  uint32_t client_max_inflight;
 
   // monitor
   std::string monitor_file_name;

@@ -11,6 +11,7 @@
 #include "common/thread_id.h"
 #include "common/time.h"
 #include "monitor/matrix_scope.h"
+#include "common/rate_limiter.h"
 
 namespace bdf{
 
@@ -29,6 +30,7 @@ IoThreadDataRun::~IoThreadDataRun(){
 void IoThreadDataRun::PutMessage(EventMessage* message){
   hd_data_->data_lock_.lock();
   hd_data_->data_.emplace(message);
+  pending_.store(hd_data_->data_.size(), std::memory_order_relaxed);
   hd_data_->data_lock_.unlock();
 }
 
@@ -43,6 +45,7 @@ void IoThreadDataRun::CallRun(){
     return;
   }
   temp.swap(hd_data_->data_);
+  pending_.store(0, std::memory_order_relaxed);
   hd_data_->data_lock_.unlock();
 
   //如有必要这里也可以增加队列超过一定长度的过载保护
@@ -94,8 +97,15 @@ void IoThreadDataRun::HandleIoMessageEvent(EventMessage* message){
     uint64_t birth_to_now = Time::GetCurrentClockTime() - message->birthtime;
     if (birth_to_now > INNER_QUERY_SEND_PROTECT_TIME) {
       monitor::MatrixCounter::Add("client_send_queue_overload", 1);
-      //从发送到io handle处理超过100ms,过载保护
-      INFO(logger_, "birth_to_now:" << birth_to_now << ",msg:" << *message);
+      //从发送到io handle处理超过200ms,过载保护
+      // Rate limited: one line per drop (with the whole message) made the
+      // I/O thread slower exactly while it was behind, so the backlog grew.
+      static common::RateLimiter overload_log;
+      uint64_t suppressed = 0;
+      if (overload_log.Allow(&suppressed)) {
+        WARN(logger_, "client send queue overload, drop, birth_to_now:" << birth_to_now
+          << ",suppressed since last log:" << suppressed << ",msg:" << *message);
+      }
       con->OnSendDropped();
       HandleIoMessageFailed(message);
       return;

@@ -33,6 +33,9 @@ public:
   int GetIoThreadId(EventFunctionBase* ezfd);
 
   void PutMessageToHandle(EventMessage* msg);
+  // Backlog of the I/O thread that owns ezfd (same choice as
+  // PutMessageToHandle), for send-side backpressure.
+  size_t PendingSize(EventFunctionBase* ezfd);
 
   uint64_t StartTimer(TimerData& data,int io_thread_id);
   void CancelTimer(uint64_t timer_id,int io_thread_id);

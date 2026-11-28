@@ -15,6 +15,8 @@ void ServiceConfig::Dump(std::ostream& os) const {
     << ", " << "\"coroutine_type\": " << coroutine_type
     << ", " << "\"coroutine_stack_size\": " << coroutine_stack_size
     << ", \"max_coroutine_size\": " << max_coroutine_size
+    << ", \"client_send_queue_limit\": " << client_send_queue_limit
+    << ", \"client_max_inflight\": " << client_max_inflight
     << ", \"services_config\": ";
     for(const auto& srv_conf:server_config){
       os << "{\"name\":"<< srv_conf.name
@@ -129,6 +131,18 @@ int ConfigInfo::LoadServiceConfig(CIniFileS& ini, ServiceConfig* config){
     return -1;
   }
   config->max_coroutine_size = static_cast<uint32_t>(max_coroutine_size);
+  int send_queue_limit = ini.GetValueInt("io_service", "client_send_queue_limit", 30000);
+  if (send_queue_limit < 0) {
+    ERROR(logger_, "client_send_queue_limit must be >= 0 (0 = unlimited), got " << send_queue_limit);
+    return -1;
+  }
+  config->client_send_queue_limit = static_cast<uint32_t>(send_queue_limit);
+  int max_inflight = ini.GetValueInt("io_service", "client_max_inflight", 3000);
+  if (max_inflight < 0) {
+    ERROR(logger_, "client_max_inflight must be >= 0 (0 = unlimited), got " << max_inflight);
+    return -1;
+  }
+  config->client_max_inflight = static_cast<uint32_t>(max_inflight);
   return 0;
 }
 

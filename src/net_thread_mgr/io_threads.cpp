@@ -125,6 +125,11 @@ void IoThreads::PutMessageToHandle(EventMessage* msg){
   io_thread_data_run_[id]->PutMessage(msg);
 }
 
+size_t IoThreads::PendingSize(EventFunctionBase* ezfd){
+  if (io_thread_data_run_.empty()) return 0;
+  return io_thread_data_run_[GetIoThreadIndex(ezfd, io_thread_data_run_.size())]->PendingSize();
+}
+
 uint64_t IoThreads::StartTimer(TimerData& data,int io_thread_id){
   if(io_thread_id < 0 || 
     io_thread_id >= (int)(event_threads_.size())){
